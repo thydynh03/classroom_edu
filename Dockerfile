@@ -20,8 +20,10 @@ RUN addgroup -S app && adduser -S app -G app
 COPY --from=build /app/public ./public
 COPY --from=build /app/.next/standalone ./
 COPY --from=build /app/.next/static ./.next/static
-# Migration chạy như bước riêng trước khi deploy: node scripts/migrate (xem README)
 COPY --from=build /app/drizzle ./drizzle
+# Bộ chạy migration độc lập (standalone không có drizzle migrator)
+RUN mkdir /migrator && cd /migrator && npm init -y >/dev/null   && npm install --omit=dev --no-audit --no-fund drizzle-orm@0.45.3 postgres@3.4.9 @node-rs/argon2@2.2.1
+COPY docker/migrate.mjs /migrator/migrate.mjs
 USER app
 EXPOSE 3000
-CMD ["node", "server.js"]
+CMD ["sh", "-c", "node /migrator/migrate.mjs && node server.js"]

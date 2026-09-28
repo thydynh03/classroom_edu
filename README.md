@@ -35,10 +35,22 @@ pnpm test:int                              # integration (Testcontainers, cần 
 pnpm test:e2e                              # Playwright, cần DB đã seed
 ```
 
-## Deploy
+## Deploy (Render)
 
-- `Dockerfile` build Next.js standalone. Chạy `pnpm db:migrate` (với `DATABASE_URL` production) trước mỗi lần deploy.
-- Biến môi trường: xem `.env.example`. Production cần thêm `S3_PUBLIC_ORIGIN` nếu endpoint S3 khác origin trình duyệt truy cập.
+Image Docker tự chạy migration khi khởi động (`docker/migrate.mjs`) rồi mới chạy app.
+
+Biến môi trường cần đặt trên Render (secret thì đặt trong dashboard, không commit):
+
+| Biến | Ghi chú |
+| --- | --- |
+| `DATABASE_URL` | Internal Database URL của Postgres trên Render (secret) |
+| `APP_URL` | URL public của web service |
+| `BOOTSTRAP_ADMIN_USERNAME` / `BOOTSTRAP_ADMIN_PASSWORD` | Tạo admin đầu tiên nếu DB chưa có admin (mật khẩu ≥ 12 ký tự, secret). Xóa mật khẩu sau khi đăng nhập. |
+| `S3_ENDPOINT`, `S3_BUCKET`, `S3_REGION=auto`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_FORCE_PATH_STYLE=false` | Cloudflare R2. Chưa đặt thì upload file báo "chưa cấu hình" |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `EMAIL_FROM` | Gửi email (Resend SMTP). Chưa đặt thì không gửi email |
+| `CLAMAV_HOST`, `CLAMAV_PORT` | Quét virus. Chưa đặt thì tắt quét (gói free không đủ RAM chạy ClamAV) |
+
+Giáo viên đăng ký tự do cần email xác minh. Khi chưa có SMTP, admin tạo tài khoản giáo viên ở `/admin`.
 
 ## Quy tắc cho người và AI agent
 

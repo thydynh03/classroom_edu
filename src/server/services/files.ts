@@ -20,6 +20,9 @@ export async function createUpload(
   actor: Actor,
   input: { purpose: "ATTACHMENT" | "SUBMISSION"; contextId: string; name: string; mime: string; size: number },
 ) {
+  if (!process.env.S3_ENDPOINT || !process.env.S3_BUCKET) {
+    throw new UserError("Hệ thống chưa cấu hình nơi lưu file. Báo quản trị viên, tạm thời hãy viết bài trực tiếp.");
+  }
   const name = sanitizeFilename(input.name);
   if (!isAllowed(name, input.mime)) throw new UserError("Loại file này không được phép.");
   const rule = FILE_RULES[input.purpose];
