@@ -2,6 +2,8 @@
 
 @AGENTS.md
 
+> Quy tắc tiết kiệm token, khi nào nhắc `/compact`, khi nào dùng subagent/agent khác: xem `~/.claude/CLAUDE.md` (áp dụng cho mọi dự án). Dự án này: mỗi phiên làm một milestone, cập nhật `docs/memory/PROGRESS.md` trước khi compact.
+
 Phần dưới đây dành riêng cho Claude Code (bao gồm subagent của Claude).
 
 ## Vai trò của Claude trong repo này
