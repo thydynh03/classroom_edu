@@ -3,6 +3,7 @@ import { and, eq, isNull, lte, gt, sql } from "drizzle-orm";
 import { db } from "@/server/db/client";
 import { assignments, classMembers, classes, submissions } from "@/server/db/schema";
 import { flushNotificationEmails, notify } from "@/server/services/notifications";
+import { after } from "next/server";
 import { publishDueScheduled } from "@/server/services/assignments";
 
 /**
@@ -95,5 +96,20 @@ export function startScheduler() {
   setInterval(
     () => runScheduledPublishing().catch((e) => console.error("[jobs] đăng theo lịch lỗi", (e as Error).message)),
     60_000,
+  );
+}
+
+let lastLazyRun = 0;
+/**
+ * Serverless (Vercel) không có setInterval: đăng bài theo lịch "lười" khi có người mở trang,
+ * tối đa 1 lần/phút mỗi instance. Không chặn render, lỗi chỉ ghi log.
+ */
+export function publishDueLazily() {
+  const now = Date.now();
+  if (now - lastLazyRun < 60_000) return;
+  lastLazyRun = now;
+  // after(): chạy sau khi trả response, Vercel giữ function sống tới khi xong.
+  after(() =>
+    runScheduledPublishing().catch((e) => console.error("[jobs] đăng theo lịch lỗi", (e as Error).message)),
   );
 }

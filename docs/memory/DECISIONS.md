@@ -58,3 +58,6 @@ Lý do: nhiều HS phổ thông không có email riêng.
 **2026-09-28 · Better Auth, session lưu DB (không JWT)** — Đã chốt. Lý do: thu hồi phiên được, dữ liệu HS không ra bên thứ ba.
 
 **2026-09-28 · `is_late` là cờ, không phải trạng thái; lịch sử chấm append-only** — Đã chốt.
+
+## 2026-09-29 — Chuyển deploy từ Render sang Vercel
+Người dùng muốn cả app trên Vercel. Serverless không có process sống lâu nên: job chạy qua `/api/cron` (bảo vệ bằng `CRON_SECRET`; Hobby chỉ 1 lần/ngày, cron ngoài gọi thêm), bài lên lịch được đăng "lười" bằng `after()` trong layout GV/HS, migration chạy trong `vercel-build`. ClamAV tắt. Dockerfile giữ lại cho Render/VPS.

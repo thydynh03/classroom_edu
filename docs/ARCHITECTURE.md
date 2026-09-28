@@ -14,10 +14,10 @@ Tài liệu này mô tả code **đang chạy** (cập nhật 28/09/2026 sau khi
 | DB           | PostgreSQL 16 + Drizzle ORM + drizzle-kit (migration trong `drizzle/`)                                      |
 | Auth         | Tự viết: session lưu DB (token 32 byte, DB chỉ lưu SHA-256), cookie httpOnly, argon2id (`@node-rs/argon2`) |
 | Storage      | S3 API (`@aws-sdk/client-s3` + presigner). Dev: SeaweedFS (docker). Prod: Cloudflare R2                    |
-| Jobs         | `setInterval` 15 phút trong process web, khởi động từ `src/instrumentation.ts`                              |
+| Jobs         | Vercel: `/api/cron` (CRON_SECRET) + đăng bài lười khi mở trang. Docker: `setInterval` từ `instrumentation.ts` |
 | Email        | nodemailer qua SMTP. Dev: Mailpit (UI :8025). Prod: SMTP của Resend                                        |
 | Test         | Vitest (unit), Vitest + Testcontainers (integration), Playwright + axe-core (E2E)                           |
-| Deploy       | `Dockerfile` (Next standalone) → Render (1 web service + managed Postgres)                                  |
+| Deploy       | Vercel (`vercel.json`, region sin1) + Postgres ngoài. `Dockerfile` giữ cho Render/VPS                        |
 
 Không thêm thư viện ngoài bảng này khi chưa ghi ADR vào `docs/memory/DECISIONS.md`.
 

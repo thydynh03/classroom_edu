@@ -1,4 +1,4 @@
-// Chạy khi container khởi động (Render free không có pre-deploy command):
+// Chạy khi container khởi động, hoặc trước `next build` trên Vercel (MIGRATIONS_DIR=./drizzle):
 // 1) migrate DB, 2) tạo admin đầu tiên nếu có BOOTSTRAP_ADMIN_* và chưa có admin nào.
 import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
@@ -15,7 +15,7 @@ const client = postgres(url, { max: 1 });
 try {
   await client`create extension if not exists unaccent`;
   await client`create extension if not exists pg_trgm`;
-  await migrate(drizzle(client), { migrationsFolder: "/app/drizzle" });
+  await migrate(drizzle(client), { migrationsFolder: process.env.MIGRATIONS_DIR ?? "/app/drizzle" });
   console.log("[migrate] xong");
 
   const username = process.env.BOOTSTRAP_ADMIN_USERNAME;

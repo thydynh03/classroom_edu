@@ -9,7 +9,8 @@ function createClient() {
   // postgres() chỉ kết nối khi có truy vấn đầu tiên. Lúc `next build` không có DATABASE_URL,
   // dùng URL giả để import được; khi chạy thật mà thiếu biến thì truy vấn sẽ lỗi rõ ràng.
   const url = process.env.DATABASE_URL ?? "postgres://missing-database-url:5432/missing";
-  return postgres(url, { max: 10 });
+  // Serverless: mỗi instance ít kết nối để không vượt giới hạn của Postgres free.
+  return postgres(url, { max: process.env.VERCEL ? 2 : 10 });
 }
 
 const client = globalForDb.pgClient ?? createClient();

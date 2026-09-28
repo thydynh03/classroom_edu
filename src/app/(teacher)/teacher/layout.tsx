@@ -1,12 +1,14 @@
 import * as React from "react";
 import { AppRail, MobileTabBar, TopBar } from "@/components/layout";
 import { requireActor } from "@/server/auth/guard";
+import { publishDueLazily } from "@/server/jobs/deadlines";
 import { unreadCount } from "@/server/services/notifications";
 import { gradingQueue } from "@/server/services/submissions";
 import { longDateVN } from "@/lib/dates";
 
 export default async function TeacherLayout({ children }: { children: React.ReactNode }) {
   const actor = await requireActor("TEACHER");
+  publishDueLazily();
   const [unread, queue] = await Promise.all([unreadCount(actor.id), gradingQueue(actor)]);
   const pending = queue.reduce((s, q) => s + q.pending, 0);
   return (

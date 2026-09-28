@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "vercel-build": "MIGRATIONS_DIR=./drizzle node docker/migrate.mjs && next build",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",

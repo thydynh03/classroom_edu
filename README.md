@@ -35,22 +35,26 @@ pnpm test:int                              # integration (Testcontainers, cần 
 pnpm test:e2e                              # Playwright, cần DB đã seed
 ```
 
-## Deploy (Render)
+## Deploy (Vercel)
 
-Image Docker tự chạy migration khi khởi động (`docker/migrate.mjs`) rồi mới chạy app.
+Cả app (giao diện + server actions) chạy trên Vercel, region `sin1`. `pnpm vercel-build` chạy migration + tạo admin đầu tiên (`docker/migrate.mjs`) rồi mới `next build`.
 
-Biến môi trường cần đặt trên Render (secret thì đặt trong dashboard, không commit):
+- Job nền: không có `setInterval` trên serverless. Bài lên lịch được đăng khi có người mở trang GV/HS (tối đa 1 lần/phút) và qua `/api/cron`. Vercel Hobby chỉ cho cron **1 lần/ngày**, nên muốn nhắc hạn đều hơn thì tạo cron miễn phí ở cron-job.org gọi `GET /api/cron` mỗi 15 phút với header `Authorization: Bearer <CRON_SECRET>`.
+- ClamAV không chạy được trên Vercel: để trống `CLAMAV_HOST` (tắt quét).
+- Rate limit đăng nhập nằm trong bộ nhớ từng instance, nên trên serverless chỉ mang tính tương đối (khóa tài khoản sau 10 lần sai vẫn lưu trong DB).
+
+Biến môi trường (Project → Settings → Environment Variables; secret thì bạn tự đặt, không commit):
 
 | Biến | Ghi chú |
 | --- | --- |
-| `DATABASE_URL` | Internal Database URL của Postgres trên Render (secret) |
-| `APP_URL` | URL public của web service |
-| `BOOTSTRAP_ADMIN_USERNAME` / `BOOTSTRAP_ADMIN_PASSWORD` | Tạo admin đầu tiên nếu DB chưa có admin (mật khẩu ≥ 12 ký tự, secret). Xóa mật khẩu sau khi đăng nhập. |
-| `S3_ENDPOINT`, `S3_BUCKET`, `S3_REGION=auto`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_FORCE_PATH_STYLE=false` | Cloudflare R2. Chưa đặt thì upload file báo "chưa cấu hình" |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `EMAIL_FROM` | Gửi email (Resend SMTP). Chưa đặt thì không gửi email |
-| `CLAMAV_HOST`, `CLAMAV_PORT` | Quét virus. Chưa đặt thì tắt quét (gói free không đủ RAM chạy ClamAV) |
+| `DATABASE_URL` | **External** URL Postgres (Render/Neon), thêm `?sslmode=require`. Cần có cả lúc build (migration) |
+| `APP_URL` | URL public, ví dụ `https://classroom-edu.vercel.app` |
+| `CRON_SECRET` | Chuỗi ngẫu nhiên ≥ 32 ký tự; Vercel Cron tự gửi header này |
+| `BOOTSTRAP_ADMIN_USERNAME` / `BOOTSTRAP_ADMIN_PASSWORD` | Tạo admin đầu tiên (mật khẩu ≥ 12 ký tự). Xóa mật khẩu sau khi đăng nhập |
+| `S3_ENDPOINT`, `S3_BUCKET`, `S3_REGION=auto`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_FORCE_PATH_STYLE=false` | Cloudflare R2. Chưa đặt thì upload báo "chưa cấu hình" |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `EMAIL_FROM` | Gửi email. Chưa đặt thì không gửi |
 
-Giáo viên đăng ký tự do cần email xác minh. Khi chưa có SMTP, admin tạo tài khoản giáo viên ở `/admin`.
+`Dockerfile` vẫn giữ để chạy trên Render/VPS nếu cần (ở đó job chạy bằng `setInterval`).
 
 ## Quy tắc cho người và AI agent
 
