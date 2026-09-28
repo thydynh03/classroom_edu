@@ -12,6 +12,17 @@ if (!url) {
   console.error("[migrate] Thiếu DATABASE_URL");
   process.exit(1);
 }
+try {
+  new URL(url);
+} catch {
+  // Không in mật khẩu: chỉ mô tả lỗi định dạng hay gặp.
+  const hints = [];
+  if (/^["']|["']$/.test(url)) hints.push("có dấu nháy ở đầu/cuối, hãy bỏ đi");
+  if (url.includes("[") || url.includes("]")) hints.push("còn [YOUR-PASSWORD] hoặc dấu [ ]");
+  if ((url.match(/@/g) || []).length > 1) hints.push("mật khẩu có '@' chưa đổi thành %40");
+  console.error(`[migrate] URL database sai định dạng: ${hints.join("; ") || "kiểm tra lại chuỗi kết nối"}`);
+  process.exit(1);
+}
 const client = postgres(url, { max: 1 });
 try {
   await client`create extension if not exists unaccent`;
