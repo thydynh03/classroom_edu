@@ -1,0 +1,5324 @@
+<title>Classroom Edu Blueprint</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Lexend:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Source+Sans+3:wght@400;500;600&display=swap"
+/>
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --surface: #ffffff;
+    --surface-2: #eef0f4;
+    --border: #dce0e7;
+    --text: #161a22;
+    --muted: #5a6272;
+    --accent: #2c54c9;
+    --accent-soft: #e6ecfb;
+    --ok: #1b7f45;
+    --warn: #a45d06;
+    --bad: #b7332c;
+    --code: #eef0f4;
+    --f-body:
+      "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --f-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #12151b;
+      --surface: #191d25;
+      --surface-2: #222733;
+      --border: #2e3441;
+      --text: #e8ebf1;
+      --muted: #9aa3b5;
+      --accent: #8aa6ff;
+      --accent-soft: #232c47;
+      --ok: #5fcb8c;
+      --warn: #e8a94f;
+      --bad: #f08a83;
+      --code: #222733;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #12151b;
+    --surface: #191d25;
+    --surface-2: #222733;
+    --border: #2e3441;
+    --text: #e8ebf1;
+    --muted: #9aa3b5;
+    --accent: #8aa6ff;
+    --accent-soft: #232c47;
+    --ok: #5fcb8c;
+    --warn: #e8a94f;
+    --bad: #f08a83;
+    --code: #222733;
+  }
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.6 var(--f-body);
+    padding-inline: 16px;
+    padding-block: 0 64px;
+  }
+  a {
+    color: var(--accent);
+  }
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 210px minmax(0, 1fr);
+    gap: 40px;
+  }
+  @media (max-width: 900px) {
+    .wrap {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .toc {
+      display: none;
+    }
+  }
+  .toc {
+    position: sticky;
+    top: calc(env(safe-area-inset-top, 0px) + 24px);
+    align-self: start;
+    padding-top: 32px;
+    font-size: 13px;
+  }
+  .toc a {
+    display: block;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 4px 0 4px 10px;
+    border-left: 2px solid var(--border);
+  }
+  .toc a:hover {
+    color: var(--text);
+    border-left-color: var(--accent);
+  }
+  .toc b {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  header.top {
+    padding-block: 40px 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+  header.top .eyebrow {
+    font: 500 12px var(--f-mono);
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  header.top h1 {
+    font-size: clamp(28px, 4vw, 40px);
+    line-height: 1.15;
+    margin: 0.3em 0 0.4em;
+    text-wrap: balance;
+    letter-spacing: -0.01em;
+  }
+  header.top p {
+    max-width: 68ch;
+    color: var(--muted);
+    margin: 0;
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  .chip {
+    font: 500 12px var(--f-mono);
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--surface-2);
+    color: var(--text);
+  }
+  .chip.stop {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  section {
+    padding-block: 36px 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  h2 {
+    font-size: 24px;
+    line-height: 1.25;
+    margin: 0 0 4px;
+    text-wrap: balance;
+    letter-spacing: -0.005em;
+  }
+  h2 .n {
+    font: 500 13px var(--f-mono);
+    color: var(--muted);
+    display: block;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+  }
+  h3 {
+    font-size: 17px;
+    margin: 28px 0 8px;
+  }
+  h4 {
+    font-size: 14px;
+    margin: 18px 0 6px;
+  }
+  p,
+  li {
+    max-width: 74ch;
+  }
+  .lede {
+    color: var(--muted);
+    margin: 0 0 16px;
+  }
+  code {
+    font: 13px var(--f-mono);
+    background: var(--code);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+  .tbl {
+    overflow-x: auto;
+    margin: 12px 0 8px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 13.5px;
+    min-width: 560px;
+  }
+  th,
+  td {
+    text-align: left;
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  th {
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--muted);
+    background: var(--surface-2);
+    letter-spacing: 0.02em;
+  }
+  tr:last-child td {
+    border-bottom: 0;
+  }
+  td.c,
+  th.c {
+    text-align: center;
+  }
+  .y {
+    color: var(--ok);
+    font-weight: 600;
+  }
+  .no {
+    color: var(--muted);
+  }
+  .l {
+    color: var(--warn);
+    font-weight: 600;
+  }
+  .x {
+    color: var(--bad);
+    font-weight: 600;
+  }
+  .grid2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin: 12px 0;
+  }
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+  .panel h4 {
+    margin-top: 0;
+  }
+  .panel ul {
+    margin: 0;
+    padding-left: 18px;
+  }
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
+    padding: 12px 16px;
+    border-radius: 0 8px 8px 0;
+    margin: 16px 0;
+    max-width: 80ch;
+  }
+  .callout.warn {
+    border-left-color: var(--warn);
+    background: color-mix(in srgb, var(--warn) 10%, var(--surface));
+  }
+  pre.mermaid {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    overflow-x: auto;
+    font-size: 13px;
+  }
+  .tag {
+    display: inline-block;
+    font: 500 11px var(--f-mono);
+    padding: 1px 7px;
+    border-radius: 4px;
+    background: var(--surface-2);
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .tag.mvp {
+    background: color-mix(in srgb, var(--ok) 14%, var(--surface));
+    color: var(--ok);
+  }
+  .tag.p2 {
+    background: color-mix(in srgb, var(--warn) 14%, var(--surface));
+    color: var(--warn);
+  }
+  .tag.p3 {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 10px 0;
+  }
+  .sw {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font: 12px var(--f-mono);
+    padding: 4px 10px 4px 4px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+  }
+  .sw i {
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
+    display: block;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+  }
+  ol.flow li,
+  ul.tight li {
+    margin-bottom: 4px;
+  }
+
+  /* ---------- Part 10 ---------- */
+  .tpl-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 16px 0;
+  }
+  .tpl-tabs button,
+  .seg button {
+    font: 600 14px var(--f-body);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    padding: 9px 16px;
+    border-radius: 9px;
+    cursor: pointer;
+  }
+  .tpl-tabs button[aria-selected="true"] {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+  }
+  .seg {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 12px 0;
+  }
+  .seg button {
+    font-size: 13px;
+    padding: 6px 12px;
+    font-weight: 500;
+  }
+  .seg button[aria-pressed="true"] {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .spec {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 0 28px;
+    margin: 8px 0 16px;
+  }
+  .spec dl {
+    margin: 0;
+  }
+  .spec dt {
+    font: 500 11px var(--f-mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 14px;
+  }
+  .spec dd {
+    margin: 2px 0 0;
+  }
+  .stage {
+    background: repeating-linear-gradient(
+      45deg,
+      var(--surface-2) 0 10px,
+      var(--bg) 10px 20px
+    );
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    overflow: hidden;
+  }
+  .frame {
+    margin: 0 auto;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(15, 20, 30, 0.18);
+    container-type: inline-size;
+    width: 100%;
+    transition: width 0.25s ease;
+  }
+  .frame.mobile {
+    width: 390px;
+    max-width: 100%;
+    border-radius: 26px;
+    border: 8px solid #1b1d22;
+  }
+  .cap {
+    font-size: 12.5px;
+    color: var(--muted);
+    margin: 10px 2px 0;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .frame {
+      transition: none;
+    }
+  }
+
+  /* ===== shared mock primitives (fixed light palettes, per template) ===== */
+  .mk {
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--k-text);
+    background: var(--k-bg);
+    min-height: 560px;
+  }
+  .mk * {
+    box-sizing: border-box;
+  }
+  .mk svg {
+    width: 16px;
+    height: 16px;
+    flex: none;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .mk button {
+    font: inherit;
+    cursor: pointer;
+  }
+  .mk .num {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------------- TEMPLATE A ---------------- */
+  .tA {
+    --k-bg: #f5f7fb;
+    --k-surf: #ffffff;
+    --k-bd: #e2e7f0;
+    --k-text: #152036;
+    --k-mut: #5b6780;
+    --k-pri: #2458d6;
+    --k-pri-s: #e8eefc;
+    --k-sec: #0e8a7d;
+    --k-sec-s: #e3f4f1;
+    --k-ok: #15803d;
+    --k-ok-s: #e5f4ea;
+    --k-warn: #b45309;
+    --k-warn-s: #fdf0de;
+    --k-bad: #c2362f;
+    --k-bad-s: #fbe7e5;
+    --k-info: #0369a1;
+    font-family: "Be Vietnam Pro", system-ui, sans-serif;
+    display: grid;
+    grid-template-columns: 224px minmax(0, 1fr);
+  }
+  .tA h1,
+  .tA h2,
+  .tA h3,
+  .tA .disp {
+    font-family: "Lexend", "Be Vietnam Pro", sans-serif;
+    letter-spacing: -0.01em;
+  }
+  .tA .side {
+    background: var(--k-surf);
+    border-right: 1px solid var(--k-bd);
+    padding: 18px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .tA .logo {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font:
+      600 16px "Lexend",
+      sans-serif;
+    padding: 4px 8px 16px;
+  }
+  .tA .logo i {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: var(--k-pri);
+    display: grid;
+    place-items: center;
+    color: #fff;
+    font-style: normal;
+    font-size: 14px;
+  }
+  .tA .nav {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 10px;
+    color: var(--k-mut);
+    font-weight: 500;
+  }
+  .tA .nav.on {
+    background: var(--k-pri-s);
+    color: var(--k-pri);
+  }
+  .tA .nav .ct {
+    margin-left: auto;
+    font-size: 12px;
+    background: var(--k-pri);
+    color: #fff;
+    border-radius: 999px;
+    padding: 0 7px;
+  }
+  .tA .grp {
+    font-size: 11px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--k-mut);
+    margin: 18px 10px 6px;
+  }
+  .tA .cls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px;
+    font-size: 13.5px;
+  }
+  .tA .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 3px;
+    flex: none;
+  }
+  .tA .me {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    border-top: 1px solid var(--k-bd);
+  }
+  .tA .av {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--k-sec-s);
+    color: var(--k-sec);
+    flex: none;
+  }
+  .tA main {
+    min-width: 0;
+  }
+  .tA .bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 24px;
+    background: var(--k-surf);
+    border-bottom: 1px solid var(--k-bd);
+  }
+  .tA .search {
+    flex: 1;
+    max-width: 360px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--k-bg);
+    border: 1px solid var(--k-bd);
+    border-radius: 10px;
+    padding: 8px 12px;
+    color: var(--k-mut);
+    font-size: 13px;
+  }
+  .tA .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 0;
+    border-radius: 10px;
+    padding: 9px 14px;
+    font-weight: 600;
+    font-size: 13.5px;
+    background: var(--k-pri);
+    color: #fff;
+  }
+  .tA .btn.ghost {
+    background: var(--k-surf);
+    color: var(--k-text);
+    border: 1px solid var(--k-bd);
+  }
+  .tA .btn.ok {
+    background: var(--k-ok);
+  }
+  .tA .icon-btn {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid var(--k-bd);
+    display: grid;
+    place-items: center;
+    background: var(--k-surf);
+    color: var(--k-mut);
+  }
+  .tA .icon-btn b {
+    position: absolute;
+    top: 6px;
+    right: 7px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--k-bad);
+  }
+  .tA .content {
+    padding: 22px 24px;
+    display: grid;
+    gap: 18px;
+  }
+  .tA .hello h1 {
+    font-size: 22px;
+    margin: 0;
+  }
+  .tA .hello p {
+    margin: 2px 0 0;
+    color: var(--k-mut);
+  }
+  .tA .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+  .tA .stat {
+    background: var(--k-surf);
+    border: 1px solid var(--k-bd);
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: grid;
+    gap: 2px;
+  }
+  .tA .stat .ico {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    display: grid;
+    place-items: center;
+    margin-bottom: 6px;
+  }
+  .tA .stat strong {
+    font:
+      600 24px "Lexend",
+      sans-serif;
+  }
+  .tA .stat span {
+    color: var(--k-mut);
+    font-size: 12.5px;
+  }
+  .tA .card {
+    background: var(--k-surf);
+    border: 1px solid var(--k-bd);
+    border-radius: 14px;
+    padding: 16px 18px;
+  }
+  .tA .card h3 {
+    font-size: 15px;
+    margin: 0 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .tA .card h3 a {
+    font: 500 12.5px "Be Vietnam Pro";
+    color: var(--k-pri);
+    text-decoration: none;
+  }
+  .tA .row2 {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 18px;
+  }
+  .tA .li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-top: 1px solid var(--k-bd);
+  }
+  .tA .li:first-of-type {
+    border-top: 0;
+  }
+  .tA .li .t {
+    font-weight: 500;
+  }
+  .tA .li .s {
+    font-size: 12.5px;
+    color: var(--k-mut);
+  }
+  .tA .li .r {
+    margin-left: auto;
+    text-align: right;
+    font-size: 12.5px;
+  }
+  .tA .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .tA .b-ok {
+    background: var(--k-ok-s);
+    color: var(--k-ok);
+  }
+  .tA .b-warn {
+    background: var(--k-warn-s);
+    color: var(--k-warn);
+  }
+  .tA .b-bad {
+    background: var(--k-bad-s);
+    color: var(--k-bad);
+  }
+  .tA .b-pri {
+    background: var(--k-pri-s);
+    color: var(--k-pri);
+  }
+  .tA .b-mut {
+    background: #eef1f6;
+    color: var(--k-mut);
+  }
+  .tA .prog {
+    display: grid;
+    gap: 14px;
+  }
+  .tA .pbar {
+    display: flex;
+    height: 10px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: #eef1f6;
+    margin-top: 6px;
+  }
+  .tA .pbar i {
+    display: block;
+    height: 100%;
+  }
+  .tA .legend {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: var(--k-mut);
+  }
+  .tA .legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .tA .legend i {
+    width: 9px;
+    height: 9px;
+    border-radius: 3px;
+    display: inline-block;
+  }
+  .tA .classes {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+  .tA .cc {
+    border: 1px solid var(--k-bd);
+    border-radius: 14px;
+    padding: 14px;
+    background: var(--k-surf);
+  }
+  .tA .cc .top {
+    height: 6px;
+    border-radius: 999px;
+    margin-bottom: 12px;
+  }
+  .tA .cc b {
+    display: block;
+    font-family: "Lexend";
+    font-weight: 600;
+  }
+  .tA .cc small {
+    color: var(--k-mut);
+  }
+  .tA .date {
+    width: 44px;
+    text-align: center;
+    border-radius: 10px;
+    background: var(--k-pri-s);
+    color: var(--k-pri);
+    padding: 4px 0;
+    flex: none;
+  }
+  .tA .date b {
+    display: block;
+    font: 600 16px "Lexend";
+  }
+  .tA .date small {
+    font-size: 10.5px;
+    text-transform: uppercase;
+  }
+  .tA .acard {
+    display: grid;
+    gap: 8px;
+    background: var(--k-surf);
+    border: 1px solid var(--k-bd);
+    border-radius: 14px;
+    padding: 14px 16px;
+  }
+  .tA .acard .sub {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--k-mut);
+  }
+  .tA .acard h4 {
+    margin: 0;
+    font: 600 15px "Lexend";
+  }
+  .tA .acard .ft {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .tA .ring {
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: conic-gradient(var(--k-sec) 0 60%, #e6ebf2 60% 100%);
+    flex: none;
+  }
+  .tA .ring div {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--k-surf);
+    display: grid;
+    place-items: center;
+    font: 600 17px "Lexend";
+  }
+  .tA .grade {
+    font: 600 18px "Lexend";
+    color: var(--k-ok);
+  }
+  .tA .detail {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 18px;
+    align-items: start;
+  }
+  .tA .crumb {
+    font-size: 12.5px;
+    color: var(--k-mut);
+  }
+  .tA .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    font-size: 13px;
+    color: var(--k-mut);
+  }
+  .tA .meta span {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .tA .prose p {
+    margin: 0 0 8px;
+  }
+  .tA .file {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid var(--k-bd);
+    border-radius: 10px;
+    padding: 9px 12px;
+    font-size: 13px;
+  }
+  .tA .file .ft {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    font: 600 10px "Be Vietnam Pro";
+    flex: none;
+  }
+  .tA .drop {
+    border: 1.5px dashed #b9c6e4;
+    border-radius: 12px;
+    padding: 18px;
+    text-align: center;
+    color: var(--k-mut);
+    font-size: 13px;
+    background: #fafbfe;
+  }
+  .tA .drop b {
+    color: var(--k-pri);
+  }
+  .tA textarea,
+  .tA input.in {
+    width: 100%;
+    font: inherit;
+    border: 1px solid var(--k-bd);
+    border-radius: 10px;
+    padding: 10px 12px;
+    background: var(--k-surf);
+    color: var(--k-text);
+    resize: none;
+  }
+  .tA .due {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--k-warn-s);
+    color: var(--k-warn);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .tA .grading {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr) 300px;
+    gap: 0;
+    min-height: 520px;
+  }
+  .tA .gl {
+    background: var(--k-surf);
+    border-right: 1px solid var(--k-bd);
+    padding: 12px;
+  }
+  .tA .gl .st {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    border-radius: 10px;
+    font-size: 13px;
+  }
+  .tA .gl .st.on {
+    background: var(--k-pri-s);
+  }
+  .tA .gv {
+    padding: 18px;
+    display: grid;
+    gap: 12px;
+    align-content: start;
+  }
+  .tA .paper {
+    background: var(--k-surf);
+    border: 1px solid var(--k-bd);
+    border-radius: 12px;
+    padding: 16px;
+    display: grid;
+    gap: 10px;
+  }
+  .tA .thumbs {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .tA .thumb {
+    aspect-ratio: 4/3;
+    border-radius: 10px;
+    background: linear-gradient(180deg, #f1f4fa, #e6ebf4);
+    border: 1px solid var(--k-bd);
+    display: grid;
+    place-items: center;
+    color: var(--k-mut);
+    font-size: 12px;
+    max-width: 100%;
+  }
+  .tA .gp {
+    background: var(--k-surf);
+    border-left: 1px solid var(--k-bd);
+    padding: 18px;
+    display: grid;
+    gap: 14px;
+    align-content: start;
+  }
+  .tA .score {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+  .tA .score input {
+    width: 90px;
+    font: 600 28px "Lexend";
+    border: 1px solid var(--k-bd);
+    border-radius: 12px;
+    padding: 6px 10px;
+    text-align: center;
+    color: var(--k-text);
+  }
+  .tA .score span {
+    color: var(--k-mut);
+    font: 500 18px "Lexend";
+  }
+  .tA .lbl {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--k-mut);
+    margin-bottom: 4px;
+    display: block;
+  }
+  .tA .tabbar {
+    display: none;
+  }
+  @container (max-width:760px) {
+    .tA {
+      grid-template-columns: 1fr;
+    }
+    .tA .side {
+      display: none;
+    }
+    .tA .bar {
+      padding: 12px 16px;
+    }
+    .tA .search {
+      display: none;
+    }
+    .tA .bar .btn span {
+      display: none;
+    }
+    .tA .content {
+      padding: 16px;
+      padding-bottom: 84px;
+    }
+    .tA .stats {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .tA .row2,
+    .tA .detail {
+      grid-template-columns: 1fr;
+    }
+    .tA .classes {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .tA .grading {
+      grid-template-columns: 1fr;
+    }
+    .tA .gl {
+      display: none;
+    }
+    .tA .gp {
+      border-left: 0;
+      border-top: 1px solid var(--k-bd);
+    }
+    .tA .tabbar {
+      display: flex;
+      position: sticky;
+      bottom: 0;
+      background: var(--k-surf);
+      border-top: 1px solid var(--k-bd);
+      justify-content: space-around;
+      padding: 8px 0 12px;
+    }
+    .tA .tabbar div {
+      display: grid;
+      justify-items: center;
+      gap: 2px;
+      font-size: 11px;
+      color: var(--k-mut);
+    }
+    .tA .tabbar div.on {
+      color: var(--k-pri);
+      font-weight: 600;
+    }
+    .tA main {
+      position: relative;
+    }
+  }
+
+  /* ---------------- TEMPLATE B ---------------- */
+  .tB {
+    --k-bg: #ffffff;
+    --k-text: #16181d;
+    --k-mut: #6a6e77;
+    --k-rule: #e6e6e3;
+    --k-acc: #1e5b47;
+    --k-acc-s: #eaf2ed;
+    --k-warn: #9a5b0a;
+    --k-bad: #b42318;
+    --k-ok: #1e5b47;
+    font-family: "Source Sans 3", system-ui, sans-serif;
+    font-size: 15px;
+  }
+  .tB .serif {
+    font-family: "Newsreader", Georgia, serif;
+  }
+  .tB header {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    padding: 20px 48px;
+    border-bottom: 1px solid var(--k-rule);
+  }
+  .tB .wm {
+    font:
+      500 21px "Newsreader",
+      serif;
+    letter-spacing: -0.01em;
+  }
+  .tB .wm em {
+    color: var(--k-acc);
+  }
+  .tB nav {
+    display: flex;
+    gap: 26px;
+    font-size: 14.5px;
+    color: var(--k-mut);
+  }
+  .tB nav a {
+    color: inherit;
+    text-decoration: none;
+    padding-bottom: 4px;
+    border-bottom: 1.5px solid transparent;
+  }
+  .tB nav a.on {
+    color: var(--k-text);
+    border-bottom-color: var(--k-text);
+  }
+  .tB .hr {
+    margin-left: auto;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    font-size: 14px;
+    color: var(--k-mut);
+  }
+  .tB .hr .new {
+    color: var(--k-acc);
+    font-weight: 600;
+  }
+  .tB .ini {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid var(--k-rule);
+    display: grid;
+    place-items: center;
+    font-size: 12px;
+    color: var(--k-text);
+  }
+  .tB .page {
+    padding: 44px 48px 56px;
+    max-width: 1080px;
+  }
+  .tB .kick {
+    font-size: 12.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--k-mut);
+  }
+  .tB h1 {
+    font:
+      400 44px/1.1 "Newsreader",
+      serif;
+    letter-spacing: -0.02em;
+    margin: 8px 0 14px;
+  }
+  .tB .sum {
+    font:
+      400 20px/1.5 "Newsreader",
+      serif;
+    max-width: 40ch;
+    color: #34373e;
+    margin: 0;
+  }
+  .tB .sum b {
+    font-weight: 500;
+    color: var(--k-text);
+    border-bottom: 1.5px solid var(--k-acc);
+  }
+  .tB .cols {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    gap: 64px;
+    margin-top: 44px;
+  }
+  .tB h2 {
+    font: 500 13px "Source Sans 3";
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--k-mut);
+    margin: 0 0 6px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--k-text);
+  }
+  .tB .it {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 4px 16px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--k-rule);
+  }
+  .tB .it .t {
+    font:
+      500 19px/1.3 "Newsreader",
+      serif;
+  }
+  .tB .it .m {
+    font-size: 13.5px;
+    color: var(--k-mut);
+  }
+  .tB .it .v {
+    text-align: right;
+    font-size: 13.5px;
+  }
+  .tB .it .v strong {
+    display: block;
+    font:
+      400 22px "Newsreader",
+      serif;
+  }
+  .tB .line {
+    grid-column: 1/-1;
+    height: 2px;
+    background: var(--k-rule);
+    position: relative;
+    margin-top: 6px;
+  }
+  .tB .line i {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 2px;
+    background: var(--k-text);
+  }
+  .tB .line u {
+    position: absolute;
+    top: 0;
+    height: 2px;
+    background: var(--k-acc);
+    text-decoration: none;
+  }
+  .tB .cl {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--k-rule);
+    font-size: 15px;
+  }
+  .tB .cl span {
+    color: var(--k-mut);
+    font-size: 13.5px;
+  }
+  .tB .big {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    margin-top: 36px;
+    border-top: 1px solid var(--k-rule);
+  }
+  .tB .big div {
+    padding: 18px 0;
+  }
+  .tB .big strong {
+    display: block;
+    font:
+      400 40px/1 "Newsreader",
+      serif;
+  }
+  .tB .big span {
+    font-size: 13px;
+    color: var(--k-mut);
+  }
+  .tB .warn {
+    color: var(--k-warn);
+  }
+  .tB .bad {
+    color: var(--k-bad);
+  }
+  .tB .acc {
+    color: var(--k-acc);
+  }
+  .tB .status {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .tB .doc {
+    display: grid;
+    grid-template-columns: minmax(0, 640px) 280px;
+    gap: 72px;
+    justify-content: start;
+  }
+  .tB .doc h1 {
+    font-size: 40px;
+  }
+  .tB .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 22px;
+    font-size: 14px;
+    color: var(--k-mut);
+    padding: 12px 0;
+    border-top: 1px solid var(--k-rule);
+    border-bottom: 1px solid var(--k-rule);
+  }
+  .tB .prose {
+    font:
+      400 18px/1.65 "Newsreader",
+      serif;
+    color: #26282d;
+  }
+  .tB .prose p {
+    margin: 18px 0;
+  }
+  .tB .att {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--k-rule);
+    font-size: 14.5px;
+  }
+  .tB .att a {
+    color: var(--k-text);
+    text-decoration: underline;
+    text-decoration-color: var(--k-rule);
+    text-underline-offset: 3px;
+  }
+  .tB .aside {
+    border-top: 2px solid var(--k-text);
+    padding-top: 16px;
+    display: grid;
+    gap: 14px;
+    align-content: start;
+    position: sticky;
+    top: 0;
+  }
+  .tB .aside .dd {
+    font:
+      400 26px/1.15 "Newsreader",
+      serif;
+  }
+  .tB .drop {
+    border: 1px dashed #bdbdb7;
+    padding: 18px;
+    text-align: center;
+    font-size: 14px;
+    color: var(--k-mut);
+  }
+  .tB .btn {
+    border: 0;
+    background: var(--k-text);
+    color: #fff;
+    padding: 12px 18px;
+    font-size: 14.5px;
+    font-weight: 600;
+    width: 100%;
+  }
+  .tB .btn.alt {
+    background: transparent;
+    color: var(--k-text);
+    border: 1px solid var(--k-text);
+  }
+  .tB .tl {
+    font-size: 13.5px;
+    color: var(--k-mut);
+  }
+  .tB textarea,
+  .tB input.in {
+    width: 100%;
+    border: 0;
+    border-bottom: 1px solid var(--k-rule);
+    font: inherit;
+    padding: 8px 0;
+    background: transparent;
+    color: var(--k-text);
+    resize: none;
+  }
+  .tB .sheet {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 56px;
+  }
+  .tB .scorebig {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font:
+      400 64px/1 "Newsreader",
+      serif;
+  }
+  .tB .scorebig input {
+    width: 120px;
+    font: inherit;
+    border: 0;
+    border-bottom: 2px solid var(--k-text);
+    background: transparent;
+    color: var(--k-text);
+    text-align: center;
+  }
+  .tB .scorebig span {
+    font-size: 28px;
+    color: var(--k-mut);
+  }
+  .tB .ph {
+    aspect-ratio: 3/4;
+    max-width: 100%;
+    background: #f6f6f4;
+    border: 1px solid var(--k-rule);
+    display: grid;
+    place-items: center;
+    color: var(--k-mut);
+    font-size: 13px;
+  }
+  .tB .pager {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: var(--k-mut);
+    padding: 10px 0;
+    border-bottom: 1px solid var(--k-rule);
+    margin-bottom: 24px;
+  }
+  .tB .mnav {
+    display: none;
+  }
+  @container (max-width:760px) {
+    .tB header {
+      padding: 14px 18px;
+      gap: 12px;
+    }
+    .tB header nav {
+      display: none;
+    }
+    .tB .hr .search {
+      display: none;
+    }
+    .tB .mnav {
+      display: flex;
+      gap: 20px;
+      overflow-x: auto;
+      padding: 10px 18px;
+      border-bottom: 1px solid var(--k-rule);
+      font-size: 14px;
+      color: var(--k-mut);
+      white-space: nowrap;
+    }
+    .tB .mnav .on {
+      color: var(--k-text);
+      font-weight: 600;
+    }
+    .tB .page {
+      padding: 26px 18px 40px;
+    }
+    .tB h1,
+    .tB .doc h1 {
+      font-size: 32px;
+    }
+    .tB .sum {
+      font-size: 18px;
+    }
+    .tB .cols,
+    .tB .doc,
+    .tB .sheet {
+      grid-template-columns: 1fr;
+      gap: 36px;
+    }
+    .tB .big strong {
+      font-size: 30px;
+    }
+    .tB .aside {
+      position: static;
+    }
+  }
+
+  /* ---------------- TEMPLATE C ---------------- */
+  .tC {
+    --k-bg: #ffffff;
+    --k-side: #f7f7f5;
+    --k-bd: #e9e9e7;
+    --k-text: #1f1f1d;
+    --k-mut: #77766f;
+    --k-acc: #5b3fd6;
+    --k-acc-s: #efebfe;
+    --k-hov: #efefed;
+    --c-ok: #2f7d4e;
+    --c-ok-s: #e4f2e9;
+    --c-warn: #9a6206;
+    --c-warn-s: #fbefd9;
+    --c-bad: #b3372f;
+    --c-bad-s: #fae6e4;
+    --c-gr: #6b6a64;
+    --c-gr-s: #ededea;
+    --c-bl: #2c63b8;
+    --c-bl-s: #e5eefa;
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    font-size: 13px;
+    display: grid;
+    grid-template-columns: 236px minmax(0, 1fr);
+  }
+  .tC .mono {
+    font-family: "IBM Plex Mono", monospace;
+  }
+  .tC .side {
+    background: var(--k-side);
+    border-right: 1px solid var(--k-bd);
+    padding: 10px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  .tC .ws {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    font-weight: 600;
+  }
+  .tC .ws i {
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
+    background: var(--k-acc);
+    color: #fff;
+    font-style: normal;
+    display: grid;
+    place-items: center;
+    font-size: 11px;
+  }
+  .tC .ws small {
+    margin-left: auto;
+    color: var(--k-mut);
+    font-weight: 400;
+  }
+  .tC .cmdk {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 6px 4px 8px;
+    padding: 6px 8px;
+    border: 1px solid var(--k-bd);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--k-mut);
+  }
+  .tC kbd {
+    font:
+      500 11px "IBM Plex Mono",
+      monospace;
+    border: 1px solid var(--k-bd);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    padding: 0 4px;
+    background: #fff;
+    color: var(--k-mut);
+  }
+  .tC .cmdk kbd {
+    margin-left: auto;
+  }
+  .tC .ni {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 8px;
+    border-radius: 5px;
+    color: #45443f;
+  }
+  .tC .ni.on {
+    background: var(--k-hov);
+    color: var(--k-text);
+    font-weight: 500;
+  }
+  .tC .ni .ct {
+    margin-left: auto;
+    font: 500 11.5px "IBM Plex Mono";
+    color: var(--k-mut);
+  }
+  .tC .ni .ct.hot {
+    color: var(--k-acc);
+  }
+  .tC .sec {
+    font-size: 11.5px;
+    color: var(--k-mut);
+    padding: 14px 8px 4px;
+    font-weight: 500;
+  }
+  .tC .ni.sub {
+    padding-left: 28px;
+    color: var(--k-mut);
+  }
+  .tC .caret {
+    width: 12px;
+    color: var(--k-mut);
+    font-size: 10px;
+  }
+  .tC main {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .tC .tb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--k-bd);
+    height: 44px;
+  }
+  .tC .crumb {
+    color: var(--k-mut);
+  }
+  .tC .crumb b {
+    color: var(--k-text);
+    font-weight: 500;
+  }
+  .tC .tb .sp {
+    margin-left: auto;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .tC .b {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--k-bd);
+    background: #fff;
+    color: var(--k-text);
+    border-radius: 6px;
+    padding: 4px 9px;
+    font-size: 12.5px;
+  }
+  .tC .b.pri {
+    background: var(--k-acc);
+    border-color: var(--k-acc);
+    color: #fff;
+  }
+  .tC .b.pri kbd {
+    background: transparent;
+    color: #dcd4ff;
+    border-color: #8f7be8;
+  }
+  .tC .body {
+    padding: 18px 20px;
+    display: grid;
+    gap: 18px;
+    align-content: start;
+  }
+  .tC h1 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+  }
+  .tC .kpi {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    border: 1px solid var(--k-bd);
+    border-radius: 8px;
+  }
+  .tC .kpi div {
+    flex: 1 1 120px;
+    padding: 10px 14px;
+    border-left: 1px solid var(--k-bd);
+  }
+  .tC .kpi div:first-child {
+    border-left: 0;
+  }
+  .tC .kpi strong {
+    display: block;
+    font: 500 20px "IBM Plex Mono";
+  }
+  .tC .kpi span {
+    color: var(--k-mut);
+    font-size: 12px;
+  }
+  .tC .views {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    border-bottom: 1px solid var(--k-bd);
+  }
+  .tC .views a {
+    padding: 6px 10px;
+    color: var(--k-mut);
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+  .tC .views a.on {
+    color: var(--k-text);
+    border-bottom-color: var(--k-text);
+    font-weight: 500;
+  }
+  .tC .views .f {
+    margin-left: auto;
+    display: flex;
+    gap: 6px;
+  }
+  .tC table.dt {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 0;
+    font-size: 13px;
+  }
+  .tC .dt th {
+    font-weight: 500;
+    color: var(--k-mut);
+    font-size: 12px;
+    background: transparent;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--k-bd);
+    text-align: left;
+    letter-spacing: 0;
+  }
+  .tC .dt td {
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--k-bd);
+    vertical-align: middle;
+  }
+  .tC .dt tr.sel td {
+    background: var(--k-acc-s);
+  }
+  .tC .dt .n {
+    font-family: "IBM Plex Mono";
+    font-size: 12.5px;
+    white-space: nowrap;
+  }
+  .tC .mini {
+    display: inline-block;
+    width: 56px;
+    height: 5px;
+    background: var(--c-gr-s);
+    border-radius: 3px;
+    vertical-align: middle;
+    margin-right: 6px;
+    overflow: hidden;
+  }
+  .tC .mini i {
+    display: block;
+    height: 100%;
+    background: var(--k-text);
+  }
+  .tC .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 1px 7px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .tC .pill:before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  .tC .p-ok {
+    background: var(--c-ok-s);
+    color: var(--c-ok);
+  }
+  .tC .p-warn {
+    background: var(--c-warn-s);
+    color: var(--c-warn);
+  }
+  .tC .p-bad {
+    background: var(--c-bad-s);
+    color: var(--c-bad);
+  }
+  .tC .p-gr {
+    background: var(--c-gr-s);
+    color: var(--c-gr);
+  }
+  .tC .p-bl {
+    background: var(--c-bl-s);
+    color: var(--c-bl);
+  }
+  .tC .p-acc {
+    background: var(--k-acc-s);
+    color: var(--k-acc);
+  }
+  .tC .cls {
+    font-size: 12px;
+    color: var(--k-mut);
+  }
+  .tC .hint {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    color: var(--k-mut);
+    font-size: 12px;
+  }
+  .tC .two {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+    gap: 18px;
+  }
+  .tC .box {
+    border: 1px solid var(--k-bd);
+    border-radius: 8px;
+  }
+  .tC .box h3 {
+    font-size: 12.5px;
+    font-weight: 600;
+    margin: 0;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--k-bd);
+    display: flex;
+    justify-content: space-between;
+  }
+  .tC .box h3 span {
+    color: var(--k-mut);
+    font-weight: 400;
+  }
+  .tC .lr {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 12px;
+    border-bottom: 1px solid var(--k-bd);
+  }
+  .tC .lr:last-child {
+    border-bottom: 0;
+  }
+  .tC .lr .r {
+    margin-left: auto;
+  }
+  .tC .split {
+    display: grid;
+    grid-template-columns: 230px minmax(0, 1fr) 290px;
+    flex: 1;
+    min-height: 0;
+  }
+  .tC .pane {
+    border-right: 1px solid var(--k-bd);
+    min-width: 0;
+  }
+  .tC .pane:last-child {
+    border-right: 0;
+  }
+  .tC .sr {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+    border-bottom: 1px solid var(--k-bd);
+  }
+  .tC .sr.on {
+    background: var(--k-acc-s);
+    box-shadow: inset 2px 0 0 var(--k-acc);
+  }
+  .tC .av {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--c-gr-s);
+    display: grid;
+    place-items: center;
+    font-size: 10px;
+    font-weight: 600;
+    flex: none;
+  }
+  .tC .ph {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--k-bd);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+  }
+  .tC .ph .r {
+    margin-left: auto;
+  }
+  .tC .sub {
+    padding: 14px 16px;
+    display: grid;
+    gap: 12px;
+  }
+  .tC .doc {
+    border: 1px solid var(--k-bd);
+    border-radius: 6px;
+    padding: 12px 14px;
+    line-height: 1.6;
+  }
+  .tC .img {
+    aspect-ratio: 4/3;
+    max-width: 100%;
+    border: 1px solid var(--k-bd);
+    border-radius: 6px;
+    background: repeating-linear-gradient(
+      0deg,
+      #fafaf9 0 22px,
+      #f0f0ee 22px 23px
+    );
+    display: grid;
+    place-items: center;
+    color: var(--k-mut);
+  }
+  .tC .fld {
+    display: grid;
+    gap: 4px;
+  }
+  .tC .fld label {
+    font-size: 12px;
+    color: var(--k-mut);
+  }
+  .tC .fld input,
+  .tC .fld textarea {
+    font: inherit;
+    border: 1px solid var(--k-bd);
+    border-radius: 6px;
+    padding: 6px 8px;
+    background: #fff;
+    color: var(--k-text);
+    resize: none;
+    width: 100%;
+  }
+  .tC .scorein {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .tC .scorein input {
+    width: 70px;
+    font: 500 18px "IBM Plex Mono";
+    text-align: right;
+  }
+  .tC .rub {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 4px 10px;
+    font-size: 12.5px;
+  }
+  .tC .ham {
+    display: none;
+  }
+  .tC .drop {
+    border: 1px dashed #c9c8c2;
+    border-radius: 6px;
+    padding: 14px;
+    text-align: center;
+    color: var(--k-mut);
+  }
+  .tC .prop {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 6px 10px;
+    font-size: 12.5px;
+  }
+  .tC .prop dt {
+    color: var(--k-mut);
+  }
+  .tC .prop dd {
+    margin: 0;
+  }
+  @container (max-width:760px) {
+    .tC {
+      grid-template-columns: 1fr;
+      font-size: 14px;
+    }
+    .tC .side {
+      display: none;
+    }
+    .tC .ham {
+      display: inline-flex;
+    }
+    .tC .tb .sp .b span {
+      display: none;
+    }
+    .tC .body {
+      padding: 14px;
+    }
+    .tC .two {
+      grid-template-columns: 1fr;
+    }
+    .tC .dt .hm {
+      display: none;
+    }
+    .tC .split {
+      grid-template-columns: 1fr;
+    }
+    .tC .split .pane.list {
+      display: none;
+    }
+    .tC .pane {
+      border-right: 0;
+      border-bottom: 1px solid var(--k-bd);
+    }
+    .tC .hint {
+      display: none;
+    }
+  }
+</style>
+
+<div class="wrap">
+  <nav class="toc" aria-label="Mục lục">
+    <b>Mục lục</b>
+    <a href="#p1">1 · Repository audit</a>
+    <a href="#p2">2 · Yêu cầu sản phẩm</a>
+    <a href="#p3">3 · Skills / MCP</a>
+    <a href="#p4">4 · Tech stack</a>
+    <a href="#p5">5 · Kiến trúc</a>
+    <a href="#p6">6 · Database / ERD</a>
+    <a href="#p7">7 · Phân quyền</a>
+    <a href="#p8">8 · Bảo mật</a>
+    <a href="#p9">9 · Design system & IA</a>
+    <a href="#p10">10 · 3 design template</a>
+    <a href="#decide">Chọn hướng thiết kế</a>
+  </nav>
+
+  <div>
+    <header class="top">
+      <div class="eyebrow">classroom_edu · blueprint v0.1 · 28/09/2026</div>
+      <h1>Classroom Edu: audit, kiến trúc và 3 hướng thiết kế</h1>
+      <p>
+        Tài liệu chốt trước khi code. Phần 1–9 là đề xuất kiến trúc và hệ thống
+        thiết kế dùng chung; phần 10 có mockup chạy được của 3 template (desktop
+        và mobile). Chưa có dòng code implementation nào được viết.
+      </p>
+      <div class="chips">
+        <span class="chip">Repo: trống (greenfield)</span
+        ><span class="chip">Stack đề xuất: Next.js + PostgreSQL</span
+        ><span class="chip stop">Trạng thái: chờ bạn chọn A / B / C</span>
+      </div>
+    </header>
+
+    <!-- ================= PART 1 ================= -->
+    <section id="p1">
+      <h2><span class="n">PART 1</span>Repository audit</h2>
+      <p class="lede">
+        Đã kiểm tra <code>E:\Templates\classroom_edu</code>: thư mục tồn tại
+        nhưng không có file nào (0 file, không có <code>.git</code>, không có
+        <code>package.json</code>, không có config). Workspace cha
+        <code>E:\Templates</code> chỉ chứa thư mục này.
+      </p>
+      <div class="tbl">
+        <table>
+          <thead>
+            <tr>
+              <th>Hạng mục audit</th>
+              <th>Kết quả</th>
+              <th>Hệ quả</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Folder structure</td>
+              <td>Trống</td>
+              <td>
+                Tự do chọn cấu trúc; nên chốt monorepo-ready ngay từ đầu vì đây
+                là một trong chuỗi website giáo dục
+              </td>
+            </tr>
+            <tr>
+              <td>Frontend / components / UI system</td>
+              <td>Không có</td>
+              <td>
+                Design system sẽ được xây mới; nên đóng gói thành package dùng
+                lại cho các site khác
+              </td>
+            </tr>
+            <tr>
+              <td>Backend / API</td>
+              <td>Không có</td>
+              <td>Không có ràng buộc tương thích ngược</td>
+            </tr>
+            <tr>
+              <td>Database / migration</td>
+              <td>Không có</td>
+              <td>Schema thiết kế từ đầu, migration-first</td>
+            </tr>
+            <tr>
+              <td>Authentication / security</td>
+              <td>Không có</td>
+              <td>Không có nợ bảo mật; cần làm đúng ngay từ commit đầu</td>
+            </tr>
+            <tr>
+              <td>Env config / secrets</td>
+              <td>Không có <code>.env</code></td>
+              <td>
+                Cần <code>.env.example</code> + validate env bằng schema khi
+                khởi động
+              </td>
+            </tr>
+            <tr>
+              <td>Dependencies</td>
+              <td>Không có</td>
+              <td>Chọn phiên bản ổn định, khóa lockfile</td>
+            </tr>
+            <tr>
+              <td>Deployment / CI</td>
+              <td>Không có</td>
+              <td>
+                Cần CI (lint, typecheck, test) trước khi có feature đầu tiên
+              </td>
+            </tr>
+            <tr>
+              <td>Tests</td>
+              <td>Không có</td>
+              <td>Dựng test harness cùng lúc với module đầu tiên</td>
+            </tr>
+            <tr>
+              <td>Git</td>
+              <td>Chưa <code>git init</code></td>
+              <td>Khởi tạo repo ở bước implementation</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="grid2">
+        <div class="panel">
+          <h4>A. Đã có</h4>
+          <ul>
+            <li>Tên project và thư mục.</li>
+            <li>Bản yêu cầu sản phẩm chi tiết (prompt này).</li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h4>B. Có thể reuse</h4>
+          <ul>
+            <li>Không có gì trong repo.</li>
+            <li>
+              Nếu các website giáo dục khác của bạn đã có design token, auth
+              hoặc user table, nên chia sẻ trước khi chốt Part 9 và Part 6. Hiện
+              tôi chưa thấy chúng trong workspace này.
+            </li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h4>C. Cần refactor · E. Nên loại bỏ</h4>
+          <ul>
+            <li>Không có (repo trống).</li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h4>D. Đang thiếu (toàn bộ)</h4>
+          <ul>
+            <li>
+              Toàn bộ app, schema, auth, storage, CI, test, tài liệu kiến trúc.
+            </li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h4>F. Technical debt cần phòng ngừa</h4>
+          <ul>
+            <li>
+              Phân quyền rải rác trong từng route thay vì tập trung ở policy
+              layer.
+            </li>
+            <li>Lưu file public URL rồi mới “thêm bảo mật” sau.</li>
+            <li>
+              Gộp trạng thái submission thành 1 cột mơ hồ, sau này không phân
+              biệt được “nộp trễ” và “đã chấm”.
+            </li>
+            <li>Ghi đè điểm thay vì lưu lịch sử chấm.</li>
+            <li>Dùng múi giờ local khi lưu deadline.</li>
+            <li>Gửi đáp án quiz về client trước khi nộp.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout">
+        Vì repo trống, nguyên tắc “không rewrite, ưu tiên incremental” không bị
+        ảnh hưởng. Rủi ro lớn nhất lúc này là over-engineer, nên mọi đề xuất bên
+        dưới đều gắn nhãn <span class="tag mvp">MVP</span>
+        <span class="tag p2">Phase 2</span> <span class="tag p3">Phase 3</span>.
+      </div>
+    </section>
+
+    <!-- ================= PART 2 ================= -->
+    <section id="p2">
+      <h2><span class="n">PART 2</span>Phân tích yêu cầu sản phẩm</h2>
+
+      <h3>User roles</h3>
+      <div class="tbl">
+        <table>
+          <thead>
+            <tr>
+              <th>Role</th>
+              <th>Mô tả</th>
+              <th>Cách có tài khoản</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b>ADMIN</b></td>
+              <td>
+                Vận hành nền tảng: khóa tài khoản, hỗ trợ, xem audit log. Không
+                mặc định đọc bài nộp.
+              </td>
+              <td>Seed / chỉ admin tạo</td>
+            </tr>
+            <tr>
+              <td><b>TEACHER</b></td>
+              <td>
+                Sở hữu lớp, tạo bài, chấm bài. Có thể là co-teacher của lớp khác
+                (Phase 2).
+              </td>
+              <td>Tự đăng ký + xác minh email</td>
+            </tr>
+            <tr>
+              <td><b>STUDENT</b></td>
+              <td>Thành viên lớp, làm và nộp bài, xem điểm của chính mình.</td>
+              <td>
+                Tham gia bằng mã lớp / link mời, hoặc giáo viên tạo sẵn: tài
+                khoản là vĩnh viễn, chỉ <b>mật khẩu</b> là tạm. Lần đầu đăng
+                nhập, học sinh bắt buộc đặt mật khẩu mới; từ đó đăng nhập bằng
+                username + mật khẩu của mình. Quên mật khẩu mà không có email
+                thì giáo viên cấp lại mật khẩu tạm mới.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout warn">
+        <b>Quyết định quan trọng:</b> nhiều học sinh THCS/THPT ở Việt Nam không
+        có email riêng hoặc không dùng email thường xuyên. Vì vậy tài khoản học
+        sinh nên đăng nhập được bằng <b>username</b>, email là tùy chọn. Giáo
+        viên có thể tạo hàng loạt tài khoản với mật khẩu tạm và bắt buộc đổi mật
+        khẩu ở lần đăng nhập đầu. Điều này ảnh hưởng tới schema (email nullable)
+        và luồng quên mật khẩu (giáo viên reset cho học sinh không có email).
+      </div>
+
+      <h3>Functional requirements và phạm vi MVP</h3>
+      <div class="tbl">
+        <table>
+          <thead>
+            <tr>
+              <th>Module</th>
+              <th>MVP</th>
+              <th>Phase 2</th>
+              <th>Phase 3</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Auth</td>
+              <td>
+                Đăng nhập email/username + mật khẩu, logout, đăng ký giáo viên,
+                xác minh email giáo viên, quên mật khẩu, bắt buộc đổi mật khẩu
+                tạm, danh sách phiên đăng nhập + thu hồi, khóa tài khoản
+              </td>
+              <td>Google OAuth, 2FA cho giáo viên/admin</td>
+              <td>
+                SSO trường học (Google Workspace for Education, Microsoft 365),
+                multi-tenant theo trường
+              </td>
+            </tr>
+            <tr>
+              <td>Lớp học</td>
+              <td>
+                Tạo/sửa/lưu trữ lớp, mã tham gia, link mời, thêm/xóa học sinh,
+                tạo tài khoản học sinh hàng loạt
+              </td>
+              <td>Co-teacher, nhập CSV, nhóm trong lớp</td>
+              <td>Tổ chức trường → khối → lớp, đồng bộ SIS</td>
+            </tr>
+            <tr>
+              <td>Bài tập</td>
+              <td>
+                Bài tự luận và quiz; tiêu đề, đề bài (rich text giới hạn), file
+                đính kèm, deadline, chọn nhiều lớp (tạo bản sao cho từng lớp),
+                nháp / lên lịch đăng / archive
+              </td>
+              <td>Chủ đề/chương, mẫu bài tập, lịch</td>
+              <td>Thư viện bài dùng chung giữa giáo viên</td>
+            </tr>
+            <tr>
+              <td>Nộp bài</td>
+              <td>
+                Viết trực tiếp, upload file/ảnh, tự lưu nháp, nộp, rút lại trước
+                hạn, nhận diện nộp trễ, cho phép nộp lại khi giáo viên trả bài
+              </td>
+              <td>Chụp nhiều trang thành 1 PDF, chính sách nộp lại chi tiết</td>
+              <td>Phát hiện đạo văn</td>
+            </tr>
+            <tr>
+              <td>Chấm bài</td>
+              <td>
+                Chấm điểm, nhận xét, trả bài, sửa điểm, lịch sử chấm
+                (append-only)
+              </td>
+              <td>
+                Rubric, nhận xét inline, ngân hàng nhận xét, xuất bảng điểm CSV
+              </td>
+              <td>Nhiều người chấm, phúc khảo, thống kê nâng cao</td>
+            </tr>
+            <tr>
+              <td>Auto-grading</td>
+              <td>
+                Trắc nghiệm 1 đáp án, nhiều đáp án, Đúng/Sai; tự chấm và hiện
+                kết quả theo cài đặt; 1 lượt làm
+              </td>
+              <td>
+                Nhiều lượt làm, giới hạn thời gian, trộn câu/đáp án, ngân hàng
+                câu hỏi, độ khó, danh mục
+              </td>
+              <td>Exam mode (khóa tab, giám sát), điền khuyết, ghép cặp</td>
+            </tr>
+            <tr>
+              <td>Theo dõi</td>
+              <td>
+                Theo từng bài: tổng HS / đã nộp / chưa nộp / trễ / đã chấm /
+                chưa chấm; hộp “Cần chấm” xuyên lớp
+              </td>
+              <td>Theo từng học sinh: tỉ lệ nộp, xu hướng điểm</td>
+              <td>Dashboard cấp trường</td>
+            </tr>
+            <tr>
+              <td>Thông báo</td>
+              <td>
+                In-app (chuông) cho 6 event; email cho bài mới, sắp đến hạn và
+                bài đã được trả (có gộp digest)
+              </td>
+              <td>Tùy chỉnh thông báo, thông báo lớp (bảng tin)</td>
+              <td>Web push / PWA, Zalo OA</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Non-functional requirements</h3>
+      <div class="grid2">
+        <div class="panel">
+          <h4>Chất lượng</h4>
+          <ul class="tight">
+            <li>Trang chính tải dưới 2,5s (LCP) trên 4G tầm trung.</li>
+            <li>API p95 dưới 300ms cho các truy vấn danh sách.</li>
+            <li>WCAG 2.2 AA cho các luồng chính.</li>
+            <li>
+              Mobile-first cho học sinh, desktop-first cho giáo viên nhưng dùng
+              được trên tablet.
+            </li>
+            <li>Toàn bộ UI tiếng Việt; font phải hỗ trợ đủ dấu tiếng Việt.</li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h4>Vận hành</h4>
+          <ul class="tight">
+            <li>
+              Quy mô ban đầu nhỏ: vài tới vài chục giáo viên, vài trăm học sinh.
+              Vì vậy MVP chạy <b>một service duy nhất</b> + một Postgres; không
+              tách worker, không cache, không Redis. Khi tăng tải thì tách
+              worker ra mà không phải viết lại.
+            </li>
+            <li>Deadline lưu UTC, hiển thị giờ Việt Nam (Asia/Ho_Chi_Minh).</li>
+            <li>Không mất bài nộp: tự lưu nháp, upload có thể thử lại.</li>
+            <li>
+              Backup DB hằng ngày, PITR; retention file theo chính sách của
+              trường.
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>Core workflows</h3>
+      <ol class="flow">
+        <li>
+          <b>Giáo viên bắt đầu:</b> đăng ký → xác minh email → tạo lớp → chia sẻ
+          mã lớp hoặc tạo tài khoản học sinh.
+        </li>
+        <li>
+          <b>Giao bài:</b> tạo bài (tự luận hoặc quiz) → đính kèm file → đặt hạn
+          → chọn lớp → đăng ngay hoặc lên lịch → học sinh nhận thông báo.
+        </li>
+        <li>
+          <b>Học sinh nộp:</b> mở “Việc cần làm” → vào bài → viết hoặc upload
+          (tự lưu nháp) → nộp → trạng thái “Đã nộp” hoặc “Nộp trễ”.
+        </li>
+        <li>
+          <b>Chấm:</b> giáo viên mở “Cần chấm” → duyệt lần lượt từng học sinh →
+          nhập điểm + nhận xét → trả bài (từng bài hoặc hàng loạt) → học sinh
+          nhận thông báo.
+        </li>
+        <li>
+          <b>Quiz:</b> học sinh làm → nộp → server chấm → hiện điểm (ngay hoặc
+          sau hạn, theo cài đặt).
+        </li>
+        <li>
+          <b>Nộp lại:</b> giáo viên trả bài và cho phép nộp lại → học sinh sửa →
+          nộp phiên bản mới; phiên bản cũ vẫn được giữ.
+        </li>
+      </ol>
+
+      <h3>Vòng đời submission</h3>
+      <p class="lede">
+        Tách <b>trạng thái</b> khỏi <b>cờ nộp trễ</b>: “trễ” là thuộc tính của
+        lần nộp, không phải một trạng thái riêng. Nhờ vậy bài có thể vừa “Đã
+        chấm” vừa “Nộp trễ”.
+      </p>
+      <pre class="mermaid">
+stateDiagram-v2
+  [*] --> NOT_STARTED
+  NOT_STARTED --> DRAFT: hoc sinh bat dau
+  DRAFT --> SUBMITTED: nop (is_late = submitted_at sau due_at)
+  SUBMITTED --> DRAFT: rut lai (truoc khi cham)
+  SUBMITTED --> GRADED: giao vien luu diem (chua tra)
+  GRADED --> RETURNED: tra bai
+  RETURNED --> DRAFT: nop lai (neu duoc phep)
+  NOT_STARTED --> MISSING: qua han, khong nop (hien thi)
+</pre>
+    </section>
+
+    <!-- ================= PART 3 ================= -->
+    <section id="p3">
+      <h2>
+        <span class="n">PART 3</span>Skills, plugins và MCP trong môi trường này
+      </h2>
+      <p class="lede">
+        Đã rà soát các skill và MCP đang có trong phiên làm việc. Chỉ đánh dấu
+        “Cần” khi tool thực sự tiết kiệm thời gian hoặc bắt được lỗi mà cách làm
+        thủ công dễ bỏ sót.
+      </p>
+      <div class="tbl">
+        <table>
+          <thead>
+            <tr>
+              <th>Tool</th>
+              <th>Mục đích</th>
+              <th>Khi nào dùng</th>
+              <th>Lợi ích</th>
+              <th>Cần?</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>ui-ux-pro-max</code> (skill)</td>
+              <td>Palette, font pairing, pattern dashboard, checklist UX</td>
+              <td>Chốt Design System Final</td>
+              <td>
+                Kiểm tra chéo token và pattern, dùng lại cho các site khác
+              </td>
+              <td class="y">Có</td>
+            </tr>
+            <tr>
+              <td><code>frontend-ui-engineering</code> (skill)</td>
+              <td>Chuẩn component production, state, layout</td>
+              <td>Khi code frontend</td>
+              <td>Giữ chất lượng component đồng nhất</td>
+              <td class="y">Có</td>
+            </tr>
+            <tr>
+              <td><code>ckmui-styling</code> (skill)</td>
+              <td>shadcn/ui + Radix + Tailwind</td>
+              <td>Dựng component library</td>
+              <td>Khớp stack đề xuất, component accessible sẵn</td>
+              <td class="y">Có</td>
+            </tr>
+            <tr>
+              <td>
+                <code>design:design-system</code>,
+                <code>design:design-handoff</code>
+              </td>
+              <td>Tài liệu token/variant, spec handoff</td>
+              <td>Sau khi chọn template</td>
+              <td>Spec chuẩn để agent code không đoán</td>
+              <td class="y">Có</td>
+            </tr>
+            <tr>
+              <td><code>design:accessibility-review</code></td>
+              <td>Audit WCAG 2.1 AA</td>
+              <td>Cuối mỗi milestone UI</td>
+              <td>Bắt lỗi contrast, focus, label</td>
+              <td class="y">Có</td>
+            </tr>
+            <tr>
+              <td><code>design:ux-copy</code></td>
+              <td>Microcopy, empty/error state</td>
+              <td>Khi làm UX states</td>
+              <td>Copy tiếng Việt nhất quán</td>
+              <td class="l">Tùy chọn</td>
+            </tr>
+            <tr>
+              <td>
+                <code>engineering:system-design</code>,
+                <code>engineering:architecture</code> (ADR)
+              </td>
+              <td>Review kiến trúc, ghi ADR</td>
+              <td>Architecture Final</td>
+              <td>Lưu lý do quyết định vào repo</td>
+              <td class="y">Có</td>
+            </tr>
+            <tr>
+              <td><code>engineering:testing-strategy</code></td>
+              <td>Test plan</td>
+              <td>Testing Plan</td>
+              <td>Ma trận test theo rủi ro</td>
+              <td class="y">Có</td>
+            </tr>
+            <tr>
+              <td><code>security-review</code>, <code>code-review</code></td>
+              <td>Review bảo mật và correctness của diff</td>
+              <td>Mỗi PR có auth, upload, phân quyền</td>
+              <td>Bắt IDOR, injection, lỗi logic sớm</td>
+              <td class="y">Có</td>
+            </tr>
+            <tr>
+              <td><code>engineering:tech-debt</code>, <code>simplify</code></td>
+              <td>Dọn code, giảm trùng lặp</td>
+              <td>Cuối mỗi phase</td>
+              <td>Giữ codebase gọn</td>
+              <td class="l">Định kỳ</td>
+            </tr>
+            <tr>
+              <td>Claude Browser (built-in)</td>
+              <td>Chạy dev server, xem UI, đọc console, đổi viewport mobile</td>
+              <td>Mỗi màn hình UI</td>
+              <td>Kiểm tra thật trên trình duyệt, không cần cài thêm</td>
+              <td class="y">Có</td>
+            </tr>
+            <tr>
+              <td>Playwright (dev dependency, không phải MCP)</td>
+              <td>E2E + visual regression (<code>toHaveScreenshot</code>)</td>
+              <td>CI</td>
+              <td>Tự động hóa 10 luồng chính</td>
+              <td class="y">Có</td>
+            </tr>
+            <tr>
+              <td>Render MCP</td>
+              <td>Tạo Postgres, web service, cron, xem log/metrics</td>
+              <td>Deploy staging/production</td>
+              <td>Deploy và debug không rời phiên làm việc</td>
+              <td class="y">Có (nếu chọn Render)</td>
+            </tr>
+            <tr>
+              <td>Resend MCP</td>
+              <td>Email template, domain, gửi thử</td>
+              <td>Module thông báo email</td>
+              <td>Quản lý template và domain verification</td>
+              <td class="y">Có</td>
+            </tr>
+            <tr>
+              <td>AWS MCP / deploy-on-aws</td>
+              <td>S3, pricing, IaC</td>
+              <td>Chỉ khi chọn AWS thay R2</td>
+              <td>Không cần cho MVP</td>
+              <td class="no">Không</td>
+            </tr>
+            <tr>
+              <td>Stitch MCP, Pencil MCP</td>
+              <td>Sinh màn hình / file thiết kế .pen</td>
+              <td>Nếu bạn muốn file thiết kế riêng sau khi chọn</td>
+              <td>Mockup HTML ở Part 10 đã đủ để chọn hướng</td>
+              <td class="l">Tùy chọn</td>
+            </tr>
+            <tr>
+              <td>Figma MCP</td>
+              <td>Đọc/ghi Figma</td>
+              <td>Nếu có designer dùng Figma</td>
+              <td>
+                Hiện <b>chưa xác thực</b>; cần bật trong phần cài đặt connector
+              </td>
+              <td class="no">Chưa</td>
+            </tr>
+            <tr>
+              <td>GitHub MCP</td>
+              <td>PR, issue, CI</td>
+              <td>Khi có remote repo</td>
+              <td>
+                Hiện <b>chưa xác thực</b>; <code>gh</code> CLI là phương án thay
+                thế
+              </td>
+              <td class="l">Sau</td>
+            </tr>
+            <tr>
+              <td>drawio-ai-kit</td>
+              <td>Sơ đồ kiến trúc</td>
+              <td>Tài liệu chính thức</td>
+              <td>Mermaid trong repo đã đủ và diff được</td>
+              <td class="no">Không</td>
+            </tr>
+            <tr>
+              <td>Cloudinary MCP</td>
+              <td>Quản lý và biến đổi media</td>
+              <td>Không phù hợp cho bài nộp riêng tư</td>
+              <td>Xem Part 5 phần storage</td>
+              <td class="no">Không</td>
+            </tr>
+            <tr>
+              <td>
+                Image gen (higgsfield, imagegen-*), slides, Gmail, Jira, Notion,
+                Linear
+              </td>
+              <td>Ngoài phạm vi</td>
+              <td>—</td>
+              <td>—</td>
+              <td class="no">Không</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <h4>Có nên dùng sub-agent?</h4>
+      <p>
+        Ở giai đoạn này thì <b>không</b>: repo trống nên audit chỉ tốn một lệnh,
+        và các phần kiến trúc phụ thuộc chặt vào nhau (schema ↔ phân quyền ↔
+        API). Nếu chia cho nhiều agent, mỗi agent phải tự dựng lại cùng một ngữ
+        cảnh. Sub-agent chỉ có lợi ở phase implementation cho những việc độc
+        lập:
+      </p>
+      <ul class="tight">
+        <li>
+          Agent security review chạy song song khi hoàn thành module auth và
+          upload.
+        </li>
+        <li>Agent viết E2E test khi các màn hình chính đã ổn định.</li>
+        <li>Agent audit accessibility trên các màn hình đã xong.</li>
+      </ul>
+    </section>
+
+    <!-- ================= PART 4 ================= -->
+    <section id="p4">
+      <h2><span class="n">PART 4</span>Tech stack đề xuất</h2>
+      <div class="tbl">
+        <table>
+          <thead>
+            <tr>
+              <th>Lớp</th>
+              <th>Chọn</th>
+              <th>Lý do</th>
+              <th>Đã cân nhắc và loại</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Frontend</td>
+              <td>
+                Next.js (App Router) + TypeScript, Tailwind CSS, shadcn/ui
+                (Radix), React Hook Form + Zod, TanStack Query chỉ cho vài màn
+                hình tương tác nhiều
+              </td>
+              <td>
+                Server Components giảm JS phía học sinh; Radix cho accessibility
+                sẵn; một ngôn ngữ cho cả stack
+              </td>
+              <td>
+                SPA Vite + API riêng (thêm một deploy, thêm CORS); Vue/Nuxt (hệ
+                sinh thái component a11y yếu hơn)
+              </td>
+            </tr>
+            <tr>
+              <td>Backend</td>
+              <td>
+                Modular monolith trong cùng app Next.js: domain services +
+                policy layer; REST <code>/api/v1</code> cho client ngoài, Server
+                Actions cho form nội bộ, cả hai gọi cùng service
+              </td>
+              <td>
+                Một codebase, một deploy; ranh giới module rõ nên tách service
+                sau được
+              </td>
+              <td>
+                NestJS riêng (thêm vận hành, chưa cần); microservices
+                (over-engineer)
+              </td>
+            </tr>
+            <tr>
+              <td>Database</td>
+              <td>PostgreSQL 16 + Drizzle ORM + drizzle-kit migrations</td>
+              <td>
+                Quan hệ chặt, constraint mạnh, hỗ trợ RLS; Drizzle gần SQL, kiểm
+                soát query tốt
+              </td>
+              <td>
+                MongoDB (dữ liệu quan hệ); Prisma (ổn, nhưng khó viết query theo
+                phạm vi/RLS hơn)
+              </td>
+            </tr>
+            <tr>
+              <td>Auth</td>
+              <td>
+                Better Auth (self-hosted, session lưu DB, cookie httpOnly),
+                argon2id
+              </td>
+              <td>
+                Có sẵn username plugin, email verification, reset, rate limit,
+                danh sách/thu hồi phiên; dữ liệu nằm trong DB của mình
+              </td>
+              <td>
+                JWT tự làm (khó thu hồi); Clerk/Auth0 (chi phí theo MAU, dữ liệu
+                học sinh ra bên thứ ba)
+              </td>
+            </tr>
+            <tr>
+              <td>Storage</td>
+              <td>Cloudflare R2 (S3 API), bucket private, presigned URL</td>
+              <td>Không tính phí egress, rẻ, S3-compatible nên dễ đổi</td>
+              <td>Xem bảng so sánh ở Part 5</td>
+            </tr>
+            <tr>
+              <td>Background jobs</td>
+              <td>pg-boss (queue trên Postgres) + process worker riêng</td>
+              <td>Không cần Redis trong MVP; job transactional cùng DB</td>
+              <td>BullMQ + Redis (Phase 3 khi tải lớn)</td>
+            </tr>
+            <tr>
+              <td>Notification</td>
+              <td>
+                Bảng notification + outbox; email qua Resend + React Email
+              </td>
+              <td>Đơn giản, có retry, có MCP hỗ trợ</td>
+              <td>Firebase, OneSignal (chưa cần push)</td>
+            </tr>
+            <tr>
+              <td>Testing</td>
+              <td>
+                Vitest (unit), Vitest + Testcontainers Postgres (integration),
+                Playwright (E2E + screenshot), axe-core
+              </td>
+              <td>
+                Test trên Postgres thật, bắt được lỗi constraint và phân quyền
+              </td>
+              <td>
+                Jest (chậm hơn với ESM); SQLite cho test (khác hành vi Postgres)
+              </td>
+            </tr>
+            <tr>
+              <td>Deployment</td>
+              <td>
+                Docker image; Render: <b>một</b> web service (chạy luôn pg-boss
+                bên trong) + managed Postgres; R2 cho file
+              </td>
+              <td>
+                Quy mô nhỏ nên một service là đủ, chi phí thấp nhất; tách worker
+                riêng khi cần
+              </td>
+              <td>Vercel (khó chạy worker dài hạn, cần tách chỗ khác)</td>
+            </tr>
+            <tr>
+              <td>Monitoring</td>
+              <td>
+                Sentry (lỗi + performance), pino (JSON log có redaction), uptime
+                check
+              </td>
+              <td>Rẻ, đủ cho MVP</td>
+              <td>Datadog (đắt, MCP cũng chưa xác thực)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Cấu trúc thư mục đề xuất (monorepo nhẹ, dễ tách package dùng chung cho
+        các site giáo dục khác):
+      </p>
+      <pre
+        style="
+          background: var(--code);
+          padding: 14px;
+          border-radius: 8px;
+          overflow-x: auto;
+          font: 13px/1.55 var(--f-mono);
+        "
+      >
+apps/web            Next.js app (UI + route handlers + server actions)
+apps/worker         (chưa cần ở MVP) job chạy trong apps/web; tách ra đây khi tải tăng
+packages/db         Drizzle schema, migrations, scoped repositories
+packages/core       domain services + policy (không phụ thuộc Next)
+packages/ui         design tokens + component (dùng lại cho site khác)
+packages/config     eslint, tsconfig, env schema</pre>
+    </section>
+
+    <!-- ================= PART 5 ================= -->
+    <section id="p5">
+      <h2><span class="n">PART 5</span>Kiến trúc</h2>
+      <pre class="mermaid">
+flowchart LR
+  subgraph C[Client]
+    BR[Trinh duyet: desktop, tablet, mobile]
+  end
+  subgraph W[apps/web - Next.js]
+    UI[Server Components va Client Components]
+    SA[Server Actions]
+    API[REST /api/v1]
+    MW[Middleware: session, rate limit, security headers]
+  end
+  subgraph CORE[packages/core]
+    POL[Policy layer: authz]
+    SVC[Domain services: class, assignment, submission, grading, quiz, notification, file]
+  end
+  DAL[packages/db: scoped repositories]
+  PG[(PostgreSQL)]
+  R2[(R2 bucket private)]
+  WK[pg-boss jobs - chay chung process voi web o MVP]
+  MAIL[Resend email]
+  SEN[Sentry + logs]
+  BR --> MW --> UI
+  MW --> API
+  UI --> SA
+  SA --> POL
+  API --> POL
+  POL --> SVC --> DAL --> PG
+  SVC -- presigned URL --> R2
+  BR -- upload/download truc tiep --> R2
+  SVC -- outbox event --> PG
+  PG -- job queue --> WK
+  WK --> MAIL
+  WK --> R2
+  W --> SEN
+  WK --> SEN
+</pre>
+
+      <div class="grid2">
+        <div class="panel">
+          <h4>Frontend</h4>
+          <ul class="tight">
+            <li>
+              Route group theo role: <code>(teacher)</code>,
+              <code>(student)</code>, <code>(auth)</code>; layout riêng cho từng
+              nhóm.
+            </li>
+            <li>
+              Mặc định dùng Server Component để đọc dữ liệu; chỉ dùng Client
+              Component cho form, upload, quiz player, command palette.
+            </li>
+            <li>
+              Server state: RSC + <code>revalidatePath</code> sau mutation;
+              TanStack Query chỉ cho màn chấm bài (chuyển học sinh nhanh,
+              prefetch bài kế tiếp).
+            </li>
+            <li>
+              Form: React Hook Form + Zod; cùng một schema Zod được dùng ở
+              server.
+            </li>
+            <li>
+              Optimistic update chỉ cho: đánh dấu đã đọc thông báo, lưu nháp.
+              Không dùng cho nộp bài hay chấm điểm (phải chắc chắn server đã
+              nhận).
+            </li>
+            <li>
+              Mỗi route có <code>loading.tsx</code>, <code>error.tsx</code>,
+              <code>not-found.tsx</code>.
+            </li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h4>Backend và API</h4>
+          <ul class="tight">
+            <li>
+              <b>REST thay GraphQL:</b> tài nguyên rõ ràng, dễ cache, dễ phân
+              quyền theo từng endpoint, ít bề mặt tấn công hơn.
+            </li>
+            <li>Version bằng đường dẫn: <code>/api/v1</code>.</li>
+            <li>
+              Validation: Zod ở biên (body, query, params); từ chối field lạ.
+            </li>
+            <li>
+              Lỗi theo RFC 9457 (<code>application/problem+json</code>) với
+              <code>code</code> ổn định, ví dụ
+              <code>SUBMISSION_DEADLINE_PASSED</code>.
+            </li>
+            <li>
+              Phân trang cursor-based (<code>?cursor=&amp;limit=</code>, tối đa
+              100); lọc và sắp xếp theo allowlist.
+            </li>
+            <li>
+              Tìm kiếm: Postgres <code>ILIKE</code> + <code>unaccent</code> +
+              trigram index (gõ “ham so” vẫn tìm ra “Hàm số”).
+            </li>
+            <li>
+              Rate limit: auth theo IP + tài khoản; API ghi theo user. MVP lưu
+              trong Postgres, chuyển sang Redis khi chạy nhiều instance.
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>Tài nguyên API (v1)</h3>
+      <div class="tbl">
+        <table>
+          <thead>
+            <tr>
+              <th>Resource</th>
+              <th>Endpoint chính</th>
+              <th>Ghi chú</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>auth</td>
+              <td><code>/api/auth/*</code> (Better Auth)</td>
+              <td>login, logout, session list/revoke, reset, verify</td>
+            </tr>
+            <tr>
+              <td>me</td>
+              <td>
+                <code>GET /me</code>, <code>GET /me/todo</code>,
+                <code>GET /me/grades</code>
+              </td>
+              <td>
+                Dữ liệu luôn lấy theo session, không nhận userId từ client
+              </td>
+            </tr>
+            <tr>
+              <td>classes</td>
+              <td>
+                <code>/classes</code>, <code>/classes/:id</code>,
+                <code>/classes/:id/members</code>,
+                <code>POST /classes/join</code>
+              </td>
+              <td>join bằng mã lớp; có rate limit</td>
+            </tr>
+            <tr>
+              <td>assignments</td>
+              <td>
+                <code>/classes/:id/assignments</code>,
+                <code>/assignments/:id</code>,
+                <code>/assignments/:id/stats</code>
+              </td>
+              <td>
+                Tạo cho nhiều lớp: <code>POST /assignments</code> với
+                <code>classIds[]</code>
+              </td>
+            </tr>
+            <tr>
+              <td>submissions</td>
+              <td>
+                <code>/assignments/:id/submissions</code> (GV),
+                <code>/assignments/:id/my-submission</code> (HS),
+                <code>POST …/submit</code>, <code>POST …/unsubmit</code>
+              </td>
+              <td>
+                Không có endpoint “lấy submission theo id” cho học sinh, tránh
+                IDOR ngay từ thiết kế
+              </td>
+            </tr>
+            <tr>
+              <td>grades</td>
+              <td>
+                <code>PUT /submissions/:id/grade</code>,
+                <code>POST /submissions/:id/return</code>,
+                <code>POST /assignments/:id/return</code> (hàng loạt),
+                <code>GET /submissions/:id/grade-history</code>
+              </td>
+              <td>Mỗi lần ghi điểm tạo một grade_event</td>
+            </tr>
+            <tr>
+              <td>quiz</td>
+              <td>
+                <code>/assignments/:id/questions</code> (GV),
+                <code>POST /assignments/:id/attempts</code>,
+                <code>PUT /attempts/:id/answers</code>,
+                <code>POST /attempts/:id/finish</code>
+              </td>
+              <td>
+                Học sinh chỉ nhận câu hỏi và lựa chọn, không nhận
+                <code>is_correct</code>
+              </td>
+            </tr>
+            <tr>
+              <td>files</td>
+              <td>
+                <code>POST /files/upload-url</code>,
+                <code>POST /files/:id/complete</code>,
+                <code>GET /files/:id/download-url</code>
+              </td>
+              <td>Phân quyền qua tài nguyên cha (bài tập/bài nộp)</td>
+            </tr>
+            <tr>
+              <td>notifications</td>
+              <td>
+                <code>GET /notifications</code>,
+                <code>POST /notifications/read</code>
+              </td>
+              <td>Cursor pagination</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>File storage</h3>
+      <div class="tbl">
+        <table>
+          <thead>
+            <tr>
+              <th>Phương án</th>
+              <th>Chi phí</th>
+              <th>Bảo mật</th>
+              <th>Scale</th>
+              <th>Đơn giản</th>
+              <th>Kết luận</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Local disk</td>
+              <td>Rẻ nhất</td>
+              <td>Tự lo mọi thứ</td>
+              <td>Không scale ngang, mất file khi redeploy container</td>
+              <td>Dễ lúc đầu</td>
+              <td class="x">Chỉ dùng cho dev</td>
+            </tr>
+            <tr>
+              <td><b>Cloudflare R2</b></td>
+              <td>Không tính phí egress; storage rẻ</td>
+              <td>Private bucket + presigned URL</td>
+              <td>Tốt</td>
+              <td>S3 API chuẩn</td>
+              <td class="y">Chọn</td>
+            </tr>
+            <tr>
+              <td>AWS S3</td>
+              <td>Tốn phí egress khi học sinh tải tài liệu</td>
+              <td>Mạnh nhất (IAM, KMS)</td>
+              <td>Tốt</td>
+              <td>Nhiều cấu hình</td>
+              <td>Phương án dự phòng, cùng API</td>
+            </tr>
+            <tr>
+              <td>Supabase Storage</td>
+              <td>Hợp lý</td>
+              <td>Tốt nếu dùng cả Supabase Auth/RLS</td>
+              <td>Tốt</td>
+              <td>Dễ</td>
+              <td>Chỉ hợp lý nếu cả stack là Supabase</td>
+            </tr>
+            <tr>
+              <td>Cloudinary</td>
+              <td>Đắt theo lượng biến đổi</td>
+              <td>Thiên về media public</td>
+              <td>Tốt</td>
+              <td>Dễ cho ảnh</td>
+              <td class="no">Không hợp với bài nộp riêng tư</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <h4>Luồng upload</h4>
+      <ol class="flow">
+        <li>
+          Client gửi <code>POST /files/upload-url</code> kèm purpose, tên file,
+          MIME, kích thước. Server kiểm tra quyền trên tài nguyên cha, allowlist
+          loại file và giới hạn dung lượng, rồi tạo bản ghi <code>file</code> ở
+          trạng thái <code>PENDING</code>.
+        </li>
+        <li>
+          Server trả về presigned PUT (hết hạn sau 5 phút, khóa content-type và
+          content-length). Object key không chứa tên gốc, ví dụ
+          <code>sub/{classId}/{submissionId}/{fileId}</code>.
+        </li>
+        <li>
+          Client upload thẳng lên R2. Ảnh được nén trên trình duyệt (≤2MB) và
+          <b>xóa EXIF</b>, vì ảnh điện thoại của học sinh có thể chứa vị trí
+          GPS.
+        </li>
+        <li>
+          Client gọi <code>complete</code>. Server HEAD object để khớp size, đọc
+          magic bytes để khớp MIME, chuyển trạng thái sang <code>READY</code> và
+          đưa job quét virus vào hàng đợi.
+        </li>
+        <li>
+          Tải xuống: kiểm tra quyền → presigned GET 5 phút với
+          <code>Content-Disposition: attachment</code>. File chỉ xem trước (ảnh,
+          PDF) được phục vụ từ domain riêng, không phải domain của app.
+        </li>
+      </ol>
+      <p>
+        Giới hạn MVP: bài nộp tối đa 25MB mỗi file, 10 file mỗi bài; tài liệu
+        giáo viên tối đa 50MB. Loại file cho phép: pdf, doc(x), ppt(x), xls(x),
+        txt, jpg, png, heic, webp, zip. Chặn svg, html và file thực thi.
+      </p>
+
+      <h3>Notification architecture</h3>
+      <pre class="mermaid">
+flowchart TD
+  A[Domain action: publish, submit, return] -->|cung transaction| O[(outbox_event)]
+  CR[Cron moi 15 phut: quet due soon, overdue] --> O
+  O --> D[Worker: dispatcher]
+  D --> R{Rules: nguoi nhan, dedupe_key, gop, gio yen tinh}
+  R --> N[(notification: in-app)]
+  R --> E[Email queue]
+  E --> DG{Digest?}
+  DG -->|ngay| M[Resend]
+  DG -->|gop theo gio hoac ngay| M
+</pre>
+      <div class="tbl">
+        <table>
+          <thead>
+            <tr>
+              <th>Event</th>
+              <th>Người nhận</th>
+              <th>In-app</th>
+              <th>Email</th>
+              <th>Chống spam</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ASSIGNMENT_CREATED</td>
+              <td>Học sinh trong lớp</td>
+              <td class="y">Có</td>
+              <td>Có</td>
+              <td>
+                Gửi khi bài được đăng (kể cả đăng theo lịch); dedupe theo
+                <code>(assignment, user)</code>
+              </td>
+            </tr>
+            <tr>
+              <td>ASSIGNMENT_DUE_SOON</td>
+              <td>Học sinh chưa nộp</td>
+              <td class="y">Có</td>
+              <td>Có</td>
+              <td>Một lần 24h trước hạn; gộp nhiều bài trong một email</td>
+            </tr>
+            <tr>
+              <td>ASSIGNMENT_OVERDUE</td>
+              <td>Học sinh chưa nộp</td>
+              <td class="y">Có</td>
+              <td class="no">Không</td>
+              <td>Một lần duy nhất; không nhắc lặp</td>
+            </tr>
+            <tr>
+              <td>SUBMISSION_RECEIVED</td>
+              <td>Giáo viên</td>
+              <td class="y">Gộp</td>
+              <td class="no">Không (digest cuối ngày ở Phase 2)</td>
+              <td>Gộp theo bài: “12 bài mới nộp cho Hàm số bậc hai”</td>
+            </tr>
+            <tr>
+              <td>ASSIGNMENT_GRADED / RETURNED</td>
+              <td>Học sinh</td>
+              <td class="y">Có</td>
+              <td>Có</td>
+              <td>
+                Chỉ gửi khi <b>trả bài</b>, không gửi khi giáo viên mới lưu điểm
+                nháp; trả hàng loạt vẫn gửi một thông báo cho mỗi học sinh
+              </td>
+            </tr>
+            <tr>
+              <td>FEEDBACK_ADDED</td>
+              <td>Người còn lại trong thread</td>
+              <td class="y">Có</td>
+              <td class="no">Không</td>
+              <td>Gộp nhiều bình luận trong 10 phút</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Giờ yên tĩnh: không gửi email cho học sinh từ 21:30 tới 6:30 (giờ Việt
+        Nam); email được xếp hàng tới sáng.
+      </p>
+
+      <h3>Background jobs, caching, logging, deploy</h3>
+      <div class="grid2">
+        <div class="panel">
+          <h4>Jobs (pg-boss)</h4>
+          <ul class="tight">
+            <li>
+              notification.dispatch, email.send (retry exponential, dead-letter)
+            </li>
+            <li>assignment.publish_scheduled</li>
+            <li>deadline.scan (15 phút)</li>
+            <li>
+              file.scan (ClamAV), file.cleanup_pending (xóa upload bỏ dở sau
+              24h)
+            </li>
+            <li>session.cleanup</li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h4>Caching</h4>
+          <ul class="tight">
+            <li>
+              MVP: không có tầng cache riêng. Số liệu dashboard là aggregate SQL
+              dùng index.
+            </li>
+            <li>Dùng <code>React.cache</code> để dedupe trong một request.</li>
+            <li>Không cache dữ liệu cá nhân ở CDN.</li>
+            <li>Phase 2: counter cache cho thống kê bài tập khi lớp đông.</li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h4>Logging và monitoring</h4>
+          <ul class="tight">
+            <li>pino JSON, request_id xuyên suốt web ↔ worker.</li>
+            <li>Sentry: lỗi, trace, p95 latency theo route.</li>
+            <li>
+              Log sự kiện: đăng nhập thành công/thất bại, khóa tài khoản, nộp
+              bài, chấm, trả bài, job lỗi, email bounce.
+            </li>
+            <li>
+              <b>Không log:</b> mật khẩu, token, cookie, nội dung bài làm, nhận
+              xét, điểm, tên file gốc. Dùng pino redact và scrub PII trong
+              Sentry.
+            </li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h4>Deploy</h4>
+          <ul class="tight">
+            <li>
+              Môi trường: dev (docker compose: Postgres, MinIO, Mailpit),
+              staging, production.
+            </li>
+            <li>
+              CI: lint → typecheck → unit → integration (Testcontainers) → build
+              → E2E trên preview.
+            </li>
+            <li>
+              Migration chạy như bước riêng trước khi deploy; chỉ thêm thay đổi
+              tương thích ngược.
+            </li>
+            <li>
+              Secrets nằm trong env của Render; không commit <code>.env</code>.
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>Testing strategy</h3>
+      <div class="tbl">
+        <table>
+          <thead>
+            <tr>
+              <th>Tầng</th>
+              <th>Phạm vi</th>
+              <th>Ví dụ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Unit (Vitest)</td>
+              <td>Logic thuần</td>
+              <td>
+                Tính trễ hạn, chuyển trạng thái submission, chấm quiz (một đáp
+                án / nhiều đáp án / chấm điểm từng phần), dedupe notification,
+                parse và sanitize rich text
+              </td>
+            </tr>
+            <tr>
+              <td>Integration (Vitest + Testcontainers)</td>
+              <td>Service + policy + DB thật</td>
+              <td>
+                Mọi endpoint được test với 5 actor: GV của lớp, GV khác, HS
+                trong lớp, HS lớp khác, chưa đăng nhập
+              </td>
+            </tr>
+            <tr>
+              <td>E2E (Playwright)</td>
+              <td>10 luồng chính</td>
+              <td>
+                GV đăng nhập → tạo lớp → thêm HS → tạo bài → HS đăng nhập → xem
+                bài → nộp → GV xem → chấm → HS xem điểm; chạy thêm ở viewport
+                mobile
+              </td>
+            </tr>
+            <tr>
+              <td>Security</td>
+              <td>Tấn công có chủ đích</td>
+              <td>
+                IDOR (đổi id trong URL/body), leo thang role qua form đăng ký,
+                upload sai MIME/đổi đuôi, file quá lớn, vượt rate limit, quiz
+                payload có lộ <code>is_correct</code> không
+              </td>
+            </tr>
+            <tr>
+              <td>A11y + visual</td>
+              <td>Màn hình chính</td>
+              <td>
+                axe-core trong Playwright; screenshot diff cho design system
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Performance</h3>
+      <ul class="tight">
+        <li>
+          Index cho mọi truy vấn danh sách (xem Part 6); dùng
+          <code>EXPLAIN</code> cho dashboard trước khi release.
+        </li>
+        <li>
+          Thống kê theo bài tính bằng một câu <code>GROUP BY status</code>,
+          không lặp N+1 theo từng học sinh.
+        </li>
+        <li>
+          Cursor pagination; API chỉ trả field cần dùng, không trả nội dung bài
+          làm trong danh sách.
+        </li>
+        <li>
+          Upload đi thẳng lên R2 (server không nhận file); nén ảnh phía client.
+        </li>
+        <li>
+          <code>next/image</code> cho avatar và ảnh xem trước; lazy load
+          thumbnail bài nộp.
+        </li>
+        <li>
+          Ngân sách JS: trang học sinh dưới 150KB gzip; editor và quiz player
+          được import động.
+        </li>
+      </ul>
+    </section>
+
+    <!-- ================= PART 6 ================= -->
+    <section id="p6">
+      <h2><span class="n">PART 6</span>Database / ERD</h2>
+      <p class="lede">
+        So với danh sách entity dự kiến, tôi đã điều chỉnh một số chỗ: bỏ bảng
+        <code>Role</code> riêng (role là enum trên user, role theo lớp nằm ở
+        <code>class_member</code>); gộp <code>Grade</code> và
+        <code>Feedback</code> thành điểm hiện tại trên submission cộng
+        <code>grade_event</code> append-only; <code>Quiz</code> là một loại
+        assignment chứ không phải bảng riêng; thêm bảng <code>file</code> dùng
+        chung, <code>outbox_event</code> và <code>audit_log</code>.
+      </p>
+      <pre class="mermaid">
+erDiagram
+  USER ||--o{ SESSION : has
+  USER ||--o{ CLASS_MEMBER : joins
+  CLASS ||--o{ CLASS_MEMBER : has
+  CLASS ||--o{ CLASS_INVITE : issues
+  CLASS ||--o{ ASSIGNMENT : contains
+  ASSIGNMENT ||--o{ ASSIGNMENT_ATTACHMENT : has
+  FILE ||--o{ ASSIGNMENT_ATTACHMENT : used_by
+  ASSIGNMENT ||--o{ SUBMISSION : receives
+  USER ||--o{ SUBMISSION : owns
+  SUBMISSION ||--o{ SUBMISSION_VERSION : versions
+  SUBMISSION_VERSION ||--o{ SUBMISSION_FILE : has
+  FILE ||--o{ SUBMISSION_FILE : used_by
+  SUBMISSION ||--o{ GRADE_EVENT : history
+  SUBMISSION ||--o{ SUBMISSION_COMMENT : thread
+  ASSIGNMENT ||--o{ QUESTION : has
+  QUESTION ||--o{ QUESTION_OPTION : offers
+  SUBMISSION ||--o{ QUIZ_ATTEMPT : attempts
+  QUIZ_ATTEMPT ||--o{ ATTEMPT_ANSWER : records
+  USER ||--o{ NOTIFICATION : receives
+  USER {
+    uuid id PK
+    citext email UK "nullable"
+    citext username UK
+    text password_hash "argon2id"
+    enum role "ADMIN/TEACHER/STUDENT"
+    enum status "ACTIVE/LOCKED/DISABLED"
+    bool must_change_password
+    timestamptz email_verified_at
+    timestamptz deleted_at
+  }
+  CLASS {
+    uuid id PK
+    uuid owner_id FK
+    text name
+    text subject
+    text school_year
+    enum status "ACTIVE/ARCHIVED"
+    timestamptz deleted_at
+  }
+  CLASS_MEMBER {
+    uuid class_id PK
+    uuid user_id PK
+    enum class_role "TEACHER/STUDENT"
+    enum status "ACTIVE/REMOVED"
+    timestamptz joined_at
+  }
+  CLASS_INVITE {
+    uuid id PK
+    uuid class_id FK
+    text code UK "8 ky tu"
+    timestamptz expires_at
+    int max_uses
+  }
+  ASSIGNMENT {
+    uuid id PK
+    uuid class_id FK
+    uuid group_id "cung bai giao nhieu lop"
+    enum type "WRITTEN/QUIZ"
+    text title
+    jsonb body "rich text da sanitize"
+    numeric max_points
+    timestamptz due_at "UTC"
+    bool allow_late
+    bool allow_resubmit
+    enum show_results "IMMEDIATE/AFTER_DUE/MANUAL"
+    enum status "DRAFT/SCHEDULED/PUBLISHED/ARCHIVED"
+    timestamptz publish_at
+  }
+  SUBMISSION {
+    uuid id PK
+    uuid assignment_id FK
+    uuid student_id FK
+    enum status "DRAFT/SUBMITTED/GRADED/RETURNED"
+    bool is_late
+    timestamptz submitted_at
+    numeric score "diem hien tai"
+    int version_no
+  }
+  SUBMISSION_VERSION {
+    uuid id PK
+    uuid submission_id FK
+    int version_no
+    jsonb content
+    timestamptz submitted_at
+  }
+  GRADE_EVENT {
+    uuid id PK
+    uuid submission_id FK
+    uuid grader_id FK
+    numeric score
+    text feedback
+    enum action "GRADED/EDITED/RETURNED"
+    timestamptz created_at
+  }
+  FILE {
+    uuid id PK
+    uuid uploader_id FK
+    text storage_key UK
+    text original_name
+    text mime
+    bigint size_bytes
+    text sha256
+    enum status "PENDING/READY/INFECTED/DELETED"
+  }
+  QUESTION {
+    uuid id PK
+    uuid assignment_id FK
+    enum type "SINGLE/MULTI/TRUE_FALSE"
+    jsonb prompt
+    numeric points
+    int position
+  }
+  QUESTION_OPTION {
+    uuid id PK
+    uuid question_id FK
+    jsonb label
+    bool is_correct
+    int position
+  }
+  QUIZ_ATTEMPT {
+    uuid id PK
+    uuid submission_id FK
+    int attempt_no
+    timestamptz started_at
+    timestamptz finished_at
+    numeric score
+  }
+  NOTIFICATION {
+    uuid id PK
+    uuid recipient_id FK
+    text type
+    jsonb data "chi id va tieu de"
+    text dedupe_key UK
+    timestamptz read_at
+  }
+</pre>
+
+      <h3>Ràng buộc và index chính</h3>
+      <div class="tbl">
+        <table>
+          <thead>
+            <tr>
+              <th>Bảng</th>
+              <th>Unique / check</th>
+              <th>Index</th>
+              <th>Vì sao</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>class_member</td>
+              <td>PK <code>(class_id, user_id)</code></td>
+              <td><code>(user_id, status)</code></td>
+              <td>
+                “Lớp của tôi”; đây cũng là bảng dùng để kiểm tra quyền truy cập
+              </td>
+            </tr>
+            <tr>
+              <td>submission</td>
+              <td>
+                unique <code>(assignment_id, student_id)</code>; check
+                <code>score &lt;= max_points</code> (kiểm tra ở service)
+              </td>
+              <td>
+                <code>(assignment_id, status)</code>,
+                <code>(student_id, status)</code>
+              </td>
+              <td>
+                Một học sinh một submission mỗi bài; thống kê theo trạng thái
+              </td>
+            </tr>
+            <tr>
+              <td>assignment</td>
+              <td>check <code>publish_at &lt;= due_at</code></td>
+              <td>
+                <code>(class_id, status, due_at)</code>,
+                <code>(due_at) WHERE status='PUBLISHED'</code>
+              </td>
+              <td>Danh sách bài theo lớp; job quét hạn nộp</td>
+            </tr>
+            <tr>
+              <td>notification</td>
+              <td>unique <code>dedupe_key</code></td>
+              <td><code>(recipient_id, read_at, created_at desc)</code></td>
+              <td>Chặn thông báo trùng; tải chuông nhanh</td>
+            </tr>
+            <tr>
+              <td>grade_event</td>
+              <td>chỉ INSERT (DB role của app không có quyền UPDATE/DELETE)</td>
+              <td><code>(submission_id, created_at)</code></td>
+              <td>Lịch sử chấm không sửa được</td>
+            </tr>
+            <tr>
+              <td>class_invite</td>
+              <td>unique <code>code</code></td>
+              <td>—</td>
+              <td>Mã 8 ký tự bỏ ký tự dễ nhầm (0/O, 1/I)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <ul class="tight">
+        <li>
+          <b>PK:</b> UUIDv7 (sắp theo thời gian, index hiệu quả, không đoán được
+          như id tăng dần).
+        </li>
+        <li>
+          <b>Audit fields:</b> mọi bảng có <code>created_at</code> và
+          <code>updated_at</code>; bảng nghiệp vụ có thêm
+          <code>created_by</code>.
+        </li>
+        <li>
+          <b>Soft delete:</b> chỉ cho user, class, assignment (qua
+          <code>deleted_at</code> hoặc ARCHIVED). Không soft delete submission
+          hay grade_event. Học sinh rời lớp thì
+          <code>class_member.status = REMOVED</code>, bài cũ vẫn được giữ cho
+          giáo viên.
+        </li>
+        <li>
+          <b>Tiền tính cho Phase 2:</b> <code>question.assignment_id</code> có
+          thể nullable kèm <code>bank_id</code> cho ngân hàng câu hỏi;
+          <code>quiz_attempt.attempt_no</code> đã sẵn cho nhiều lượt làm;
+          <code>grade_event</code> đã sẵn cho regrade và multi-grader.
+        </li>
+      </ul>
+    </section>
+
+    <!-- ================= PART 7 ================= -->
+    <section id="p7">
+      <h2><span class="n">PART 7</span>Authorization model</h2>
+      <p class="lede">
+        <b>Authentication</b> trả lời “bạn là ai” (session hợp lệ, tài khoản
+        ACTIVE). <b>Authorization</b> trả lời “bạn được làm gì với tài nguyên
+        <i>này</i>”. Quyền theo role toàn cục (RBAC) chưa đủ; quyết định cuối
+        cùng luôn dựa vào quan hệ với lớp (ReBAC nhẹ qua
+        <code>class_member</code>).
+      </p>
+
+      <div class="tbl">
+        <table>
+          <thead>
+            <tr>
+              <th>Hành động</th>
+              <th class="c">Admin</th>
+              <th class="c">GV của lớp</th>
+              <th class="c">GV khác</th>
+              <th class="c">HS trong lớp</th>
+              <th class="c">HS ngoài lớp</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Tạo lớp</td>
+              <td class="c y">✓</td>
+              <td class="c y">✓</td>
+              <td class="c y">✓</td>
+              <td class="c x">✗</td>
+              <td class="c x">✗</td>
+            </tr>
+            <tr>
+              <td>Xem thông tin lớp</td>
+              <td class="c y">✓</td>
+              <td class="c y">✓</td>
+              <td class="c x">✗</td>
+              <td class="c y">✓</td>
+              <td class="c x">✗</td>
+            </tr>
+            <tr>
+              <td>Sửa / archive lớp, quản lý thành viên</td>
+              <td class="c l">hỗ trợ</td>
+              <td class="c y">✓</td>
+              <td class="c x">✗</td>
+              <td class="c x">✗</td>
+              <td class="c x">✗</td>
+            </tr>
+            <tr>
+              <td>Xem danh sách học sinh</td>
+              <td class="c y">✓</td>
+              <td class="c y">✓</td>
+              <td class="c x">✗</td>
+              <td class="c l">chỉ tên</td>
+              <td class="c x">✗</td>
+            </tr>
+            <tr>
+              <td>Tạo / sửa / archive bài tập</td>
+              <td class="c x">✗</td>
+              <td class="c y">✓</td>
+              <td class="c x">✗</td>
+              <td class="c x">✗</td>
+              <td class="c x">✗</td>
+            </tr>
+            <tr>
+              <td>Xem bài tập đã đăng</td>
+              <td class="c y">✓</td>
+              <td class="c y">✓</td>
+              <td class="c x">✗</td>
+              <td class="c y">✓</td>
+              <td class="c x">✗</td>
+            </tr>
+            <tr>
+              <td>Xem bài tập nháp / đã lên lịch</td>
+              <td class="c y">✓</td>
+              <td class="c y">✓</td>
+              <td class="c x">✗</td>
+              <td class="c x">✗</td>
+              <td class="c x">✗</td>
+            </tr>
+            <tr>
+              <td>Nộp bài</td>
+              <td class="c x">✗</td>
+              <td class="c x">✗</td>
+              <td class="c x">✗</td>
+              <td class="c y">bài của mình</td>
+              <td class="c x">✗</td>
+            </tr>
+            <tr>
+              <td>Xem bài nộp</td>
+              <td class="c l">khi có yêu cầu hỗ trợ, có ghi log</td>
+              <td class="c y">tất cả trong lớp</td>
+              <td class="c x">✗</td>
+              <td class="c y">chỉ của mình</td>
+              <td class="c x">✗</td>
+            </tr>
+            <tr>
+              <td>Chấm, sửa điểm, trả bài</td>
+              <td class="c x">✗</td>
+              <td class="c y">✓</td>
+              <td class="c x">✗</td>
+              <td class="c x">✗</td>
+              <td class="c x">✗</td>
+            </tr>
+            <tr>
+              <td>Xem điểm và nhận xét</td>
+              <td class="c l">có ghi log</td>
+              <td class="c y">✓</td>
+              <td class="c x">✗</td>
+              <td class="c y">của mình, sau khi được trả</td>
+              <td class="c x">✗</td>
+            </tr>
+            <tr>
+              <td>Xem đáp án quiz</td>
+              <td class="c y">✓</td>
+              <td class="c y">✓</td>
+              <td class="c x">✗</td>
+              <td class="c l">theo <code>show_results</code></td>
+              <td class="c x">✗</td>
+            </tr>
+            <tr>
+              <td>Tải file đính kèm của bài tập</td>
+              <td class="c y">✓</td>
+              <td class="c y">✓</td>
+              <td class="c x">✗</td>
+              <td class="c y">✓</td>
+              <td class="c x">✗</td>
+            </tr>
+            <tr>
+              <td>Khóa tài khoản, xem audit log</td>
+              <td class="c y">✓</td>
+              <td class="c x">✗</td>
+              <td class="c x">✗</td>
+              <td class="c x">✗</td>
+              <td class="c x">✗</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Ba tầng thực thi</h3>
+      <div class="grid2">
+        <div class="panel">
+          <h4>1 · Frontend (chỉ để trải nghiệm)</h4>
+          <ul class="tight">
+            <li>Route group theo role; ẩn nút học sinh không dùng được.</li>
+            <li>Middleware chuyển hướng người chưa đăng nhập.</li>
+            <li><b>Không bao giờ</b> được coi là lớp bảo vệ.</li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h4>2 · Policy layer (bắt buộc)</h4>
+          <ul class="tight">
+            <li>
+              Mọi service nhận <code>actor</code> từ session, không nhận userId
+              từ request.
+            </li>
+            <li>
+              Hàm policy tập trung, ví dụ
+              <code>can(actor, "submission.grade", submission)</code>, tra
+              <code>class_member</code>.
+            </li>
+            <li>
+              Tài nguyên không có quyền trả về <b>404</b>, không phải 403, để
+              không lộ việc tài nguyên tồn tại.
+            </li>
+            <li>
+              Lint rule: route handler nào không gọi policy thì CI báo lỗi.
+            </li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h4>3 · Data access layer</h4>
+          <ul class="tight">
+            <li>
+              Repository chỉ có hàm có phạm vi, ví dụ
+              <code>submissions.forStudent(actor, assignmentId)</code>, luôn
+              join <code>class_member</code>.
+            </li>
+            <li>
+              DB role của app không có quyền DDL; <code>grade_event</code> và
+              <code>audit_log</code> chỉ cho INSERT.
+            </li>
+            <li>
+              <span class="tag p2">Phase 2</span> Postgres RLS với
+              <code>SET LOCAL app.user_id</code> làm lớp phòng thủ thứ hai.
+            </li>
+          </ul>
+        </div>
+      </div>
+      <h3>Privacy</h3>
+      <ul class="tight">
+        <li>
+          Học sinh A chỉ thấy bài nộp, điểm và nhận xét của A. Danh sách lớp chỉ
+          hiện tên, không có email hay username của bạn học.
+        </li>
+        <li>
+          Giáo viên chỉ thấy các lớp mình là thành viên với vai trò TEACHER.
+        </li>
+        <li>
+          Admin không tự động có quyền đọc bài nộp và điểm; mỗi lần truy cập hỗ
+          trợ đều ghi <code>audit_log</code> kèm lý do.
+        </li>
+        <li>
+          Điểm chỉ hiện với học sinh khi bài đã được <b>trả</b> (điểm nháp của
+          giáo viên vẫn là nháp).
+        </li>
+        <li>
+          Payload notification và email chỉ chứa tiêu đề và link, không chứa
+          điểm hay nhận xét.
+        </li>
+        <li>
+          Xuất và xóa dữ liệu cá nhân theo yêu cầu
+          <span class="tag p2">Phase 2</span>, phù hợp Nghị định 13/2023/NĐ-CP
+          về bảo vệ dữ liệu cá nhân.
+        </li>
+      </ul>
+    </section>
+
+    <!-- ================= PART 8 ================= -->
+    <section id="p8">
+      <h2><span class="n">PART 8</span>Security architecture</h2>
+      <h3>Checklist</h3>
+      <div class="grid2">
+        <div class="panel">
+          <h4>Authentication</h4>
+          <ul class="tight">
+            <li>
+              argon2id (m=19MiB, t=2, p=1); mật khẩu tối thiểu 8 ký tự, kiểm tra
+              danh sách mật khẩu phổ biến.
+            </li>
+            <li>
+              Session lưu DB; cookie <code>__Host-</code>, httpOnly, Secure,
+              SameSite=Lax.
+            </li>
+            <li>
+              Session hết hạn sau 7 ngày không hoạt động (giáo viên 30 ngày nếu
+              chọn “ghi nhớ”); xoay session id sau đăng nhập và khi đổi mật
+              khẩu.
+            </li>
+            <li>
+              Logout xóa session ở server. Đổi mật khẩu thu hồi mọi phiên khác.
+            </li>
+            <li>
+              Rate limit đăng nhập theo IP và tài khoản; khóa tạm 15 phút sau 10
+              lần sai.
+            </li>
+            <li>
+              Token reset và verify: ngẫu nhiên, chỉ lưu hash, dùng một lần, hết
+              hạn sau 30 phút.
+            </li>
+            <li>
+              Thông báo lỗi đăng nhập chung chung, không lộ tài khoản có tồn tại
+              hay không.
+            </li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h4>Input và output</h4>
+          <ul class="tight">
+            <li>
+              Zod ở mọi biên; từ chối field lạ (chặn gán hàng loạt kiểu
+              <code>role: "ADMIN"</code>).
+            </li>
+            <li>
+              Rich text lưu JSON (TipTap/ProseMirror), render bằng renderer
+              allowlist; không lưu HTML thô.
+            </li>
+            <li>SQL chỉ qua query builder có tham số.</li>
+            <li>
+              CSRF: SameSite=Lax + kiểm tra Origin cho mọi mutation (Server
+              Actions đã có sẵn).
+            </li>
+            <li>
+              CSP có nonce, <code>frame-ancestors 'none'</code>, HSTS,
+              <code>X-Content-Type-Options</code>, <code>Referrer-Policy</code>.
+            </li>
+            <li>CORS: API chỉ same-origin trong MVP.</li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h4>File upload</h4>
+          <ul class="tight">
+            <li>
+              Allowlist theo cả đuôi file và magic bytes; chặn svg và html.
+            </li>
+            <li>Presigned URL khóa kích thước và content-type.</li>
+            <li>
+              Object key ngẫu nhiên; tên gốc được làm sạch và chỉ lưu trong DB.
+            </li>
+            <li>
+              Bucket private; URL tải hết hạn sau 5 phút;
+              <code>Content-Disposition: attachment</code>.
+            </li>
+            <li>
+              Quét ClamAV trong worker. File INFECTED bị chặn tải và giáo viên
+              được báo.
+            </li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h4>Secrets và database</h4>
+          <ul class="tight">
+            <li>
+              Validate env bằng schema khi khởi động; <code>.env</code> nằm
+              trong <code>.gitignore</code>, chỉ commit
+              <code>.env.example</code>.
+            </li>
+            <li>
+              Tách DB user: <code>migrator</code> (DDL) và <code>app</code> (DML
+              giới hạn).
+            </li>
+            <li>Kết nối DB qua TLS; backup mã hóa.</li>
+            <li>Gitleaks trong CI; Dependabot/Renovate.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>Threat analysis</h3>
+      <div class="tbl">
+        <table>
+          <thead>
+            <tr>
+              <th>Mối đe dọa</th>
+              <th>Kịch bản</th>
+              <th>Mức</th>
+              <th>Biện pháp</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>IDOR</td>
+              <td>
+                Học sinh đổi <code>submissionId</code> trong URL để xem bài bạn
+              </td>
+              <td class="x">Cao</td>
+              <td>
+                Không có endpoint theo id cho học sinh; policy trả 404;
+                integration test với 5 actor
+              </td>
+            </tr>
+            <tr>
+              <td>Lộ đáp án quiz</td>
+              <td>Mở DevTools thấy <code>is_correct</code> trong payload</td>
+              <td class="x">Cao</td>
+              <td>
+                DTO riêng cho học sinh; test khẳng định payload không có field
+                đáp án; chấm điểm chỉ ở server
+              </td>
+            </tr>
+            <tr>
+              <td>Leo thang quyền</td>
+              <td>
+                Gửi <code>role=TEACHER</code> khi đăng ký hoặc tham gia lớp
+              </td>
+              <td class="x">Cao</td>
+              <td>
+                Role lấy từ luồng đăng ký, không lấy từ body; schema strict
+              </td>
+            </tr>
+            <tr>
+              <td>Lách deadline</td>
+              <td>Chỉnh giờ máy hoặc sửa request để không bị tính trễ</td>
+              <td class="l">Trung bình</td>
+              <td>
+                <code>submitted_at</code> do server gán;
+                <code>is_late</code> tính ở server
+              </td>
+            </tr>
+            <tr>
+              <td>Stored XSS</td>
+              <td>Chèn script vào đề bài hoặc nhận xét</td>
+              <td class="x">Cao</td>
+              <td>JSON rich text + renderer allowlist + CSP</td>
+            </tr>
+            <tr>
+              <td>File độc hại</td>
+              <td>Upload html hoặc svg để chạy script trên domain app</td>
+              <td class="x">Cao</td>
+              <td>
+                Chặn loại file, domain file riêng, header attachment, ClamAV
+              </td>
+            </tr>
+            <tr>
+              <td>Dò mã lớp</td>
+              <td>Brute-force mã tham gia</td>
+              <td class="l">Trung bình</td>
+              <td>
+                Mã 8 ký tự (khoảng 10^12 tổ hợp), rate limit, giáo viên có thể
+                đổi hoặc tắt mã, tùy chọn duyệt thành viên
+              </td>
+            </tr>
+            <tr>
+              <td>Chiếm tài khoản</td>
+              <td>Credential stuffing</td>
+              <td class="l">Trung bình</td>
+              <td>
+                Rate limit, khóa tạm, cảnh báo đăng nhập mới cho giáo viên, 2FA
+                ở Phase 2
+              </td>
+            </tr>
+            <tr>
+              <td>Lạm dụng storage</td>
+              <td>Upload hàng loạt để tốn chi phí</td>
+              <td class="no">Thấp</td>
+              <td>Quota theo user, dọn file PENDING, giới hạn số file</td>
+            </tr>
+            <tr>
+              <td>Rò rỉ qua log</td>
+              <td>Token hoặc nội dung bài xuất hiện trong log hay Sentry</td>
+              <td class="l">Trung bình</td>
+              <td>
+                pino redact, Sentry scrubbing, review log trong code review
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= PART 9 ================= -->
+    <section id="p9">
+      <h2><span class="n">PART 9</span>UI/UX design system và IA</h2>
+      <p class="lede">
+        Phần này là nền chung cho cả 3 template: token ngữ nghĩa, thang khoảng
+        cách, danh sách component và trạng thái. Mỗi template ở Part 10 chỉ thay
+        giá trị token và cách trình bày.
+      </p>
+
+      <h3>Màu ngữ nghĩa (dùng chung)</h3>
+      <p>
+        Màu trạng thái được tách khỏi màu thương hiệu, và luôn đi kèm chữ hoặc
+        icon, không bao giờ chỉ dựa vào màu:
+      </p>
+      <div class="swatches">
+        <span class="sw"
+          ><i style="background: #15803d"></i>success · Đã nộp, Đã chấm</span
+        >
+        <span class="sw"
+          ><i style="background: #b45309"></i>warning · Sắp hạn, Nộp trễ</span
+        >
+        <span class="sw"
+          ><i style="background: #c2362f"></i>error · Quá hạn, Thiếu bài</span
+        >
+        <span class="sw"
+          ><i style="background: #0369a1"></i>info · Đã trả bài</span
+        >
+        <span class="sw"
+          ><i style="background: #6b7280"></i>neutral · Nháp, Chưa làm</span
+        >
+      </div>
+      <p>
+        Mọi cặp chữ/nền phải đạt tỉ lệ tương phản ≥ 4.5:1; viền của input đạt ≥
+        3:1.
+      </p>
+
+      <div class="grid2">
+        <div class="panel">
+          <h4>Typography</h4>
+          <ul class="tight">
+            <li>
+              Mọi font được chọn đều có đủ dấu tiếng Việt (đã kiểm tra subset
+              vietnamese trên Google Fonts).
+            </li>
+            <li>Thang chữ: 12 / 13 / 14 / 16 / 18 / 22 / 28 / 36.</li>
+            <li>Body 14–16px, line-height 1.5; caption 12–13px.</li>
+            <li>Nút: 14px, weight 600, không viết hoa toàn bộ.</li>
+            <li>Số liệu dùng <code>tabular-nums</code>.</li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h4>Spacing và layout</h4>
+          <ul class="tight">
+            <li>Lưới 4px: 4 / 8 / 12 / 16 / 20 / 24 / 32 / 40 / 48 / 64.</li>
+            <li>
+              Breakpoint: 640 (mobile) / 768 (tablet) / 1024 (laptop) / 1280
+              (desktop).
+            </li>
+            <li>Vùng chạm tối thiểu 44×44px trên mobile.</li>
+            <li>Độ rộng đọc tối đa khoảng 72 ký tự cho đề bài.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>Component library</h3>
+      <div class="tbl">
+        <table>
+          <thead>
+            <tr>
+              <th>Nhóm</th>
+              <th>Component</th>
+              <th>Nguồn</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Cơ bản</td>
+              <td>
+                Button (primary, secondary, ghost, destructive; có loading),
+                Input, Textarea, Select, Checkbox, Radio, Switch, Label,
+                FormError
+              </td>
+              <td>shadcn/ui, chỉnh token</td>
+            </tr>
+            <tr>
+              <td>Overlay</td>
+              <td>
+                Dialog, AlertDialog (xác nhận xóa hoặc trả bài hàng loạt), Sheet
+                (drawer mobile), Dropdown, Popover, Tooltip, Toast (sonner)
+              </td>
+              <td>shadcn/ui</td>
+            </tr>
+            <tr>
+              <td>Hiển thị</td>
+              <td>
+                Card, Table (TanStack Table), Tabs, Badge, Avatar, Pagination,
+                Skeleton, EmptyState
+              </td>
+              <td>shadcn/ui + tự viết</td>
+            </tr>
+            <tr>
+              <td>Ngày giờ</td>
+              <td>
+                DateTimePicker (mặc định 23:59, hiện “còn 2 ngày”), DeadlineText
+                (tương đối + tuyệt đối)
+              </td>
+              <td>react-day-picker + tự viết</td>
+            </tr>
+            <tr>
+              <td>Nghiệp vụ</td>
+              <td>
+                AssignmentCard, AssignmentRow, SubmissionStatusBadge,
+                DeadlineChip, FileUploader (kéo thả, chụp ảnh, tiến trình, thử
+                lại), FileItem, GradeInput, GradeDisplay, FeedbackBox,
+                SubmissionProgressBar, StudentSubmissionList, QuizQuestion,
+                QuizResult, NotificationItem, ClassSwitcher
+              </td>
+              <td>Tự viết trong <code>packages/ui</code></td>
+            </tr>
+            <tr>
+              <td>Khung</td>
+              <td>
+                AppSidebar, TopBar, MobileTabBar, CommandPalette (Template C),
+                PageHeader, StatTile
+              </td>
+              <td>Tự viết</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Information architecture</h3>
+      <p>
+        Không dùng nguyên cấu trúc gợi ý ban đầu. Lý do: “Submissions” và
+        “Students” đứng riêng ở cấp cao nhất là thừa, vì học sinh luôn thuộc lớp
+        và bài nộp luôn thuộc bài tập. Việc thật sự hằng ngày của giáo viên là
+        <b>chấm bài</b>, còn của học sinh là <b>biết hôm nay phải làm gì</b>.
+        Menu được tổ chức quanh hai việc đó.
+      </p>
+      <div class="grid2">
+        <div class="panel">
+          <h4>Giáo viên</h4>
+          <ul class="tight">
+            <li><b>Tổng quan</b>: cần chấm, sắp đến hạn, tiến độ nộp</li>
+            <li><b>Cần chấm</b> (có số đếm): hàng đợi chấm xuyên lớp</li>
+            <li>
+              <b>Lớp học</b> → trong mỗi lớp có tab Bài tập · Học sinh · Bảng
+              điểm · Cài đặt
+            </li>
+            <li>
+              <b>Bài tập</b>: toàn bộ bài xuyên lớp, lọc theo lớp và trạng thái
+            </li>
+            <li>
+              Chuông thông báo và menu tài khoản nằm ở top bar, không chiếm mục
+              menu
+            </li>
+            <li>Nút “+ Tạo” luôn hiện (bài tập, lớp, quiz)</li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h4>Học sinh</h4>
+          <ul class="tight">
+            <li>
+              <b>Việc cần làm</b> (trang chủ): nhóm theo Quá hạn · Hôm nay ·
+              Tuần này · Sau đó
+            </li>
+            <li><b>Lớp học</b> → trong mỗi lớp là danh sách bài tập</li>
+            <li><b>Điểm</b>: điểm và nhận xét đã được trả</li>
+            <li>
+              Mobile: 4 tab dưới cùng (Việc cần làm · Lớp · Điểm · Thông báo)
+            </li>
+            <li>
+              Lịch: gộp vào Việc cần làm (xem theo ngày) thay vì một trang riêng
+              <span class="tag p2">Phase 2</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>UX states (áp dụng cho mọi màn hình)</h3>
+      <div class="tbl">
+        <table>
+          <thead>
+            <tr>
+              <th>State</th>
+              <th>Cách hiển thị</th>
+              <th>Ví dụ copy</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Loading</td>
+              <td>
+                Skeleton đúng hình dạng nội dung; không spinner toàn trang
+              </td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td>Empty</td>
+              <td>Giải thích và một hành động chính</td>
+              <td>“Chưa có bài tập nào. Tạo bài đầu tiên cho lớp 10A1.”</td>
+            </tr>
+            <tr>
+              <td>Error</td>
+              <td>Nói rõ lỗi gì và cách sửa; có nút Thử lại</td>
+              <td>
+                “Không tải được danh sách bài nộp. Kiểm tra kết nối rồi thử
+                lại.”
+              </td>
+            </tr>
+            <tr>
+              <td>Unauthorized (401)</td>
+              <td>Chuyển về đăng nhập, giữ lại URL để quay về</td>
+              <td>“Phiên đăng nhập đã hết. Đăng nhập lại để tiếp tục.”</td>
+            </tr>
+            <tr>
+              <td>Forbidden / Not found</td>
+              <td>Cùng một màn hình (không lộ tài nguyên có tồn tại)</td>
+              <td>“Không tìm thấy trang này hoặc bạn không có quyền xem.”</td>
+            </tr>
+            <tr>
+              <td>Offline</td>
+              <td>Banner cố định; nháp lưu cục bộ, tự đồng bộ khi có mạng</td>
+              <td>“Mất kết nối. Bài làm vẫn được lưu trên máy này.”</td>
+            </tr>
+            <tr>
+              <td>Submitting</td>
+              <td>Khóa nút, hiện tiến trình upload từng file</td>
+              <td>“Đang nộp… 2/3 file”</td>
+            </tr>
+            <tr>
+              <td>Submitted</td>
+              <td>Badge xanh + thời điểm; nút “Rút lại” nếu chưa chấm</td>
+              <td>“Đã nộp lúc 21:14, 29/09”</td>
+            </tr>
+            <tr>
+              <td>Late</td>
+              <td>Badge cam, luôn kèm thời gian trễ</td>
+              <td>“Nộp trễ 2 giờ 15 phút”</td>
+            </tr>
+            <tr>
+              <td>Graded / Returned</td>
+              <td>Điểm lớn + nhận xét; nút “Nộp lại” nếu được phép</td>
+              <td>“8,5/10 · Cô Hà đã trả bài”</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <h3>Accessibility</h3>
+      <ul class="tight">
+        <li>
+          HTML ngữ nghĩa (<code>nav</code>, <code>main</code>,
+          <code>table</code> có <code>th scope</code>); có link “Bỏ qua tới nội
+          dung”.
+        </li>
+        <li>
+          Focus ring nhìn thấy được, dày 2px, tương phản ≥ 3:1; thứ tự tab hợp
+          lý; dialog giữ focus bên trong.
+        </li>
+        <li>
+          Mọi input có label; lỗi gắn với input qua
+          <code>aria-describedby</code> và được đọc bởi screen reader.
+        </li>
+        <li>
+          Toast và kết quả nộp bài dùng <code>aria-live="polite"</code>; đồng hồ
+          đếm ngược của quiz không đọc liên tục.
+        </li>
+        <li>
+          Tôn trọng <code>prefers-reduced-motion</code>; hỗ trợ phóng to 200%
+          không vỡ layout.
+        </li>
+      </ul>
+    </section>
+
+    <!-- ================= PART 10 ================= -->
+    <section id="p10">
+      <h2><span class="n">PART 10</span>3 design template</h2>
+      <p class="lede">
+        Mỗi template khác nhau về cấu trúc điều hướng, mật độ thông tin,
+        typography và cách hiển thị trạng thái, không chỉ khác màu. Mockup bên
+        dưới là HTML thật: chuyển giữa 4 màn hình và bấm “Mobile” để xem layout
+        co lại ở 390px. Dữ liệu là ví dụ minh họa.
+      </p>
+
+      <div class="tpl-tabs" role="tablist" aria-label="Template">
+        <button role="tab" id="tab-A" aria-selected="true" data-t="A">
+          A · Sáng Lớp
+        </button>
+        <button role="tab" id="tab-B" aria-selected="false" data-t="B">
+          B · Trang Giấy
+        </button>
+        <button role="tab" id="tab-C" aria-selected="false" data-t="C">
+          C · Sổ Tay
+        </button>
+      </div>
+
+      <div id="spec"></div>
+
+      <div class="seg" role="group" aria-label="Màn hình">
+        <button data-s="td" aria-pressed="true">GV · Tổng quan</button>
+        <button data-s="sd" aria-pressed="false">HS · Việc cần làm</button>
+        <button data-s="ad" aria-pressed="false">HS · Chi tiết bài tập</button>
+        <button data-s="gr" aria-pressed="false">GV · Chấm bài</button>
+        <span style="flex: 1"></span>
+        <button data-v="desk" aria-pressed="true">Desktop</button>
+        <button data-v="mob" aria-pressed="false">Mobile</button>
+      </div>
+      <div class="stage"><div class="frame" id="frame"></div></div>
+      <p class="cap" id="cap"></p>
+
+      <h3>So sánh nhanh</h3>
+      <div class="tbl">
+        <table>
+          <thead>
+            <tr>
+              <th>Tiêu chí</th>
+              <th>A · Sáng Lớp</th>
+              <th>B · Trang Giấy</th>
+              <th>C · Sổ Tay</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Dễ dùng lần đầu</td>
+              <td class="y">Rất cao</td>
+              <td>Cao</td>
+              <td class="l">Trung bình</td>
+            </tr>
+            <tr>
+              <td>Tốc độ giáo viên xử lý 100+ bài</td>
+              <td>Trung bình</td>
+              <td class="l">Thấp</td>
+              <td class="y">Rất cao</td>
+            </tr>
+            <tr>
+              <td>Trải nghiệm học sinh trên mobile</td>
+              <td class="y">Rất tốt</td>
+              <td class="y">Tốt</td>
+              <td>Khá</td>
+            </tr>
+            <tr>
+              <td>Nét riêng, khác LMS thông thường</td>
+              <td class="l">Thấp</td>
+              <td class="y">Cao</td>
+              <td>Trung bình</td>
+            </tr>
+            <tr>
+              <td>Công sức dựng</td>
+              <td class="y">Thấp (gần shadcn mặc định)</td>
+              <td>Trung bình (typography cần chăm chút)</td>
+              <td class="l">Cao (bàn phím, command palette, split view)</td>
+            </tr>
+            <tr>
+              <td>Tái sử dụng cho các site giáo dục khác</td>
+              <td class="y">Rất cao</td>
+              <td>Trung bình</td>
+              <td>Trung bình</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout" id="decide">
+        <b>Khuyến nghị của tôi: A + C.</b> Dùng ngôn ngữ thị giác của A (thân
+        thiện, dễ đọc, tối ưu mobile) cho toàn bộ phía học sinh và các trang
+        tổng quan. Mượn cấu trúc của C cho không gian làm việc của giáo viên:
+        danh sách bài dạng bảng, màn chấm bài chia 3 cột với phím J/K, và ⌘K.
+        Một bộ token, hai mật độ (comfortable cho học sinh, compact cho giáo
+        viên). B đẹp và khác biệt nhất, nhưng dàn trải thông tin và chậm cho
+        việc chấm bài hằng ngày; nó hợp với trang giới thiệu hoặc portfolio hơn
+        là công cụ làm việc.
+      </div>
+      <p>
+        <b>Dừng tại đây.</b> Tôi chưa tạo file implementation, migration, API
+        hay component nào. Hãy trả lời bằng một trong: <code>A</code> ·
+        <code>B</code> · <code>C</code> · <code>A + B</code> ·
+        <code>B + C</code> · <code>A + C</code> (hoặc mô tả cách kết hợp khác).
+        Sau đó tôi sẽ đi tiếp theo thứ tự: Design System Final → Architecture
+        Final → Database Schema → Backend Plan → Frontend Plan → Security
+        Implementation → Testing Plan → Implementation Roadmap → Coding.
+      </p>
+    </section>
+  </div>
+</div>
+
+<script>
+  const I = {
+    home: '<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+    check:
+      '<path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/>',
+    book: '<path d="M4 19V5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M8 7h7"/>',
+    list: '<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/>',
+    bell: '<path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10 21a2 2 0 0 0 4 0"/>',
+    search: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    users:
+      '<circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0"/><path d="M17 4a4 4 0 0 1 0 8M22 21a6 6 0 0 0-4-5.6"/>',
+    file: '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/>',
+    upload:
+      '<path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
+    alert: '<path d="M12 3l10 18H2z"/><path d="M12 10v4M12 17.5v.5"/>',
+    star: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
+    menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
+    cal: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+    chev: '<path d="M9 6l6 6-6 6"/>',
+    left: '<path d="M15 6l-6 6 6 6"/>',
+  };
+  const ic = (n) => `<svg viewBox="0 0 24 24" aria-hidden="true">${I[n]}</svg>`;
+
+  /* ======================= TEMPLATE A ======================= */
+  function aShell(role, active, body) {
+    const t = role === "t";
+    const nav = t
+      ? [
+          ["home", "Tổng quan", "td"],
+          ["check", "Cần chấm", "gr", 17],
+          ["book", "Lớp học", ""],
+          ["list", "Bài tập", ""],
+        ]
+      : [
+          ["home", "Việc cần làm", "sd"],
+          ["book", "Lớp học", "ad"],
+          ["star", "Điểm", ""],
+        ];
+    const cls = t
+      ? [
+          ["#2458D6", "10A1 · Toán", 38],
+          ["#0E8A7D", "10A2 · Toán", 36],
+          ["#B45309", "11B3 · Toán", 40],
+          ["#7C4DCC", "CLB Toán nâng cao", 18],
+        ]
+      : [
+          ["#2458D6", "Toán · 10A1"],
+          ["#0E8A7D", "Ngữ văn · 10A1"],
+          ["#B45309", "Tiếng Anh · 10A1"],
+          ["#7C4DCC", "Vật lý · 10A1"],
+        ];
+    return `<div class="mk tA">
+ <aside class="side">
+  <div class="logo"><i>C</i>Classroom</div>
+  ${nav.map((n) => `<div class="nav ${n[2] === active ? "on" : ""}">${ic(n[0])}${n[1]}${n[3] ? `<span class="ct">${n[3]}</span>` : ""}</div>`).join("")}
+  <div class="grp">Lớp của ${t ? "tôi" : "em"}</div>
+  ${cls.map((c) => `<div class="cls"><span class="dot" style="background:${c[0]}"></span>${c[1]}${c[2] ? `<span style="margin-left:auto;color:var(--k-mut);font-size:12px" class="num">${c[2]}</span>` : ""}</div>`).join("")}
+  <div class="me"><span class="av">${t ? "NH" : "MK"}</span><div><div style="font-weight:600;font-size:13px">${t ? "Nguyễn Thu Hà" : "Trần Minh Khoa"}</div><div style="font-size:12px;color:var(--k-mut)">${t ? "Giáo viên" : "Học sinh · 10A1"}</div></div></div>
+ </aside>
+ <main>
+  <div class="bar"><div class="search">${ic("search")}Tìm bài tập, lớp, học sinh…</div><span style="flex:1"></span>
+   ${t ? `<button class="btn">${ic("plus")}<span>Tạo bài tập</span></button>` : ""}
+   <div class="icon-btn">${ic("bell")}<b></b></div></div>
+  ${body}
+  <nav class="tabbar">${(t
+    ? [
+        ["home", "Tổng quan", "td"],
+        ["check", "Cần chấm", "gr"],
+        ["book", "Lớp", ""],
+        ["bell", "Thông báo", ""],
+      ]
+    : [
+        ["home", "Việc cần làm", "sd"],
+        ["book", "Lớp", "ad"],
+        ["star", "Điểm", ""],
+        ["bell", "Thông báo", ""],
+      ]
+  )
+    .map(
+      (x) =>
+        `<div class="${x[2] === active ? "on" : ""}">${ic(x[0])}${x[1]}</div>`
+    )
+    .join("")}</nav>
+ </main></div>`;
+  }
+  const A = {
+    td: () =>
+      aShell(
+        "t",
+        "td",
+        `<div class="content">
+ <div class="hello"><h1>Chào cô Hà</h1><p>Thứ Hai, 29/09 · Bạn có 17 bài cần chấm và 4 hạn nộp trong tuần này.</p></div>
+ <div class="stats">
+  <div class="stat"><div class="ico" style="background:var(--k-pri-s);color:var(--k-pri)">${ic("users")}</div><strong class="num">132</strong><span>Học sinh · 4 lớp</span></div>
+  <div class="stat"><div class="ico" style="background:var(--k-warn-s);color:var(--k-warn)">${ic("check")}</div><strong class="num">17</strong><span>Bài cần chấm</span></div>
+  <div class="stat"><div class="ico" style="background:var(--k-sec-s);color:var(--k-sec)">${ic("clock")}</div><strong class="num">4</strong><span>Hạn nộp trong 7 ngày</span></div>
+  <div class="stat"><div class="ico" style="background:var(--k-bad-s);color:var(--k-bad)">${ic("alert")}</div><strong class="num">5</strong><span>Nộp trễ tuần này</span></div>
+ </div>
+ <div class="row2">
+  <div class="card"><h3>Tiến độ nộp bài <a href="#">Xem tất cả</a></h3>
+   <div class="legend" style="margin-bottom:12px"><span><i style="background:var(--k-ok)"></i>Đã chấm</span><span><i style="background:var(--k-pri)"></i>Chờ chấm</span><span><i style="background:var(--k-warn)"></i>Nộp trễ</span><span><i style="background:#E3E7EF"></i>Chưa nộp</span></div>
+   <div class="prog">
+    ${[
+      ["Bài tập Hàm số bậc hai", "10A1 · hạn 30/09", 38, 12, 14, 3],
+      ["Quiz: Mệnh đề và tập hợp", "10A2 · tự chấm", 36, 34, 0, 0],
+      ["Phiếu học tập Vectơ", "11B3 · hạn 02/10", 40, 0, 8, 0],
+      ["Đề luyện HSG số 4", "CLB · hạn 05/10", 18, 0, 2, 0],
+    ]
+      .map((r) => {
+        const tot = r[2],
+          g = r[3],
+          p = r[4],
+          l = r[5];
+        return `<div><div style="display:flex;justify-content:space-between;gap:8px"><div><div style="font-weight:500">${r[0]}</div><div style="font-size:12px;color:var(--k-mut)">${r[1]}</div></div><div class="num" style="font-size:13px;font-weight:600;white-space:nowrap">${g + p + l}/${tot} đã nộp</div></div><div class="pbar"><i style="width:${(g / tot) * 100}%;background:var(--k-ok)"></i><i style="width:${(p / tot) * 100}%;background:var(--k-pri)"></i><i style="width:${(l / tot) * 100}%;background:var(--k-warn)"></i></div></div>`;
+      })
+      .join("")}
+   </div></div>
+  <div class="card"><h3>Sắp đến hạn</h3>
+   ${[
+     ["30", "Th9", "Hàm số bậc hai", "10A1 · 23:59", "9 chưa nộp", "b-warn"],
+     [
+       "02",
+       "Th10",
+       "Phiếu học tập Vectơ",
+       "11B3 · 23:59",
+       "32 chưa nộp",
+       "b-mut",
+     ],
+     ["05", "Th10", "Đề luyện HSG số 4", "CLB · 20:00", "16 chưa nộp", "b-mut"],
+   ]
+     .map(
+       (d) =>
+         `<div class="li"><div class="date"><b>${d[0]}</b><small>${d[1]}</small></div><div><div class="t">${d[2]}</div><div class="s">${d[3]}</div></div><div class="r"><span class="badge ${d[5]}">${d[4]}</span></div></div>`
+     )
+     .join("")}
+  </div>
+ </div>
+ <div><h3 style="font-size:15px;margin:0 0 10px">Lớp học</h3><div class="classes">
+  ${[
+    ["#2458D6", "10A1 · Toán", "38 học sinh", "2 bài đang mở"],
+    ["#0E8A7D", "10A2 · Toán", "36 học sinh", "1 bài đang mở"],
+    ["#B45309", "11B3 · Toán", "40 học sinh", "1 bài đang mở"],
+    ["#7C4DCC", "CLB Toán nâng cao", "18 học sinh", "1 bài đang mở"],
+  ]
+    .map(
+      (c) =>
+        `<div class="cc"><div class="top" style="background:${c[0]}"></div><b>${c[1]}</b><small>${c[2]} · ${c[3]}</small></div>`
+    )
+    .join("")}
+ </div></div>
+</div>`
+      ),
+    sd: () =>
+      aShell(
+        "s",
+        "sd",
+        `<div class="content">
+ <div class="hello"><h1>Chào Khoa</h1><p>Em có 3 bài cần làm trong tuần này.</p></div>
+ <div class="row2">
+  <div style="display:grid;gap:12px">
+   <div style="font-weight:600;font-size:13px;color:var(--k-bad)">Quá hạn</div>
+   <div class="acard" style="border-color:#F2C9C5"><div class="sub"><span class="dot" style="background:#7C4DCC"></span>Vật lý · Thầy Phạm Quang</div><h4>Báo cáo thí nghiệm con lắc đơn</h4><div class="ft"><span class="badge b-bad">${ic("alert")}Quá hạn 1 ngày · vẫn nhận bài trễ</span><button class="btn ghost">Làm bài</button></div></div>
+   <div style="font-weight:600;font-size:13px;color:var(--k-mut);margin-top:6px">Tuần này</div>
+   <div class="acard"><div class="sub"><span class="dot" style="background:#0E8A7D"></span>Ngữ văn · Cô Lê Mai</div><h4>Nghị luận: Tức nước vỡ bờ</h4><div class="ft"><span class="badge b-warn">${ic("clock")}Hạn 7:00 sáng mai</span><span class="badge b-mut">Nháp đã lưu</span></div></div>
+   <div class="acard"><div class="sub"><span class="dot" style="background:#2458D6"></span>Toán · Cô Nguyễn Thu Hà</div><h4>Bài tập Hàm số bậc hai</h4><div class="ft"><span class="badge b-pri">${ic("clock")}Còn 2 ngày · 30/09 23:59</span><span class="badge b-mut">Chưa làm</span></div></div>
+   <div class="acard"><div class="sub"><span class="dot" style="background:#B45309"></span>Tiếng Anh · Thầy David Tran</div><h4>Unit 3 Vocabulary Quiz · 15 câu</h4><div class="ft"><span class="badge b-pri">${ic("clock")}01/10 · 20 phút</span><span class="badge b-mut">Chưa làm</span></div></div>
+  </div>
+  <div style="display:grid;gap:18px;align-content:start">
+   <div class="card" style="display:flex;gap:16px;align-items:center"><div class="ring"><div class="num">3/5</div></div><div><b class="disp">Tuần này</b><div style="font-size:13px;color:var(--k-mut)">Em đã nộp 3 trên 5 bài. Còn 2 bài trước Chủ nhật.</div></div></div>
+   <div class="card"><h3>Điểm mới trả <a href="#">Tất cả</a></h3>
+    ${[
+      ["Quiz: Mệnh đề và tập hợp", "Toán · hôm qua", "9,0"],
+      ["Nghị luận xã hội", "Ngữ văn · 26/09", "7,5"],
+      ["Chuyển động thẳng đều", "Vật lý · 24/09", "8,25"],
+    ]
+      .map(
+        (g) =>
+          `<div class="li"><div><div class="t">${g[0]}</div><div class="s">${g[1]}</div></div><div class="r"><span class="grade num">${g[2]}</span><span style="color:var(--k-mut)">/10</span></div></div>`
+      )
+      .join("")}
+   </div>
+  </div>
+ </div>
+</div>`
+      ),
+    ad: () =>
+      aShell(
+        "s",
+        "ad",
+        `<div class="content">
+ <div class="crumb">Toán · 10A1 › Bài tập</div>
+ <div class="detail">
+  <div class="card" style="display:grid;gap:14px">
+   <div><span class="badge b-pri">Bài tự luận · 10 điểm</span><h1 style="font-size:22px;margin:10px 0 6px">Bài tập Hàm số bậc hai</h1>
+   <div class="meta"><span>${ic("users")}Cô Nguyễn Thu Hà</span><span>${ic("cal")}Đăng 25/09</span><span>${ic("clock")}Hạn Thứ Ba, 30/09 · 23:59</span></div></div>
+   <div class="prose"><p>Làm bài 1 đến 5 trang 42 SGK Đại số 10. Với mỗi hàm số, xác định đỉnh, trục đối xứng và vẽ đồ thị trên giấy kẻ ô.</p><p>Chụp rõ từng trang, đủ sáng, hoặc nộp một file PDF. Bài 5 là bài nâng cao, không bắt buộc.</p></div>
+   <div style="display:grid;gap:8px"><div style="font-weight:600;font-size:13px">Tài liệu (2)</div>
+    <div class="file"><span class="ft" style="background:var(--k-bad-s);color:var(--k-bad)">PDF</span><div><div>Phieu_ham_so_bac_hai.pdf</div><div style="font-size:12px;color:var(--k-mut)">1,2 MB</div></div></div>
+    <div class="file"><span class="ft" style="background:var(--k-sec-s);color:var(--k-sec)">PNG</span><div><div>Do_thi_mau.png</div><div style="font-size:12px;color:var(--k-mut)">340 KB</div></div></div></div>
+  </div>
+  <div class="card" style="display:grid;gap:12px">
+   <h3 style="margin:0">Bài làm của em <span class="badge b-mut">Nháp</span></h3>
+   <div class="due">${ic("clock")}Còn 2 ngày 5 giờ</div>
+   <textarea rows="3" aria-label="Ghi chú cho giáo viên">Em nộp bài 1 đến 4 ạ.</textarea>
+   <div class="file"><span class="ft" style="background:var(--k-pri-s);color:var(--k-pri)">JPG</span><div style="flex:1"><div>trang-1.jpg</div><div style="font-size:12px;color:var(--k-mut)">1,4 MB · đã tải lên</div></div></div>
+   <div class="drop">${ic("upload")}<div><b>Chọn file</b> hoặc chụp ảnh</div><div style="font-size:12px">PDF, ảnh, Word · tối đa 25 MB</div></div>
+   <button class="btn" style="justify-content:center;padding:12px">Nộp bài</button>
+   <div style="font-size:12px;color:var(--k-mut);text-align:center">Nháp tự lưu lúc 20:41</div>
+  </div>
+ </div>
+</div>`
+      ),
+    gr: () =>
+      aShell(
+        "t",
+        "gr",
+        `<div class="grading">
+ <div class="gl"><div style="font-weight:600;padding:4px 8px 10px">Hàm số bậc hai · 10A1</div>
+  <div style="font-size:12px;color:var(--k-mut);padding:0 8px 8px">29 đã nộp · 12 đã chấm</div>
+  ${[
+    ["LA", "Lê Hoàng Anh", "Đã nộp", "b-pri", 1],
+    ["NB", "Ngô Bảo Châu", "Nộp trễ", "b-warn"],
+    ["PD", "Phạm Đức Duy", "8,5", "b-ok"],
+    ["TG", "Trần Gia Hân", "Đã nộp", "b-pri"],
+    ["VK", "Vũ Khánh Linh", "Chưa nộp", "b-mut"],
+    ["HM", "Hồ Minh Nhật", "9,0", "b-ok"],
+  ]
+    .map(
+      (s) =>
+        `<div class="st ${s[4] ? "on" : ""}"><span class="av" style="width:28px;height:28px">${s[0]}</span><span style="flex:1">${s[1]}</span><span class="badge ${s[3]}">${s[2]}</span></div>`
+    )
+    .join("")}
+ </div>
+ <div class="gv"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><div><div style="font:600 17px Lexend">Lê Hoàng Anh</div><div style="font-size:12.5px;color:var(--k-mut)">Nộp 29/09 lúc 21:14 · đúng hạn</div></div><span class="badge b-ok">Đúng hạn</span></div>
+  <div class="paper"><div style="font-size:13px;color:var(--k-mut)">Ghi chú của học sinh</div><div>Em nộp bài 1–4, bài 5 em làm được câu a ạ.</div></div>
+  <div class="thumbs"><div class="thumb">trang-1.jpg</div><div class="thumb">trang-2.jpg</div></div>
+ </div>
+ <div class="gp">
+  <div><span class="lbl">Điểm</span><div class="score"><input value="8.5" aria-label="Điểm"><span>/ 10</span></div></div>
+  <div><span class="lbl">Nhận xét</span><textarea rows="5" aria-label="Nhận xét">Đồ thị bài 3 vẽ đúng. Bài 4 cần ghi rõ trục đối xứng x = 2.</textarea></div>
+  <button class="btn ok" style="justify-content:center;padding:12px">Trả bài</button>
+  <button class="btn ghost" style="justify-content:center">Lưu nháp, chưa trả</button>
+  <div style="font-size:12px;color:var(--k-mut)">Lịch sử: chưa có điểm trước đó</div>
+ </div>
+</div>`
+      ),
+  };
+
+  /* ======================= TEMPLATE B ======================= */
+  function bShell(role, active, body) {
+    const t = role === "t";
+    const nav = t
+      ? [
+          ["Tổng quan", "td"],
+          ["Cần chấm", "gr"],
+          ["Lớp học", ""],
+          ["Bài tập", ""],
+        ]
+      : [
+          ["Việc cần làm", "sd"],
+          ["Lớp học", "ad"],
+          ["Điểm", ""],
+        ];
+    return `<div class="mk tB"><header><div class="wm">classroom<em>.</em></div>
+ <nav>${nav.map((n) => `<a class="${n[1] === active ? "on" : ""}">${n[0]}</a>`).join("")}</nav>
+ <div class="hr"><span class="search">Tìm</span><span class="new">3 thông báo mới</span><span class="ini">${t ? "NH" : "MK"}</span></div></header>
+ <div class="mnav">${nav.map((n) => `<span class="${n[1] === active ? "on" : ""}">${n[0]}</span>`).join("")}<span>Thông báo · 3</span></div>
+ ${body}</div>`;
+  }
+  const B = {
+    td: () =>
+      bShell(
+        "t",
+        "td",
+        `<div class="page">
+ <div class="kick">Thứ Hai, 29 tháng 9</div>
+ <h1>Chào buổi tối, cô Hà.</h1>
+ <p class="sum">Có <b>17 bài</b> đang chờ cô chấm, và <b>4 hạn nộp</b> trong tuần này. Lớp 10A1 còn 9 em chưa nộp bài Hàm số.</p>
+ <div class="big"><div><strong class="num">17</strong><span>cần chấm</span></div><div><strong class="num">82%</strong><span>tỉ lệ nộp tuần này</span></div><div><strong class="num warn">5</strong><span>bài nộp trễ</span></div></div>
+ <div class="cols">
+  <div><h2>Bài tập đang mở</h2>
+   ${[
+     [
+       "Bài tập Hàm số bậc hai",
+       "10A1 · hạn thứ Ba 23:59",
+       29,
+       38,
+       12,
+       "17 chờ chấm",
+     ],
+     ["Quiz: Mệnh đề và tập hợp", "10A2 · đã tự chấm", 34, 36, 34, "Hoàn tất"],
+     ["Phiếu học tập Vectơ", "11B3 · hạn thứ Năm", 8, 40, 0, "8 chờ chấm"],
+     ["Đề luyện HSG số 4", "CLB · hạn chủ nhật", 2, 18, 0, "2 chờ chấm"],
+   ]
+     .map(
+       (r) =>
+         `<div class="it"><div><div class="t">${r[0]}</div><div class="m">${r[1]}</div></div><div class="v"><strong class="num">${r[2]}<span style="font-size:15px;color:var(--k-mut)">/${r[3]}</span></strong>${r[5]}</div><div class="line"><i style="width:${(r[2] / r[3]) * 100}%"></i><u style="left:0;width:${(r[4] / r[3]) * 100}%"></u></div></div>`
+     )
+     .join("")}
+   <p class="tl" style="margin-top:10px">Vạch đen: đã nộp · vạch xanh: đã chấm</p>
+  </div>
+  <div><h2>Lớp của tôi</h2>
+   ${[
+     ["10A1 · Toán", "38 em"],
+     ["10A2 · Toán", "36 em"],
+     ["11B3 · Toán", "40 em"],
+     ["CLB Toán nâng cao", "18 em"],
+   ]
+     .map((c) => `<div class="cl">${c[0]}<span>${c[1]}</span></div>`)
+     .join("")}
+   <h2 style="margin-top:36px">Sắp đến hạn</h2>
+   ${[
+     ["Thứ Ba 30/9", "Hàm số bậc hai"],
+     ["Thứ Năm 2/10", "Phiếu Vectơ"],
+     ["Chủ nhật 5/10", "Đề HSG số 4"],
+   ]
+     .map((d) => `<div class="cl">${d[1]}<span>${d[0]}</span></div>`)
+     .join("")}
+  </div>
+ </div></div>`
+      ),
+    sd: () =>
+      bShell(
+        "s",
+        "sd",
+        `<div class="page">
+ <div class="kick">Thứ Hai, 29 tháng 9</div>
+ <h1>Việc cần làm</h1>
+ <p class="sum">Em có <b>3 bài</b> trong tuần này và <b>1 bài quá hạn</b>.</p>
+ <div class="cols">
+  <div>
+   <h2 class="bad" style="border-bottom-color:var(--k-bad)">Quá hạn</h2>
+   <div class="it"><div><div class="t">Báo cáo thí nghiệm con lắc đơn</div><div class="m">Vật lý · Thầy Phạm Quang</div></div><div class="v"><span class="status bad">Quá hạn 1 ngày</span><br><span class="tl">vẫn nhận bài trễ</span></div></div>
+   <h2 style="margin-top:32px">Tuần này</h2>
+   <div class="it"><div><div class="t">Nghị luận: Tức nước vỡ bờ</div><div class="m">Ngữ văn · Cô Lê Mai · Nháp đã lưu</div></div><div class="v"><span class="status warn">7:00 sáng mai</span></div></div>
+   <div class="it"><div><div class="t">Bài tập Hàm số bậc hai</div><div class="m">Toán · Cô Nguyễn Thu Hà</div></div><div class="v"><span class="status">Thứ Ba, 23:59</span></div></div>
+   <div class="it"><div><div class="t">Unit 3 Vocabulary Quiz</div><div class="m">Tiếng Anh · 15 câu · 20 phút</div></div><div class="v"><span class="status">Thứ Tư, 1/10</span></div></div>
+  </div>
+  <div><h2>Điểm gần đây</h2>
+   ${[
+     ["Quiz: Mệnh đề", "Toán", "9,0"],
+     ["Nghị luận xã hội", "Ngữ văn", "7,5"],
+     ["Chuyển động thẳng đều", "Vật lý", "8,25"],
+   ]
+     .map(
+       (g) =>
+         `<div class="it"><div><div class="t" style="font-size:17px">${g[0]}</div><div class="m">${g[1]}</div></div><div class="v"><strong class="num acc">${g[2]}</strong></div></div>`
+     )
+     .join("")}
+   <h2 style="margin-top:32px">Tiến độ</h2>
+   <p class="serif" style="font-size:18px;margin:12px 0 0">Đã nộp <b>3</b> trên <b>5</b> bài tuần này.</p>
+  </div>
+ </div></div>`
+      ),
+    ad: () =>
+      bShell(
+        "s",
+        "ad",
+        `<div class="page"><div class="doc">
+ <article>
+  <div class="kick">Toán · 10A1 · Bài tự luận · 10 điểm</div>
+  <h1>Bài tập Hàm số bậc hai</h1>
+  <div class="meta"><span>Cô Nguyễn Thu Hà</span><span>Đăng 25/09</span><span>Hạn thứ Ba 30/09, 23:59</span></div>
+  <div class="prose"><p>Làm bài 1 đến 5 trang 42 SGK Đại số 10. Với mỗi hàm số, xác định đỉnh, trục đối xứng và vẽ đồ thị trên giấy kẻ ô.</p><p>Chụp rõ từng trang, đủ sáng, hoặc nộp một file PDF. Bài 5 là bài nâng cao, không bắt buộc.</p></div>
+  <h2 style="margin-top:28px">Tài liệu</h2>
+  <div class="att"><a>Phieu_ham_so_bac_hai.pdf</a><span class="tl">PDF · 1,2 MB</span></div>
+  <div class="att"><a>Do_thi_mau.png</a><span class="tl">Ảnh · 340 KB</span></div>
+ </article>
+ <aside class="aside">
+  <div class="tl">Hạn nộp</div><div class="dd">Còn 2 ngày 5 giờ</div>
+  <div class="tl">Trạng thái: <b style="color:var(--k-text)">Nháp</b> · tự lưu 20:41</div>
+  <textarea rows="2" aria-label="Ghi chú">Em nộp bài 1 đến 4 ạ.</textarea>
+  <div class="att"><span>trang-1.jpg</span><span class="tl">1,4 MB</span></div>
+  <div class="drop">Kéo file vào đây, hoặc <u>chọn file</u></div>
+  <button class="btn">Nộp bài</button>
+ </aside>
+</div></div>`
+      ),
+    gr: () =>
+      bShell(
+        "t",
+        "gr",
+        `<div class="page">
+ <div class="pager"><span>← Ngô Bảo Châu</span><span>Hàm số bậc hai · 10A1 · 13 / 29</span><span>Trần Gia Hân →</span></div>
+ <div class="sheet">
+  <div>
+   <div class="kick">Nộp 29/09, 21:14 · đúng hạn</div>
+   <h1 style="font-size:36px">Lê Hoàng Anh</h1>
+   <p class="prose" style="margin:0 0 20px">“Em nộp bài 1–4, bài 5 em làm được câu a ạ.”</p>
+   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px"><div class="ph">trang-1.jpg</div><div class="ph">trang-2.jpg</div></div>
+  </div>
+  <aside class="aside">
+   <div class="tl">Điểm</div>
+   <div class="scorebig"><input value="8,5" aria-label="Điểm"><span>/ 10</span></div>
+   <div class="tl" style="margin-top:8px">Nhận xét</div>
+   <textarea rows="4" aria-label="Nhận xét" class="serif" style="font-size:17px">Đồ thị bài 3 vẽ đúng. Bài 4 cần ghi rõ trục đối xứng x = 2.</textarea>
+   <button class="btn">Trả bài</button>
+   <button class="btn alt">Lưu, chưa trả</button>
+  </aside>
+ </div></div>`
+      ),
+  };
+
+  /* ======================= TEMPLATE C ======================= */
+  function cShell(role, active, crumb, actions, body, fill) {
+    const t = role === "t";
+    const side = t
+      ? `
+  <div class="ni ${active === "td" ? "on" : ""}">${ic("home")}Tổng quan</div>
+  <div class="ni ${active === "gr" ? "on" : ""}">${ic("check")}Cần chấm<span class="ct hot">17</span></div>
+  <div class="ni">${ic("list")}Tất cả bài tập<span class="ct">24</span></div>
+  <div class="ni">${ic("bell")}Thông báo<span class="ct">3</span></div>
+  <div class="sec">Lớp học</div>
+  <div class="ni"><span class="caret">▾</span>10A1 · Toán<span class="ct">38</span></div>
+  <div class="ni sub">Bài tập</div><div class="ni sub">Học sinh</div><div class="ni sub">Bảng điểm</div>
+  <div class="ni"><span class="caret">▸</span>10A2 · Toán<span class="ct">36</span></div>
+  <div class="ni"><span class="caret">▸</span>11B3 · Toán<span class="ct">40</span></div>
+  <div class="ni"><span class="caret">▸</span>CLB Toán nâng cao<span class="ct">18</span></div>`
+      : `
+  <div class="ni ${active === "sd" ? "on" : ""}">${ic("check")}Việc cần làm<span class="ct hot">4</span></div>
+  <div class="ni">${ic("star")}Điểm</div>
+  <div class="ni">${ic("bell")}Thông báo<span class="ct">3</span></div>
+  <div class="sec">Lớp học</div>
+  ${["Toán", "Ngữ văn", "Tiếng Anh", "Vật lý"].map((c, i) => `<div class="ni ${active === "ad" && i === 0 ? "on" : ""}"><span class="caret">▸</span>${c}</div>`).join("")}`;
+    return `<div class="mk tC"><aside class="side">
+  <div class="ws"><i>C</i>${t ? "Cô Hà" : "Minh Khoa"}<small>${t ? "THPT Lê Quý Đôn" : "10A1"}</small></div>
+  <div class="cmdk">${ic("search")}Tìm hoặc chạy lệnh<kbd>Ctrl K</kbd></div>
+  ${side}</aside>
+ <main><div class="tb"><span class="b ham">${ic("menu")}</span><span class="crumb">${crumb}</span><span class="sp">${actions}</span></div>
+ ${fill ? body : `<div class="body">${body}</div>`}</main></div>`;
+  }
+  const C = {
+    td: () =>
+      cShell(
+        "t",
+        "td",
+        "Không gian làm việc / <b>Tổng quan</b>",
+        `<span class="b">${ic("search")}<span>Lọc</span></span><span class="b pri">${ic("plus")}<span>Bài tập mới</span> <kbd>C</kbd></span>`,
+        `
+ <h1>Tổng quan</h1>
+ <div class="kpi"><div><strong>17</strong><span>Cần chấm</span></div><div><strong>4</strong><span>Hạn trong 7 ngày</span></div><div><strong>5</strong><span>Nộp trễ</span></div><div><strong>82%</strong><span>Tỉ lệ nộp</span></div><div><strong>132</strong><span>Học sinh</span></div></div>
+ <div>
+  <div class="views"><a class="on">Đang mở</a><a>Nháp · 3</a><a>Đã lên lịch · 1</a><a>Lưu trữ</a><span class="f"><span class="b">Lớp: Tất cả</span><span class="b">Sắp xếp: Hạn nộp</span></span></div>
+  <div style="overflow-x:auto"><table class="dt"><thead><tr><th>Bài tập</th><th class="hm">Lớp</th><th>Hạn</th><th>Đã nộp</th><th class="hm">Đã chấm</th><th class="hm">Trễ</th><th>Trạng thái</th></tr></thead><tbody>
+  ${[
+    [
+      "Bài tập Hàm số bậc hai",
+      "10A1",
+      "30/09 23:59",
+      "p-warn",
+      "còn 1 ngày",
+      29,
+      38,
+      12,
+      3,
+      "p-acc",
+      "17 chờ chấm",
+      1,
+    ],
+    [
+      "Phiếu học tập Vectơ",
+      "11B3",
+      "02/10 23:59",
+      "p-gr",
+      "còn 3 ngày",
+      8,
+      40,
+      0,
+      0,
+      "p-acc",
+      "8 chờ chấm",
+    ],
+    [
+      "Đề luyện HSG số 4",
+      "CLB",
+      "05/10 20:00",
+      "p-gr",
+      "còn 6 ngày",
+      2,
+      18,
+      0,
+      0,
+      "p-acc",
+      "2 chờ chấm",
+    ],
+    [
+      "Quiz: Mệnh đề và tập hợp",
+      "10A2",
+      "27/09 21:00",
+      "p-gr",
+      "đã qua",
+      34,
+      36,
+      34,
+      0,
+      "p-ok",
+      "Đã chấm hết",
+    ],
+    [
+      "Luyện tập Tập hợp",
+      "10A1",
+      "25/09 23:59",
+      "p-gr",
+      "đã qua",
+      38,
+      38,
+      38,
+      2,
+      "p-bl",
+      "Đã trả bài",
+    ],
+  ]
+    .map(
+      (r) =>
+        `<tr class="${r[11] ? "sel" : ""}"><td>${r[0]}</td><td class="hm cls">${r[1]}</td><td class="n">${r[2]} <span class="pill ${r[3]}" style="margin-left:4px">${r[4]}</span></td><td class="n"><span class="mini"><i style="width:${(r[5] / r[6]) * 100}%"></i></span>${r[5]}/${r[6]}</td><td class="n hm">${r[7]}</td><td class="n hm">${r[8] || "–"}</td><td><span class="pill ${r[9]}">${r[10]}</span></td></tr>`
+    )
+    .join("")}
+  </tbody></table></div>
+ </div>
+ <div class="two">
+  <div class="box"><h3>Nộp gần đây <span>10A1 · Hàm số</span></h3>
+   ${[
+     ["LA", "Lê Hoàng Anh", "21:14", "p-bl", "Đã nộp"],
+     ["NB", "Ngô Bảo Châu", "00:32", "p-warn", "Trễ 33 phút"],
+     ["TG", "Trần Gia Hân", "20:05", "p-bl", "Đã nộp"],
+   ]
+     .map(
+       (s) =>
+         `<div class="lr"><span class="av">${s[0]}</span>${s[1]}<span class="n mono cls">${s[2]}</span><span class="r pill ${s[3]}">${s[4]}</span></div>`
+     )
+     .join("")}
+  </div>
+  <div class="box"><h3>Lớp học <span>4</span></h3>
+   ${[
+     ["10A1 · Toán", "38", "2 mở"],
+     ["10A2 · Toán", "36", "1 mở"],
+     ["11B3 · Toán", "40", "1 mở"],
+     ["CLB Toán nâng cao", "18", "1 mở"],
+   ]
+     .map(
+       (c) =>
+         `<div class="lr">${c[0]}<span class="r cls mono">${c[1]} HS · ${c[2]}</span></div>`
+     )
+     .join("")}
+  </div>
+ </div>
+ <div class="hint"><span><kbd>J</kbd> <kbd>K</kbd> chọn dòng</span><span><kbd>Enter</kbd> mở</span><span><kbd>G</kbd> rồi <kbd>C</kbd> tới Cần chấm</span><span><kbd>Ctrl K</kbd> lệnh</span></div>
+`
+      ),
+    sd: () =>
+      cShell(
+        "s",
+        "sd",
+        "<b>Việc cần làm</b>",
+        `<span class="b">Nhóm: Hạn nộp</span>`,
+        `
+ <h1>Việc cần làm</h1>
+ <div class="views"><a class="on">Cần làm · 4</a><a>Đã nộp · 12</a><a>Đã trả · 9</a></div>
+ <div style="overflow-x:auto"><table class="dt"><thead><tr><th>Bài</th><th class="hm">Môn</th><th>Hạn</th><th>Trạng thái</th></tr></thead><tbody>
+  <tr><td colspan="4" style="font-weight:600;color:var(--c-bad);background:#FCF6F5">Quá hạn</td></tr>
+  <tr><td>Báo cáo thí nghiệm con lắc đơn</td><td class="hm cls">Vật lý</td><td class="n">28/09 23:59</td><td><span class="pill p-bad">Quá hạn 1 ngày</span></td></tr>
+  <tr><td colspan="4" style="font-weight:600;color:var(--k-mut);background:#FAFAF9">Tuần này</td></tr>
+  <tr><td>Nghị luận: Tức nước vỡ bờ</td><td class="hm cls">Ngữ văn</td><td class="n">30/09 07:00</td><td><span class="pill p-gr">Nháp</span></td></tr>
+  <tr class="sel"><td>Bài tập Hàm số bậc hai</td><td class="hm cls">Toán</td><td class="n">30/09 23:59</td><td><span class="pill p-gr">Chưa làm</span></td></tr>
+  <tr><td>Unit 3 Vocabulary Quiz</td><td class="hm cls">Tiếng Anh</td><td class="n">01/10 20:00</td><td><span class="pill p-gr">Chưa làm</span></td></tr>
+ </tbody></table></div>
+ <div class="two">
+  <div class="box"><h3>Điểm gần đây <span>đã trả</span></h3>
+   ${[
+     ["Quiz: Mệnh đề", "Toán", "9,0"],
+     ["Nghị luận xã hội", "Ngữ văn", "7,5"],
+     ["Chuyển động thẳng đều", "Vật lý", "8,25"],
+   ]
+     .map(
+       (g) =>
+         `<div class="lr">${g[0]}<span class="cls">${g[1]}</span><span class="r mono" style="font-weight:500">${g[2]}/10</span></div>`
+     )
+     .join("")}
+  </div>
+  <div class="box"><h3>Tuần này</h3><div class="lr">Đã nộp<span class="r mono">3 / 5</span></div><div class="lr"><span class="mini" style="width:100%;height:6px"><i style="width:60%;background:var(--k-acc)"></i></span></div></div>
+ </div>
+`
+      ),
+    ad: () =>
+      cShell(
+        "s",
+        "ad",
+        "Toán · 10A1 / Bài tập / <b>Hàm số bậc hai</b>",
+        `<span class="b">${ic("left")}<span>Quay lại</span></span>`,
+        `
+ <div class="two" style="grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)">
+  <div style="display:grid;gap:14px;align-content:start">
+   <h1>Bài tập Hàm số bậc hai</h1>
+   <dl class="prop"><dt>Giáo viên</dt><dd>Nguyễn Thu Hà</dd><dt>Hạn nộp</dt><dd class="mono">30/09 23:59 <span class="pill p-warn">còn 2 ngày</span></dd><dt>Điểm tối đa</dt><dd class="mono">10</dd><dt>Nộp trễ</dt><dd>Cho phép, có đánh dấu</dd><dt>Trạng thái</dt><dd><span class="pill p-gr">Nháp</span></dd></dl>
+   <div class="doc">Làm bài 1 đến 5 trang 42 SGK Đại số 10. Với mỗi hàm số, xác định đỉnh, trục đối xứng và vẽ đồ thị trên giấy kẻ ô.<br><br>Chụp rõ từng trang, đủ sáng, hoặc nộp một file PDF. Bài 5 là bài nâng cao, không bắt buộc.</div>
+   <div class="box"><h3>Tài liệu <span>2</span></h3><div class="lr">${ic("file")}Phieu_ham_so_bac_hai.pdf<span class="r cls mono">1,2 MB</span></div><div class="lr">${ic("file")}Do_thi_mau.png<span class="r cls mono">340 KB</span></div></div>
+  </div>
+  <div class="box" style="align-self:start"><h3>Bài làm <span>tự lưu 20:41</span></h3>
+   <div class="sub"><div class="fld"><label for="c-note">Ghi chú cho giáo viên</label><textarea id="c-note" rows="2">Em nộp bài 1 đến 4 ạ.</textarea></div>
+   <div class="lr" style="border:1px solid var(--k-bd);border-radius:6px">${ic("file")}trang-1.jpg<span class="r cls mono">1,4 MB</span></div>
+   <div class="drop">${ic("upload")} Thả file hoặc <u>chọn</u> · tối đa 25 MB</div>
+   <button class="b pri" style="justify-content:center;padding:8px">Nộp bài <kbd>Ctrl ↵</kbd></button></div>
+  </div>
+ </div>
+`
+      ),
+    gr: () =>
+      cShell(
+        "t",
+        "gr",
+        "Cần chấm / 10A1 / <b>Hàm số bậc hai</b>",
+        `<span class="b mono">13 / 29</span><span class="b">${ic("left")}</span><span class="b">${ic("chev")}</span>`,
+        `
+ <div class="split">
+  <div class="pane list">
+   <div class="ph">Bài nộp<span class="r cls">Lọc: Chờ chấm</span></div>
+   ${[
+     ["LA", "Lê Hoàng Anh", "p-bl", "Đã nộp", 1],
+     ["NB", "Ngô Bảo Châu", "p-warn", "Trễ"],
+     ["TG", "Trần Gia Hân", "p-bl", "Đã nộp"],
+     ["PD", "Phạm Đức Duy", "p-ok", "8,5"],
+     ["HM", "Hồ Minh Nhật", "p-ok", "9,0"],
+     ["VK", "Vũ Khánh Linh", "p-gr", "Chưa nộp"],
+     ["ĐT", "Đỗ Thanh Tâm", "p-bl", "Đã nộp"],
+   ]
+     .map(
+       (s) =>
+         `<div class="sr ${s[4] ? "on" : ""}"><span class="av">${s[0]}</span>${s[1]}<span class="pill ${s[2]}" style="margin-left:auto">${s[3]}</span></div>`
+     )
+     .join("")}
+   <div class="hint" style="padding:10px 12px"><span><kbd>J</kbd>/<kbd>K</kbd> chuyển bài</span></div>
+  </div>
+  <div class="pane">
+   <div class="ph"><span class="av">LA</span>Lê Hoàng Anh<span class="r pill p-bl">Nộp 29/09 21:14 · đúng hạn</span></div>
+   <div class="sub"><div class="doc">Em nộp bài 1–4, bài 5 em làm được câu a ạ.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div class="img">trang-1.jpg</div><div class="img">trang-2.jpg</div></div></div>
+  </div>
+  <div class="pane">
+   <div class="ph">Chấm điểm</div>
+   <div class="sub">
+    <div class="fld"><label for="c-score">Điểm</label><div class="scorein"><input id="c-score" value="8.5"><span class="mono cls">/ 10</span></div></div>
+    <div class="rub"><span>Bài 1–2 · tính đỉnh</span><span class="mono">3/3</span><span>Bài 3 · đồ thị</span><span class="mono">3/3</span><span>Bài 4 · trục đối xứng</span><span class="mono">2,5/4</span></div>
+    <div class="fld"><label for="c-fb">Nhận xét</label><textarea id="c-fb" rows="4">Đồ thị bài 3 vẽ đúng. Bài 4 cần ghi rõ trục đối xứng x = 2.</textarea></div>
+    <button class="b pri" style="justify-content:center;padding:7px">Trả bài và mở bài kế <kbd>Ctrl ↵</kbd></button>
+    <button class="b" style="justify-content:center">Lưu nháp <kbd>S</kbd></button>
+    <div class="cls">Rubric hiển thị ở Phase 2</div>
+   </div>
+  </div>
+ </div>`,
+        true
+      ),
+  };
+
+  /* ======================= SPECS ======================= */
+  const SPEC = {
+    A: {
+      name: "A · Sáng Lớp",
+      sub: "Modern Education SaaS",
+      pal: [
+        ["#2458D6", "Primary · xanh tin cậy"],
+        ["#0E8A7D", "Secondary · teal"],
+        ["#F5F7FB", "Background"],
+        ["#FFFFFF", "Surface"],
+        ["#E2E7F0", "Border"],
+        ["#152036", "Text"],
+        ["#5B6780", "Muted"],
+      ],
+      items: [
+        [
+          "Triết lý",
+          "Thân thiện, rõ ràng, quen thuộc. Mọi thứ được đóng khung trong card bo tròn để người mới nhìn vào là biết chỗ nào bấm được. Ưu tiên “không cần hướng dẫn”.",
+        ],
+        [
+          "Typography",
+          "Lexend cho tiêu đề và số (thiết kế để dễ đọc, hợp giáo dục), Be Vietnam Pro cho body (vẽ riêng cho tiếng Việt, dấu rõ). Body 14px, tiêu đề 22px.",
+        ],
+        [
+          "Sidebar",
+          "Trắng, 224px; mục đang chọn là pill nền xanh nhạt; danh sách lớp có chấm màu riêng cho từng lớp; hồ sơ người dùng ở đáy.",
+        ],
+        ["Navbar", "Ô tìm kiếm, nút chính “Tạo bài tập”, chuông có chấm đỏ."],
+        [
+          "Dashboard",
+          "Lời chào kèm câu tóm tắt → 4 stat tile có icon → tiến độ nộp bằng thanh chồng 4 màu (đã chấm / chờ chấm / trễ / chưa nộp) → sắp đến hạn dạng “tờ lịch” → lưới card lớp học.",
+        ],
+        [
+          "Assignment card",
+          "Card bo 14px: chấm màu lớp + tên giáo viên, tiêu đề Lexend, badge hạn nộp dạng pill có icon, badge trạng thái bên phải.",
+        ],
+        [
+          "Assignment detail",
+          "Hai cột: nội dung đề bên trái (badge loại bài, meta, đề, file) và panel “Bài làm của em” bên phải với đồng hồ đếm ngược màu cam.",
+        ],
+        [
+          "Submission UI",
+          "Vùng thả file viền đứt, hỗ trợ chụp ảnh; danh sách file có loại file màu; một nút Nộp bài full-width; dòng “Nháp tự lưu lúc…”.",
+        ],
+        [
+          "Grading UI",
+          "Ba cột: danh sách học sinh kèm badge, bài làm ở giữa, panel điểm và nhận xét bên phải; hai nút tách bạch “Trả bài” và “Lưu nháp, chưa trả”.",
+        ],
+        [
+          "Student UI",
+          "Việc cần làm nhóm theo Quá hạn / Tuần này; vòng tiến độ tuần; điểm mới trả với số lớn màu xanh lá.",
+        ],
+        [
+          "Mobile",
+          "Sidebar biến thành tab bar 4 mục ở đáy; stat tile 2×2; màn chấm bỏ danh sách, vuốt để chuyển học sinh.",
+        ],
+        [
+          "Animation",
+          "Nhẹ và có mục đích: hover nâng card 1px, thanh tiến độ chạy khi tải lần đầu, toast trượt vào. 150–200ms, ease-out.",
+        ],
+        [
+          "Component style",
+          "Bo 10–14px, viền 1px mảnh, bóng rất nhẹ; badge dạng pill; icon nét 1.8px.",
+        ],
+        [
+          "Ưu điểm",
+          "Dễ học nhất, gần với shadcn nên dựng nhanh, rất hợp học sinh trên mobile, dễ dùng lại cho các site khác.",
+        ],
+        [
+          "Nhược điểm",
+          "Trông giống nhiều sản phẩm SaaS khác; card nhiều nên mật độ thấp; giáo viên có 5 lớp × 20 bài sẽ phải cuộn nhiều.",
+        ],
+        [
+          "Phù hợp",
+          "Trường phổ thông, giáo viên ít quen công nghệ, học sinh dùng điện thoại là chính.",
+        ],
+      ],
+    },
+    B: {
+      name: "B · Trang Giấy",
+      sub: "Premium Minimal Education",
+      pal: [
+        ["#1E5B47", "Accent · xanh bảng phấn"],
+        ["#16181D", "Ink"],
+        ["#FFFFFF", "Background"],
+        ["#E6E6E3", "Rule"],
+        ["#6A6E77", "Muted"],
+        ["#9A5B0A", "Warning"],
+        ["#B42318", "Error"],
+      ],
+      items: [
+        [
+          "Triết lý",
+          "Trang học như trang sách. Không card, không sidebar, không icon trang trí; phân cấp hoàn toàn bằng chữ, khoảng trắng và đường kẻ mảnh. Mỗi trang mở đầu bằng một câu tóm tắt viết như người nói.",
+        ],
+        [
+          "Typography",
+          "Newsreader (serif, có dấu tiếng Việt) cho tiêu đề, đề bài và điểm số; Source Sans 3 cho UI. Tiêu đề 44px, đề bài 18px serif để đọc lâu không mỏi.",
+        ],
+        [
+          "Sidebar",
+          "Không có. Điều hướng là các link chữ trên top bar, mục đang chọn được gạch chân.",
+        ],
+        [
+          "Navbar",
+          "Wordmark serif “classroom.”, link chữ, “3 thông báo mới” viết thành chữ thay cho chấm đỏ, avatar chữ viết tắt.",
+        ],
+        [
+          "Dashboard",
+          "Ngày tháng → câu chào → một câu tóm tắt có từ khóa gạch chân → 3 con số serif lớn → danh sách bài dạng mục lục với thanh 2px (đen: đã nộp, xanh: đã chấm).",
+        ],
+        [
+          "Assignment card",
+          "Không phải card: một dòng mục lục gồm tiêu đề serif, meta xám, hạn hoặc điểm căn phải, phân cách bằng đường kẻ.",
+        ],
+        [
+          "Assignment detail",
+          "Bố cục bài báo: cột đọc 640px, meta nằm giữa hai đường kẻ, tài liệu là link gạch chân; cột phải sticky chứa hạn nộp dạng chữ lớn và vùng nộp bài.",
+        ],
+        [
+          "Submission UI",
+          "Input chỉ có gạch chân, vùng thả file viền đứt vuông, nút đen vuông góc.",
+        ],
+        [
+          "Grading UI",
+          "Như chấm bài trên giấy: tên học sinh cỡ lớn, bài làm bên trái, điểm serif 64px với ô nhập chỉ gạch chân, nhận xét bằng serif. Chuyển học sinh bằng thanh trước / sau.",
+        ],
+        [
+          "Student UI",
+          "Việc cần làm là một danh sách chữ nhóm theo mức khẩn; trạng thái là chữ màu (không pill); điểm là số serif xanh.",
+        ],
+        [
+          "Mobile",
+          "Nav chuyển thành hàng tab chữ cuộn ngang; mọi thứ về một cột; cỡ chữ giảm một bậc nhưng vẫn giữ khoảng trắng.",
+        ],
+        [
+          "Animation",
+          "Gần như không có: fade 120ms giữa các trang, gạch chân trượt theo mục đang chọn.",
+        ],
+        [
+          "Component style",
+          "Góc vuông, không bóng, đường kẻ 1px; màu chỉ dùng cho trạng thái.",
+        ],
+        [
+          "Ưu điểm",
+          "Khác biệt rõ với mọi LMS; cảm giác cao cấp và bình tĩnh; đọc đề bài dài rất dễ chịu; ít component nên ít code UI.",
+        ],
+        [
+          "Nhược điểm",
+          "Mật độ thấp, không hợp khi phải quét nhiều bài; trạng thái bằng chữ màu kém nổi hơn pill; typography cần chăm chút kỹ, dễ trông trống trải nếu làm vội; ít quen thuộc với giáo viên lớn tuổi.",
+        ],
+        [
+          "Phù hợp",
+          "Trung tâm luyện thi, lớp nhỏ, khóa học cao cấp, trường muốn thương hiệu riêng.",
+        ],
+      ],
+    },
+    C: {
+      name: "C · Sổ Tay",
+      sub: "Productivity / Notion-inspired",
+      pal: [
+        ["#5B3FD6", "Accent · tím mực"],
+        ["#F7F7F5", "Sidebar"],
+        ["#FFFFFF", "Background"],
+        ["#E9E9E7", "Border"],
+        ["#1F1F1D", "Text"],
+        ["#77766F", "Muted"],
+        ["#EFEBFE", "Selection"],
+      ],
+      items: [
+        [
+          "Triết lý",
+          "Công cụ làm việc cho giáo viên có nhiều lớp. Dày thông tin nhưng gọn; mọi thao tác có phím tắt; dữ liệu hiển thị dạng bảng có thể lọc, sắp xếp và chuyển view.",
+        ],
+        [
+          "Typography",
+          "IBM Plex Sans cho UI (13px, dày đặc nhưng rõ), IBM Plex Mono cho số, ngày giờ và phím tắt. Cả hai có dấu tiếng Việt.",
+        ],
+        [
+          "Sidebar",
+          "Mạnh: chọn workspace, ô ⌘K, hộp việc có bộ đếm, cây lớp học mở/gập với các mục con Bài tập / Học sinh / Bảng điểm.",
+        ],
+        [
+          "Navbar",
+          "Breadcrumb dạng đường dẫn, các nút hành động nhỏ bên phải kèm phím tắt.",
+        ],
+        [
+          "Dashboard",
+          "Dải KPI 5 ô liền → tab view (Đang mở / Nháp / Lên lịch / Lưu trữ) → bảng bài tập có mini bar nộp bài → hai hộp nhỏ (nộp gần đây, lớp học) → gợi ý phím tắt.",
+        ],
+        [
+          "Assignment card",
+          "Là một dòng bảng: tiêu đề, lớp, hạn (mono) + pill còn bao lâu, mini bar x/y, pill trạng thái có chấm màu.",
+        ],
+        [
+          "Assignment detail",
+          "Kiểu trang Notion: tiêu đề → bảng thuộc tính (giáo viên, hạn, điểm, trạng thái) → nội dung → hộp tài liệu; panel bài làm bên phải, nộp bằng Ctrl+Enter.",
+        ],
+        [
+          "Submission UI",
+          "Form gọn trong hộp viền mảnh, file dạng dòng, vùng thả file nhỏ.",
+        ],
+        [
+          "Grading UI",
+          "Split view 3 cột: danh sách (J/K) | bài làm | điểm + rubric + nhận xét. “Trả bài và mở bài kế” bằng Ctrl+Enter, chấm liên tục không rời bàn phím.",
+        ],
+        [
+          "Student UI",
+          "Việc cần làm là bảng nhóm theo hạn, có tab Cần làm / Đã nộp / Đã trả; hợp với học sinh lớn tuổi hơn.",
+        ],
+        [
+          "Mobile",
+          "Sidebar vào drawer (nút menu); bảng ẩn cột phụ; split view chỉ còn một khung, chuyển bằng mũi tên. Mobile là trải nghiệm phụ.",
+        ],
+        [
+          "Animation",
+          "Tức thời: 80–120ms, không có hiệu ứng trang trí; ưu tiên phản hồi ngay khi bấm phím.",
+        ],
+        [
+          "Component style",
+          "Bo 4–8px, viền xám ấm, pill vuông có chấm trạng thái, kbd hints, hover đổi nền.",
+        ],
+        [
+          "Ưu điểm",
+          "Nhanh nhất cho giáo viên chấm nhiều bài; mở rộng tốt khi có rubric, ngân hàng câu hỏi, bảng điểm; ít cuộn.",
+        ],
+        [
+          "Nhược điểm",
+          "Học sinh nhỏ tuổi thấy khô và khó; nhiều công sức nhất (phím tắt, command palette, split view); mobile là thứ yếu.",
+        ],
+        [
+          "Phù hợp",
+          "Giáo viên dạy nhiều lớp (5 lớp trở lên), tổ bộ môn, trung tâm lớn, người dùng thành thạo máy tính.",
+        ],
+      ],
+    },
+  };
+  const CAP = {
+    td: "Giáo viên · Tổng quan: thống kê, sắp đến hạn, bài gần đây, tiến độ nộp, tổng quan lớp.",
+    sd: "Học sinh · Việc cần làm: bài sắp tới, hạn nộp, điểm gần đây, lớp học, tiến độ.",
+    ad: "Học sinh · Chi tiết bài tập: tiêu đề, đề bài, tài liệu, hạn nộp, trạng thái, vùng upload, nút nộp.",
+    gr: "Giáo viên · Chấm bài: học sinh, bài làm, file, điểm, nhận xét, nút trả bài.",
+  };
+
+  const st = { t: "A", s: "td", v: "desk" };
+  function renderSpec() {
+    const s = SPEC[st.t];
+    document.getElementById("spec").innerHTML =
+      `<h3 style="margin-top:8px">${s.name} <span style="font-weight:400;color:var(--muted)">· ${s.sub}</span></h3>
+ <div class="swatches">${s.pal.map((p) => `<span class="sw"><i style="background:${p[0]}"></i>${p[0]} · ${p[1]}</span>`).join("")}</div>
+ <div class="spec">${[0, 1]
+   .map(
+     (h) =>
+       `<dl>${s.items
+         .filter((_, i) => (h ? i >= 8 : i < 8))
+         .map((i) => `<dt>${i[0]}</dt><dd>${i[1]}</dd>`)
+         .join("")}</dl>`
+   )
+   .join("")}</div>`;
+  }
+  function renderFrame() {
+    const f = document.getElementById("frame");
+    f.innerHTML = { A, B, C }[st.t][st.s]();
+    f.classList.toggle("mobile", st.v === "mob");
+    document.getElementById("cap").textContent =
+      CAP[st.s] + (st.v === "mob" ? " Đang xem ở 390px." : "");
+  }
+  document.querySelectorAll("[data-t]").forEach((b) =>
+    b.addEventListener("click", () => {
+      st.t = b.dataset.t;
+      document
+        .querySelectorAll("[data-t]")
+        .forEach((x) => x.setAttribute("aria-selected", x === b));
+      renderSpec();
+      renderFrame();
+    })
+  );
+  document.querySelectorAll("[data-s]").forEach((b) =>
+    b.addEventListener("click", () => {
+      st.s = b.dataset.s;
+      document
+        .querySelectorAll("[data-s]")
+        .forEach((x) => x.setAttribute("aria-pressed", x === b));
+      renderFrame();
+    })
+  );
+  document.querySelectorAll("[data-v]").forEach((b) =>
+    b.addEventListener("click", () => {
+      st.v = b.dataset.v;
+      document
+        .querySelectorAll("[data-v]")
+        .forEach((x) => x.setAttribute("aria-pressed", x === b));
+      renderFrame();
+    })
+  );
+  renderSpec();
+  renderFrame();
+</script>

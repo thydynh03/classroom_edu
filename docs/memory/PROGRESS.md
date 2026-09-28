@@ -1,0 +1,67 @@
+# PROGRESS — roadmap MVP
+
+Cập nhật sau mỗi task. `[x]` xong · `[~]` đang làm / dở · `[ ]` chưa làm.
+
+## M0 · Foundation
+
+- [x] Scaffold Next.js + TypeScript strict + pnpm, cấu trúc `src/` theo ARCHITECTURE.md
+- [x] ESLint + Prettier, script `lint`, `typecheck`, `test`, `test:e2e`, `db:*`
+- [x] Tailwind v4 + token light (D) / dark (E) trong `globals.css`, next-themes, font Plus Jakarta Sans + IBM Plex Mono (subset vietnamese)
+- [x] shadcn/ui base: Button, Input, Label, Textarea, Select, Dialog, AlertDialog, DropdownMenu, Tabs, Badge, Avatar, Tooltip, Skeleton, Sheet, sonner
+- [x] Layout shell: AppRail + TopBar (GV), MobileTabBar (HS), trang `/dev/ui` hiển thị token + component ở cả 2 theme
+- [x] docker-compose: Postgres 16, MinIO, Mailpit; `.env.example`; env schema Zod
+- [x] Vitest cấu hình + test unit chạy được với jsdom cho component (Playwright cấu hình ở task sau)
+- [x] GitHub Actions CI: lint → typecheck → test
+
+## M1 · Data & Auth
+
+- [x] Drizzle schema toàn bộ bảng MVP + migration + seed (`pnpm db:reset`)
+- [x] Auth tự viết: email/username + mật khẩu, đăng ký GV, verify email, quên/đặt lại mật khẩu, mật khẩu tạm bắt đổi, thiết bị đăng nhập + thu hồi, khóa sau 10 lần sai
+- [x] `getActor()` + `requireActor()` + policy layer + integration test phân quyền
+
+## M2 · Lớp học
+
+- [x] CRUD lớp, màu lớp, lưu trữ · mã tham gia + link `/join/[code]` (HS tự tạo tài khoản) · thêm/xóa HS · tạo HS hàng loạt + cấp lại mật khẩu
+
+## M3 · Bài tập & file
+
+- [x] Tạo/sửa/đăng/lưu trữ/xóa nháp, giao nhiều lớp · đề bài văn bản thuần · StorageProvider S3 + upload presigned + magic bytes + xóa EXIF
+- [x] Lên lịch đăng (status SCHEDULED + publish_at, job mỗi phút, chống đăng trùng)
+
+## M4 · Nộp bài (HS)
+
+- [x] Trang Hôm nay · chi tiết bài · tự lưu nháp (+ lưu cục bộ khi mất mạng) · nộp/rút lại · trễ hạn · nộp lại sau khi trả
+
+## M5 · Chấm bài (GV)
+
+- [x] Hộp Cần chấm · màn chấm 3 cột · điểm nhanh · ngân hàng nhận xét · chế độ tập trung + phím tắt (J/K, Ctrl+Enter, S, /, F, Esc) · grade_events · trả từng bài / hàng loạt
+
+## M6 · Quiz tự chấm
+
+- [x] Soạn câu hỏi (1 đáp án, nhiều đáp án, Đúng/Sai) · làm bài · chấm server-side · show_results · test không lộ đáp án
+
+## M7 · Dashboard & theo dõi
+
+- [x] Bento dashboard GV · thống kê từng bài · heatmap lớp (tab Theo dõi) · trang Điểm của HS
+
+## M8 · Thông báo
+
+- [x] Thông báo in-app (chuông, đánh dấu đã đọc) · job 15 phút: sắp đến hạn / quá hạn · email SMTP + giờ yên tĩnh
+
+## M9 · Hardening & deploy
+
+- [x] E2E luồng chính (GV → HS → chấm → xem điểm) + axe · integration test phân quyền · CSP/headers · Dockerfile · CI 3 job
+- [ ] Deploy thật lên Render + R2 (cần tài khoản và secret của người dùng)
+- [x] Trang quản trị `/admin`: người dùng (tìm, lọc, khóa/mở, gỡ khóa tạm, cấp mật khẩu tạm), tạo giáo viên, nhật ký
+
+## Còn mở / Phase 2 ưu tiên
+
+- Rubric, nhiều lượt làm quiz, co-teacher, xuất bảng điểm CSV.
+- Rate limit dùng Redis khi chạy nhiều instance.
+
+## Nhật ký
+
+- 2026-09-28: Chốt thiết kế D + heatmap G + focus mode E + dark E. Tạo AGENTS/CLAUDE/GEMINI.md và docs. `git init`. Giao M0 cho agy.
+- 2026-09-28: M0 hoàn tất (Claude tự viết CI + README, sửa label Select do axe báo; E2E 6/6 pass).
+- 2026-09-28: Người dùng yêu cầu Claude tự code thay agy. Hoàn thành M1–M9 (trừ deploy thật). Verify: lint, typecheck, 55 unit, 20 integration, E2E 9/9 (1 skip mobile), build pass.
+- 2026-09-28: Thêm admin, lên lịch đăng, CSP nonce (src/proxy.ts), quét virus ClamAV. Verify: 60 unit, 25 integration, E2E 9/9, build pass.

@@ -1,0 +1,170 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #f2f3f8;
+  --sidebar: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f2f3f8;
+  --border: #e6e8f1;
+  --foreground: #181a29;
+  --muted: #656982;
+  --primary: #3551f3;
+  --primary-hover: #2438c9;
+  --primary-soft: #ecefff;
+  --on-primary: #ffffff;
+  --progress: #3551f3;
+  --success: #167046;
+  --success-soft: #dcf3e7;
+  --warning: #aa4712;
+  --warning-soft: #ffe6d6;
+  --late-bar: #f59e5b;
+  --danger: #c0303d;
+  --danger-soft: #ffe1e3;
+  --info: #2360c4;
+  --info-soft: #dfebff;
+  --ring: #3551f3;
+
+  /* Pastel class colors */
+  --class-sky-bg: #dfebff;
+  --class-sky-fg: #2360c4;
+  --class-mint-bg: #dcf3e7;
+  --class-mint-fg: #167046;
+  --class-peach-bg: #ffe6d6;
+  --class-peach-fg: #aa4712;
+  --class-lilac-bg: #ece5ff;
+  --class-lilac-fg: #5f41c6;
+  --class-butter-bg: #fff1c2;
+  --class-butter-fg: #866100;
+  --class-rose-bg: #ffe1e3;
+  --class-rose-fg: #c0303d;
+
+  /* Radii */
+  --radius-control: 14px;
+  --radius-card: 22px;
+  --radius-tile: 18px;
+
+  /* Shadows */
+  --shadow-primary: 0 6px 16px rgba(53, 81, 243, 0.28);
+}
+
+.dark {
+  --background: #0a0d14;
+  --sidebar: #0c1019;
+  --surface: #121826;
+  --surface-2: #182034;
+  --border: #1e273a;
+  --foreground: #e8ecf4;
+  --muted: #8691a7;
+  --primary: #f6b94a;
+  --primary-hover: #e3a636;
+  --primary-soft: rgba(246, 185, 74, 0.13);
+  --on-primary: #1a1204;
+  --progress: #3fd2c0;
+  --success: #58d68d;
+  --success-soft: rgba(88, 214, 141, 0.13);
+  --warning: #f6b94a;
+  --warning-soft: rgba(246, 185, 74, 0.13);
+  --late-bar: #f6b94a;
+  --danger: #ff7474;
+  --danger-soft: rgba(255, 116, 116, 0.13);
+  --info: #7aa2ff;
+  --info-soft: rgba(122, 162, 255, 0.14);
+  --ring: #f6b94a;
+
+  /* Pastel class colors (Dark) */
+  --class-sky-bg: rgba(122, 162, 255, 0.14);
+  --class-sky-fg: #7aa2ff;
+  --class-mint-bg: rgba(63, 210, 192, 0.13);
+  --class-mint-fg: #3fd2c0;
+  --class-peach-bg: rgba(246, 185, 74, 0.13);
+  --class-peach-fg: #f6b94a;
+  --class-lilac-bg: rgba(199, 146, 234, 0.14);
+  --class-lilac-fg: #c792ea;
+  --class-butter-bg: rgba(255, 209, 102, 0.13);
+  --class-butter-fg: #ffd166;
+  --class-rose-bg: rgba(255, 116, 116, 0.13);
+  --class-rose-fg: #ff7474;
+
+  /* Shadows */
+  --shadow-primary: 0 6px 16px rgba(246, 185, 74, 0.28);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-sidebar: var(--sidebar);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-soft: var(--primary-soft);
+  --color-on-primary: var(--on-primary);
+  --color-progress: var(--progress);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-late-bar: var(--late-bar);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-ring: var(--ring);
+
+  --color-class-sky-bg: var(--class-sky-bg);
+  --color-class-sky-fg: var(--class-sky-fg);
+  --color-class-mint-bg: var(--class-mint-bg);
+  --color-class-mint-fg: var(--class-mint-fg);
+  --color-class-peach-bg: var(--class-peach-bg);
+  --color-class-peach-fg: var(--class-peach-fg);
+  --color-class-lilac-bg: var(--class-lilac-bg);
+  --color-class-lilac-fg: var(--class-lilac-fg);
+  --color-class-butter-bg: var(--class-butter-bg);
+  --color-class-butter-fg: var(--class-butter-fg);
+  --color-class-rose-bg: var(--class-rose-bg);
+  --color-class-rose-fg: var(--class-rose-fg);
+
+  --radius-control: var(--radius-control);
+  --radius-card: var(--radius-card);
+  --radius-tile: var(--radius-tile);
+
+  --shadow-primary: var(--shadow-primary);
+
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Ô "không nộp" trong heatmap: sọc chéo để phân biệt không chỉ bằng màu */
+.heatmap-hatch {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent 0 3px,
+    var(--border) 3px 4px
+  );
+}
