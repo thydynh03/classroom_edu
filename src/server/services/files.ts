@@ -20,9 +20,6 @@ export async function createUpload(
   actor: Actor,
   input: { purpose: "ATTACHMENT" | "SUBMISSION"; contextId: string; name: string; mime: string; size: number },
 ) {
-  if (!process.env.S3_ENDPOINT || !process.env.S3_BUCKET) {
-    throw new UserError("Hệ thống chưa cấu hình nơi lưu file. Báo quản trị viên, tạm thời hãy viết bài trực tiếp.");
-  }
   const name = sanitizeFilename(input.name);
   if (!isAllowed(name, input.mime)) throw new UserError("Loại file này không được phép.");
   const rule = FILE_RULES[input.purpose];
@@ -42,6 +39,10 @@ export async function createUpload(
     const { a } = await requireAssignmentForStudent(actor, input.contextId);
     classId = a.classId;
     key = `sub/${classId}/${a.id}/${actor.id}/${fileId}`;
+  }
+  // Kiểm tra quyền + loại file trước, rồi mới báo thiếu cấu hình storage.
+  if (!process.env.S3_ENDPOINT || !process.env.S3_BUCKET) {
+    throw new UserError("Hệ thống chưa cấu hình nơi lưu file. Báo quản trị viên, tạm thời hãy viết bài trực tiếp.");
   }
   await db.insert(files).values({
     id: fileId,
