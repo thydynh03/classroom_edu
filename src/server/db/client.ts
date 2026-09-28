@@ -10,7 +10,8 @@ function createClient() {
   // dùng URL giả để import được; khi chạy thật mà thiếu biến thì truy vấn sẽ lỗi rõ ràng.
   const url = process.env.DATABASE_URL ?? "postgres://missing-database-url:5432/missing";
   // Serverless: mỗi instance ít kết nối để không vượt giới hạn của Postgres free.
-  return postgres(url, { max: process.env.VERCEL ? 2 : 10 });
+  // Pooler kiểu transaction (Supabase :6543, pgbouncer) không hỗ trợ prepared statement.
+  return postgres(url, { max: process.env.VERCEL ? 2 : 10, prepare: !url.includes("pgbouncer=true") });
 }
 
 const client = globalForDb.pgClient ?? createClient();

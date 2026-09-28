@@ -6,7 +6,8 @@ import postgres from "postgres";
 import { hash } from "@node-rs/argon2";
 import { randomUUID } from "node:crypto";
 
-const url = process.env.DATABASE_URL;
+// Migration cần kết nối session (DIRECT_URL), không qua pooler transaction.
+const url = process.env.DIRECT_URL ?? process.env.DATABASE_URL;
 if (!url) {
   console.error("[migrate] Thiếu DATABASE_URL");
   process.exit(1);

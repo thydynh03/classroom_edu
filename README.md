@@ -37,7 +37,7 @@ pnpm test:e2e                              # Playwright, cần DB đã seed
 
 ## Deploy (Vercel)
 
-Cả app (giao diện + server actions) chạy trên Vercel, region `sin1`. `pnpm vercel-build` chạy migration + tạo admin đầu tiên (`docker/migrate.mjs`) rồi mới `next build`.
+Cả app (giao diện + server actions) chạy trên Vercel, region `bom1` (gần Supabase ap-south-1). `pnpm vercel-build` chạy migration + tạo admin đầu tiên (`docker/migrate.mjs`) rồi mới `next build`.
 
 - Job nền: không có `setInterval` trên serverless. Bài lên lịch được đăng khi có người mở trang GV/HS (tối đa 1 lần/phút) và qua `/api/cron`. Vercel Hobby chỉ cho cron **1 lần/ngày**, nên muốn nhắc hạn đều hơn thì tạo cron miễn phí ở cron-job.org gọi `GET /api/cron` mỗi 15 phút với header `Authorization: Bearer <CRON_SECRET>`.
 - ClamAV không chạy được trên Vercel: để trống `CLAMAV_HOST` (tắt quét).
@@ -47,7 +47,8 @@ Biến môi trường (Project → Settings → Environment Variables; secret th
 
 | Biến | Ghi chú |
 | --- | --- |
-| `DATABASE_URL` | **External** URL Postgres (Render/Neon), thêm `?sslmode=require`. Cần có cả lúc build (migration) |
+| `DATABASE_URL` | Supabase pooler transaction (:6543, `?pgbouncer=true`) cho app |
+| `DIRECT_URL` | Supabase pooler session (:5432) cho migration lúc build |
 | `APP_URL` | URL public, ví dụ `https://classroom-edu.vercel.app` |
 | `CRON_SECRET` | Chuỗi ngẫu nhiên ≥ 32 ký tự; Vercel Cron tự gửi header này |
 | `BOOTSTRAP_ADMIN_USERNAME` / `BOOTSTRAP_ADMIN_PASSWORD` | Tạo admin đầu tiên (mật khẩu ≥ 12 ký tự). Xóa mật khẩu sau khi đăng nhập |
