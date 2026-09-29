@@ -6,4 +6,4 @@ Tất cả ảnh lấy từ Unsplash (Unsplash License: dùng miễn phí, kể 
 - writing.webp: photo-1434030216411-0b793f4b4173
 - classroom.webp: photo-1509062522246-3755977927d7
 - hero.webp: photo-1522202176988-66273c2fd55f
-- group.webp: photo-1427504494785-3a9ca7044f45 (chưa dùng)
+- group.webp: photo-1427504494785-3a9ca7044f45 (trang đăng nhập)

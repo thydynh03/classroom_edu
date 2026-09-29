@@ -14,6 +14,7 @@ import {
   Star,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/layout";
+import { RevealOnScroll } from "@/components/marketing/reveal-on-scroll";
 import { AssignmentPreview, GradePreview, HeatmapPreview, Logo } from "@/components/marketing/previews";
 import { getActor } from "@/server/auth/session";
 import { homeFor } from "@/server/auth/guard";
@@ -70,6 +71,7 @@ export default async function Home() {
   const accent = `${display.className} text-primary font-medium`;
   return (
     <div className="landing bg-background text-foreground min-h-screen overflow-x-clip">
+      <RevealOnScroll />
       <div aria-hidden className="scroll-progress bg-primary fixed inset-x-0 top-0 z-30 h-1 scale-x-0" />
 
       <header className="landing-header bg-background/85 sticky top-0 z-20 border-b border-transparent backdrop-blur">
