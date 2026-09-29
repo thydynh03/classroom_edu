@@ -1,6 +1,6 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
   "regions": ["bom1"],
   "buildCommand": "pnpm vercel-build",
+  "git": { "deploymentEnabled": { "feat/*": false } },
   "crons": [{ "path": "/api/cron", "schedule": "0 23 * * *" }]
 }

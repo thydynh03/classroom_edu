@@ -94,14 +94,14 @@ export default async function Home() {
 
       <main>
         {/* Hero: 2 cột, chữ trái – ảnh phải, vừa một màn hình */}
-        <section className="mx-auto max-w-6xl px-4 pt-8 pb-10 sm:pt-12 lg:pt-14">
+        <section className="mx-auto max-w-6xl px-4 pt-6 pb-10 sm:pt-12 lg:pt-14">
           <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_1fr] lg:gap-14">
             <div>
               <span className="bg-primary-soft text-primary inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-semibold">
                 <span aria-hidden className="bg-primary size-1.5 rounded-full" />
                 Nền tảng giao bài cho lớp học Việt Nam
               </span>
-              <h1 className="mt-5 text-5xl leading-[1.05] font-extrabold tracking-tight text-balance sm:text-6xl">
+              <h1 className="mt-5 text-[2.6rem] leading-[1.08] font-extrabold tracking-tight text-balance sm:text-6xl">
                 Lớp học của bạn, <span className={accent}>gọn gàng</span> mỗi ngày
               </h1>
               <p className="text-muted mt-5 max-w-xl text-lg leading-relaxed">
@@ -125,9 +125,17 @@ export default async function Home() {
 
             {/* Ảnh + thẻ giao diện nổi */}
             <div className="relative">
-              <div className="rounded-card relative aspect-[4/5] overflow-hidden sm:aspect-[5/4] lg:aspect-[4/5]">
+              <div className="rounded-card relative aspect-[4/3] overflow-hidden sm:aspect-[5/4] lg:aspect-[4/5]">
                 <Image src="/landing/laptop.webp" alt="Học sinh làm bài trên máy tính" fill priority sizes="(min-width: 1024px) 540px, 100vw" className="object-cover" />
                 <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/35 to-transparent" />
+              </div>
+              <div className="bg-surface/95 rounded-card absolute right-3 bottom-3 left-3 flex items-center gap-3 p-3 shadow-lg backdrop-blur sm:hidden" aria-hidden>
+                <span className="bg-success-soft text-success flex size-9 shrink-0 items-center justify-center rounded-full"><Check className="size-5" /></span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-bold">Khoa vừa nộp bài</p>
+                  <p className="text-muted text-xs">Đúng hạn · Toán 10A1</p>
+                </div>
+                <span className="text-success font-mono text-xl font-bold">8,5</span>
               </div>
               <div className="parallax absolute -top-5 -right-3 hidden w-72 sm:block lg:-right-8"><AssignmentPreview className="shadow-xl" /></div>
               <div className="parallax absolute -bottom-8 -left-3 hidden w-72 sm:block lg:-left-10"><GradePreview className="shadow-xl" /></div>
@@ -142,7 +150,7 @@ export default async function Home() {
           </div>
 
           {/* Số liệu */}
-          <dl className="mt-24 grid grid-cols-2 gap-y-8 pb-4 md:grid-cols-4">
+          <dl className="mt-14 sm:mt-24 grid grid-cols-2 gap-y-8 pb-4 md:grid-cols-4">
             {STATS.map((s) => (
               <div key={s.value} className="reveal">
                 <dt className="sr-only">{s.label}</dt>
