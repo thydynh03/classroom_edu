@@ -93,50 +93,56 @@ export default async function Home() {
       </header>
 
       <main>
-        {/* Hero */}
-        <section className="mx-auto max-w-6xl px-4 pt-12 pb-10 sm:pt-20">
-          <div className="grid items-end gap-8 lg:grid-cols-[1.3fr_1fr]">
-            <h1 className="text-5xl leading-[1.05] font-extrabold tracking-tight text-balance sm:text-6xl lg:text-7xl">
-              Lớp học của bạn, <span className={accent}>gọn gàng</span> mỗi ngày
-            </h1>
-            <div className="lg:pb-3">
-              <p className="text-muted text-lg leading-relaxed">
+        {/* Hero: 2 cột, chữ trái – ảnh phải, vừa một màn hình */}
+        <section className="mx-auto max-w-6xl px-4 pt-8 pb-10 sm:pt-12 lg:pt-14">
+          <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_1fr] lg:gap-14">
+            <div>
+              <span className="bg-primary-soft text-primary inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-semibold">
+                <span aria-hidden className="bg-primary size-1.5 rounded-full" />
+                Nền tảng giao bài cho lớp học Việt Nam
+              </span>
+              <h1 className="mt-5 text-5xl leading-[1.05] font-extrabold tracking-tight text-balance sm:text-6xl">
+                Lớp học của bạn, <span className={accent}>gọn gàng</span> mỗi ngày
+              </h1>
+              <p className="text-muted mt-5 max-w-xl text-lg leading-relaxed">
                 Giao bài cho nhiều lớp, học sinh nộp bằng điện thoại, chấm và trả điểm ngay trên web. Không cần lướt nhóm Zalo tìm bài nữa.
               </p>
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link href="/register" className="bg-primary text-on-primary hover:bg-primary-hover shadow-primary rounded-control group inline-flex h-12 items-center justify-center gap-2 px-6 font-bold">
                   Tạo tài khoản giáo viên
                   <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" aria-hidden />
                 </Link>
-                <Link href="/login" className="border-border bg-surface hover:bg-surface-2 rounded-control inline-flex h-12 items-center justify-center border px-6 font-bold">
+                <Link href="/login" className="bg-surface hover:bg-surface-2 rounded-control inline-flex h-12 items-center justify-center px-6 font-bold shadow-sm">
                   Tôi là học sinh
                 </Link>
               </div>
+              <ul className="text-muted mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium">
+                {["Miễn phí cho giáo viên", "Không cần cài ứng dụng", "Dùng tốt trên điện thoại"].map((t) => (
+                  <li key={t} className="flex items-center gap-2"><Check className="text-primary size-4" aria-hidden />{t}</li>
+                ))}
+              </ul>
             </div>
-          </div>
 
-          {/* Ảnh lớn + thẻ giao diện nổi */}
-          <div className="relative mt-12">
-            <div className="rounded-card relative aspect-[4/3] overflow-hidden sm:aspect-[21/9]">
-              <Image src="/landing/laptop.webp" alt="Học sinh làm bài trên máy tính" fill priority sizes="(min-width: 1152px) 1152px, 100vw" className="object-cover" />
-              <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/5 to-transparent" />
-              <p className="absolute bottom-5 left-5 max-w-xs text-sm font-semibold text-white sm:bottom-8 sm:left-8 sm:text-base">
-                Học sinh nộp bài từ bất cứ đâu, giáo viên thấy ngay trên bảng theo dõi.
-              </p>
-            </div>
-            <div className="parallax absolute -top-6 right-4 hidden w-72 md:block lg:-right-6"><AssignmentPreview className="shadow-xl" /></div>
-            <div className="parallax absolute right-10 -bottom-10 hidden w-80 md:block"><GradePreview className="shadow-xl" /></div>
-            <div className="bg-surface rounded-card landing-float absolute top-1/3 -left-4 hidden items-center gap-3 p-4 shadow-xl lg:flex" aria-hidden>
-              <span className="bg-success-soft text-success flex size-9 items-center justify-center rounded-full"><Check className="size-5" /></span>
-              <div>
-                <p className="text-sm font-bold">Khoa vừa nộp bài</p>
-                <p className="text-muted text-xs">Đúng hạn · Toán 10A1</p>
+            {/* Ảnh + thẻ giao diện nổi */}
+            <div className="relative">
+              <div className="rounded-card relative aspect-[4/5] overflow-hidden sm:aspect-[5/4] lg:aspect-[4/5]">
+                <Image src="/landing/laptop.webp" alt="Học sinh làm bài trên máy tính" fill priority sizes="(min-width: 1024px) 540px, 100vw" className="object-cover" />
+                <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/35 to-transparent" />
+              </div>
+              <div className="parallax absolute -top-5 -right-3 hidden w-72 sm:block lg:-right-8"><AssignmentPreview className="shadow-xl" /></div>
+              <div className="parallax absolute -bottom-8 -left-3 hidden w-72 sm:block lg:-left-10"><GradePreview className="shadow-xl" /></div>
+              <div className="bg-surface rounded-card landing-float absolute top-[42%] -left-6 hidden items-center gap-3 p-4 shadow-xl xl:flex" aria-hidden>
+                <span className="bg-success-soft text-success flex size-9 items-center justify-center rounded-full"><Check className="size-5" /></span>
+                <div>
+                  <p className="text-sm font-bold">Khoa vừa nộp bài</p>
+                  <p className="text-muted text-xs">Đúng hạn · Toán 10A1</p>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Số liệu */}
-          <dl className="mt-20 grid grid-cols-2 gap-y-8 pb-4 md:grid-cols-4">
+          <dl className="mt-24 grid grid-cols-2 gap-y-8 pb-4 md:grid-cols-4">
             {STATS.map((s) => (
               <div key={s.value} className="reveal">
                 <dt className="sr-only">{s.label}</dt>
