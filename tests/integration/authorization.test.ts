@@ -321,3 +321,16 @@ describe("quản trị", () => {
     await expect(m.admin.createTeacher(adminActor, { fullName: "X", username: "co.moi", email: "x@example.com" })).rejects.toThrow(/đã được dùng/);
   });
 });
+
+describe("cấp lại mật khẩu hàng loạt", () => {
+  it("chỉ GV của lớp, chỉ HS đang ở lớp; có id lạ thì không đổi gì", async () => {
+    await is404(m.classes.resetStudentPasswords(teacherB, classA, [studentA.id]));
+    await is404(m.classes.resetStudentPasswords(studentA, classA, [studentA.id]));
+    await is404(m.classes.resetStudentPasswords(teacherA, classA, [studentA.id, studentB.id]));
+    const out = await m.classes.resetStudentPasswords(teacherA, classA, [studentA.id]);
+    expect(out).toHaveLength(1);
+    expect(out[0].tempPassword.length).toBeGreaterThanOrEqual(8);
+    const list = await m.classes.listClassStudents(teacherA, classA);
+    expect(list.find((s) => s.id === studentA.id)?.mustChangePassword).toBe(true);
+  });
+});

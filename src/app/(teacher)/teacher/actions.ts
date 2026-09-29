@@ -112,6 +112,17 @@ export async function resetStudentPasswordAction(classId: string, studentId: str
   return { tempPassword };
 }
 
+const studentIdsSchema = z.array(z.uuid()).min(1).max(200);
+
+export async function resetStudentPasswordsAction(classId: string, studentIds: string[]) {
+  const actor = await teacher();
+  const ids = studentIdsSchema.safeParse(studentIds);
+  if (!ids.success) return { created: [] };
+  const created = await classSvc.resetStudentPasswords(actor, classId, ids.data);
+  revalidatePath(`/teacher/classes/${classId}`);
+  return { created };
+}
+
 // ---------------------------------------------------------------- Bài tập
 
 function assignmentInput(fd: FormData) {

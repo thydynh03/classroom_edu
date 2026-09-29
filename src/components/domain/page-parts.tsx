@@ -43,15 +43,18 @@ export function Panel({
   title,
   action,
   className,
+  tour,
   children,
 }: {
   title?: React.ReactNode;
   action?: React.ReactNode;
   className?: string;
+  /** Mốc cho hướng dẫn lần đầu (ProductTour) */
+  tour?: string;
   children: React.ReactNode;
 }) {
   return (
-    <section className={cn("bg-surface border-border rounded-card flex min-w-0 flex-col border p-5", className)}>
+    <section data-tour={tour} className={cn("bg-surface border-border rounded-card flex min-w-0 flex-col border p-5", className)}>
       {(title || action) && (
         <div className="mb-3 flex items-center justify-between gap-2">
           {title && <h2 className="text-[15px] font-bold">{title}</h2>}
@@ -80,6 +83,25 @@ export function EmptyState({
       <p className="font-bold">{title}</p>
       {description && <p className="text-muted max-w-sm text-sm">{description}</p>}
       {action && <div className="mt-2">{action}</div>}
+    </div>
+  );
+}
+
+/** Chỗ trống nhỏ trong một ô dashboard khi chưa có số liệu: giữ khung, nói rõ vì sao trống. */
+export function EmptyHint({ icon, children, className }: { icon?: React.ReactNode; children: React.ReactNode; className?: string }) {
+  return (
+    <div
+      className={cn(
+        "border-border text-muted rounded-tile flex flex-1 flex-col items-center justify-center gap-2 border border-dashed px-4 py-6 text-center text-sm",
+        className,
+      )}
+    >
+      {icon && (
+        <span className="bg-surface-2 flex size-9 items-center justify-center rounded-full [&_svg]:size-4" aria-hidden="true">
+          {icon}
+        </span>
+      )}
+      {children}
     </div>
   );
 }

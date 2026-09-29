@@ -46,12 +46,12 @@ test.describe("luồng chính giáo viên → học sinh", () => {
     await expect(t).toHaveURL(/tab=students/);
 
     await t.getByLabel("Họ tên học sinh").fill(studentName);
-    await t.getByRole("button", { name: "Tạo tài khoản" }).click();
+    await t.getByRole("button", { name: /^Tạo (\d+ )?tài khoản$/ }).click();
     const row = t.getByRole("row", { name: new RegExp(studentName) });
     await expect(row).toBeVisible();
     const cells = row.getByRole("cell");
-    const username = (await cells.nth(1).innerText()).trim();
-    const tempPassword = (await cells.nth(2).innerText()).trim();
+    const username = (await cells.nth(2).innerText()).trim();
+    const tempPassword = (await cells.nth(3).innerText()).trim();
     expect(username).toMatch(/^hocsinh/);
 
     const classUrl = t.url().split("?")[0];
@@ -70,7 +70,16 @@ test.describe("luồng chính giáo viên → học sinh", () => {
     await s.getByLabel("Nhập lại mật khẩu mới").fill("matkhau-moi-456");
     await s.getByRole("button", { name: "Lưu mật khẩu mới" }).click();
     await expect(s).toHaveURL(/\/student$/);
+    // Lần đầu vào: hướng dẫn từng bước hiện ra; kiểm tra a11y cả khi đang mở, rồi bỏ qua
+    const tour = s.getByRole("dialog", { name: "Chào mừng em đến Classroom Edu" });
+    await expect(tour).toBeVisible();
     await expectNoSeriousA11y(s);
+    await s.getByRole("button", { name: "Bắt đầu hướng dẫn" }).click();
+    await expect(s.getByRole("dialog", { name: "Lịch 7 ngày" })).toBeVisible();
+    await s.getByRole("button", { name: "Bỏ qua hướng dẫn" }).click();
+    await expect(s.getByRole("dialog")).toHaveCount(0);
+    await s.reload();
+    await expect(s.getByRole("dialog")).toHaveCount(0);
 
     await s.getByRole("link", { name: new RegExp(title) }).first().click();
     await expect(s.getByRole("heading", { name: title })).toBeVisible();

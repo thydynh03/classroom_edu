@@ -22,17 +22,14 @@ test.describe("Design System Catalog (/dev/ui)", () => {
     await expect(title).toBeVisible();
 
     // Verify theme toggle button
-    const themeButton = page.getByRole("button", { name: "Đổi giao diện" });
+    const themeButton = page.getByRole("button", { name: "Đổi giao diện sáng/tối" });
     await expect(themeButton).toBeVisible();
 
-    // Toggle to dark theme
+    // Mặc định sáng; một lần bấm sang tối, bấm lần nữa về sáng
+    await expect(page.locator("html")).not.toHaveClass(/dark/);
     await themeButton.click();
-    await page.getByRole("menuitem", { name: "Tối" }).click();
     await expect(page.locator("html")).toHaveClass(/dark/);
-
-    // Toggle to light theme
     await themeButton.click();
-    await page.getByRole("menuitem", { name: "Sáng" }).click();
     await expect(page.locator("html")).not.toHaveClass(/dark/);
 
     // Check accessibility with axe-core (serious/critical violations)

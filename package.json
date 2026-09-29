@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "vercel-build": "MIGRATIONS_DIR=./drizzle node docker/migrate.mjs && next build",
+    "vercel-build": "MIGRATIONS_DIR=./drizzle node docker/migrate.mjs && tsx scripts/seed-demo.ts && next build",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
@@ -17,6 +17,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx --env-file=.env scripts/migrate.ts",
     "db:seed": "tsx --env-file=.env scripts/seed.ts",
+    "db:seed-demo": "tsx --env-file=.env scripts/seed-demo.ts",
     "db:reset": "tsx --env-file=.env scripts/reset.ts && pnpm db:migrate && pnpm db:seed",
     "test:int": "vitest run --config vitest.integration.config.ts"
   },
@@ -43,10 +44,12 @@
     "postgres": "^3.4.9",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "read-excel-file": "^9.3.10",
     "server-only": "^0.0.1",
     "sonner": "^2.0.8",
     "tailwind-merge": "^3.7.0",
     "uuidv7": "^1.2.1",
+    "write-excel-file": "^4.1.1",
     "zod": "^4.6.5"
   },
   "devDependencies": {

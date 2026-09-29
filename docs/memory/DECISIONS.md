@@ -67,3 +67,12 @@ Chưa có SMTP thật trên Vercel nên GV đăng ký xong không nhận đượ
 
 ## 2026-09-29 — Landing/auth chạy đủ hiệu ứng, bỏ qua "giảm chuyển động"
 Người dùng muốn landing trông giống nhau trên mọi máy (laptop của họ tắt Animation effects của Windows nên trình duyệt báo `prefers-reduced-motion: reduce`). Landing/auth không còn nhánh riêng cho reduce: hero trượt vào, reveal trượt, thẻ bồng bềnh, parallax, đường hành trình, thanh tiến độ cuộn, marquee đều chạy. Phần app (không có `.landing`) vẫn tắt hẳn hiệu ứng khi reduce. Thay cho mục "chỉ mờ dần" ở LESSONS 2026-09-29.
+
+## 2026-09-29 — Một bảng màu chung (cam đất + kem) cho landing, auth và app
+Người dùng muốn app GV/HS đồng bộ với landing. Bỏ bảng xanh dương/hổ phách cũ; giá trị của `.landing` chuyển lên `:root`/`.dark`, xóa khối ghi đè `.landing`. Primary `#B93C0B` (không dùng `#C2410C` vì chỉ đạt 4.44:1 trên `--surface-2`). Warning đổi sang vàng đậm `#8A5A00` để không trùng màu cam chủ đạo.
+
+## 2026-09-29 — Tài khoản dùng thử seed khi deploy
+`scripts/seed-demo.ts` chạy trong `vercel-build` sau migration: tạo `demo.gv` + `demo.hs` và dữ liệu mẫu nếu chưa có `demo.gv`, không xóa gì, lỗi thì chỉ ghi log (không chặn deploy). Repo công khai nên chỉ commit hash argon2; mật khẩu nằm trong `demo-accounts.local.md` (gitignore `*.local.md`). Tắt bằng `SEED_DEMO="false"`. Dữ liệu tính theo ngày seed nên sẽ cũ dần.
+
+## 2026-09-29 — Hướng dẫn lần đầu lưu ở DB, xuất Excel làm trên trình duyệt
+Cột `users.tour_completed_at` (migration 0002) để tour không hiện lại trên thiết bị khác; xem lại bằng `?tour=1` (link ở Tài khoản & bảo mật). File Excel tài khoản HS tạo ở client bằng `write-excel-file` (đọc bằng `read-excel-file`), nạp động khi bấm nút; mật khẩu tạm không lưu ở server, chỉ có ở phản hồi tạo/cấp lại. Cấp lại mật khẩu hàng loạt: mọi id phải là HS đang ở lớp, có id lạ thì 404 và không đổi gì.

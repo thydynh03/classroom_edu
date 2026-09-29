@@ -17,6 +17,12 @@ import { type ActionState, fieldErrorsFrom, formToObject } from "@/lib/action";
 import { headers } from "next/headers";
 import { sql } from "drizzle-orm";
 
+/** Xem xong hoặc bỏ qua hướng dẫn lần đầu: lưu lại để lần sau không tự hiện. */
+export async function completeTourAction() {
+  const actor = await requireActor();
+  await db.update(users).set({ tourCompletedAt: new Date() }).where(eq(users.id, actor.id));
+}
+
 export async function markAllReadAction() {
   const actor = await requireActor();
   await markAllRead(actor.id);

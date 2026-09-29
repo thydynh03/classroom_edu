@@ -10,28 +10,31 @@ Dark mode: class `.dark` trên `<html>` (next-themes), mặc định theo hệ t
 
 | Token             | Light (D) | Dark (E)                | Dùng cho                            |
 | ----------------- | --------- | ----------------------- | ----------------------------------- |
-| `--background`    | `#F2F3F8` | `#0A0D14`               | nền trang                           |
-| `--sidebar`       | `#FFFFFF` | `#0C1019`               | rail / sidebar                      |
-| `--surface`       | `#FFFFFF` | `#121826`               | card                                |
-| `--surface-2`     | `#F2F3F8` | `#182034`               | nền phụ, input nền, chip trung tính |
-| `--border`        | `#E6E8F1` | `#1E273A`               | viền                                |
-| `--foreground`    | `#181A29` | `#E8ECF4`               | chữ chính                           |
-| `--muted`         | `#6B6F88` | `#8691A7`               | chữ phụ                             |
-| `--primary`       | `#3551F3` | `#F6B94A`               | nút chính, link, trạng thái chọn    |
-| `--primary-hover` | `#2438C9` | `#E3A636`               | hover nút chính                     |
-| `--primary-soft`  | `#ECEFFF` | `rgba(246,185,74,.13)`  | nền mục đang chọn                   |
-| `--on-primary`    | `#FFFFFF` | `#1A1204`               | chữ trên nút chính                  |
-| `--progress`      | `#3551F3` | `#3FD2C0`               | thanh tiến độ, ring                 |
-| `--success`       | `#1C7D50` | `#58D68D`               | Đã nộp đúng hạn, Đã chấm            |
-| `--success-soft`  | `#DCF3E7` | `rgba(88,214,141,.13)`  |                                     |
-| `--warning`       | `#B5501A` | `#F6B94A`               | Nộp trễ, sắp hạn (chữ)              |
-| `--warning-soft`  | `#FFE6D6` | `rgba(246,185,74,.13)`  |                                     |
-| `--late-bar`      | `#F59E5B` | `#F6B94A`               | đoạn "trễ" trong biểu đồ            |
-| `--danger`        | `#C0303D` | `#FF7474`               | Quá hạn, lỗi, xóa                   |
-| `--danger-soft`   | `#FFE1E3` | `rgba(255,116,116,.13)` |                                     |
-| `--info`          | `#2360C4` | `#7AA2FF`               | Đã trả bài                          |
-| `--info-soft`     | `#DFEBFF` | `rgba(122,162,255,.14)` |                                     |
-| `--ring`          | `#3551F3` | `#F6B94A`               | focus ring 2px                      |
+| `--background` | `#FAF6F0` | `#14110F` | nền trang (kem) |
+| `--sidebar` | `#FFFFFF` | `#110E0C` | rail / sidebar |
+| `--surface` | `#FFFFFF` | `#1C1815` | card |
+| `--surface-2` | `#F3EDE4` | `#26211C` | nền phụ, input nền, chip trung tính |
+| `--border` | `#E9E1D5` | `#332B24` | viền |
+| `--foreground` | `#1C1917` | `#F5EFE7` | chữ chính |
+| `--muted` | `#6B6259` | `#A89F94` | chữ phụ |
+| `--primary` | `#B93C0B` | `#FB923C` | nút chính, link, trạng thái chọn (cam đất) |
+| `--primary-hover` | `#9A3412` | `#FDBA74` | hover nút chính |
+| `--primary-soft` | `#FFEDD5` | `rgba(251,146,60,.14)` | nền mục đang chọn |
+| `--on-primary` | `#FFFFFF` | `#1C1917` | chữ trên nút chính |
+| `--progress` | `#B93C0B` | `#FB923C` | thanh tiến độ, ring |
+| `--success` | `#167046` | `#58D68D` | Đã nộp đúng hạn, Đã chấm |
+| `--success-soft` | `#DCF3E7` | `rgba(88,214,141,.13)` |  |
+| `--warning` | `#8A5A00` | `#FACC15` | Nộp trễ, sắp hạn (chữ), tách khỏi màu cam chủ đạo |
+| `--warning-soft` | `#FEF3C7` | `rgba(250,204,21,.12)` |  |
+| `--late-bar` | `#F59E5B` | `#FACC15` | đoạn "trễ" trong biểu đồ |
+| `--danger` | `#C0303D` | `#FF7474` | Quá hạn, lỗi, xóa |
+| `--danger-soft` | `#FFE1E3` | `rgba(255,116,116,.13)` |  |
+| `--info` | `#2360C4` | `#7AA2FF` | Đã trả bài |
+| `--info-soft` | `#DFEBFF` | `rgba(122,162,255,.14)` |  |
+| `--ring` | `#B93C0B` | `#FB923C` | focus ring 2px |
+| `--scrim` | `rgb(28 25 23/.62)` | `rgb(0 0 0/.72)` | lớp phủ tối (hướng dẫn lần đầu) |
+
+Bảng màu dùng chung cho landing, auth và app (2026-09-29, xem DECISIONS). Chữ cam trên `--surface-2` phải ≥ 4.5:1, vì vậy primary là `#B93C0B` chứ không phải `#C2410C`.
 
 ### Màu theo lớp / môn (pastel)
 

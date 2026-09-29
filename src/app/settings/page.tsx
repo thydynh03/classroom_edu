@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { desc, eq } from "drizzle-orm";
-import { ChevronLeft, KeyRound, Monitor } from "lucide-react";
+import { ChevronLeft, Compass, KeyRound, Monitor } from "lucide-react";
 import { db } from "@/server/db/client";
 import { sessions, users } from "@/server/db/schema";
 import { requireActor, homeFor } from "@/server/auth/guard";
@@ -43,6 +43,16 @@ export default async function SettingsPage() {
             <KeyRound className="size-4" aria-hidden="true" /> Đổi mật khẩu
           </Link>
         </section>
+
+        {actor.role !== "ADMIN" && (
+          <section className="bg-surface border-border rounded-card border p-5">
+            <h2 className="mb-1 text-[15px] font-bold">Hướng dẫn sử dụng</h2>
+            <p className="text-muted mb-3 text-sm">Xem lại hướng dẫn từng bước đã hiện khi bạn đăng nhập lần đầu.</p>
+            <Link href={`${homeFor(actor.role)}?tour=1`} className="text-primary inline-flex items-center gap-1.5 text-sm font-bold hover:underline">
+              <Compass className="size-4" aria-hidden="true" /> Xem lại hướng dẫn
+            </Link>
+          </section>
+        )}
 
         <section className="bg-surface border-border rounded-card border p-5">
           <h2 className="mb-1 text-[15px] font-bold">Thiết bị đang đăng nhập</h2>

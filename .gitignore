@@ -36,3 +36,6 @@ yarn-error.log*
 
 .vercel
 .env*.local
+
+# tài khoản dùng thử, chỉ lưu local
+*.local.md

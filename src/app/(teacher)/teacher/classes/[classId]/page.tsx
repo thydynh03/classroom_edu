@@ -11,6 +11,7 @@ import { EmptyState, LinkButton, PageHeader } from "@/components/domain/page-par
 import { StudentsPanel } from "./students-panel";
 import { SettingsPanel } from "./settings-panel";
 import { cn } from "@/lib/utils";
+import { requestNow } from "@/lib/now";
 
 const TABS = [
   { id: "assignments", label: "Bài tập" },
@@ -63,7 +64,21 @@ export default async function ClassDetailPage({
       </nav>
 
       {tab === "assignments" && <AssignmentsTab actor={actor} classId={cls.id} />}
-      {tab === "students" && <StudentsPanel classId={cls.id} students={await listClassStudents(actor, cls.id)} />}
+      {tab === "students" && (
+        <StudentsPanel
+          classId={cls.id}
+          className={cls.name}
+          loginUrl={new URL("/login", process.env.APP_URL ?? "http://localhost:3000").toString()}
+          students={(await listClassStudents(actor, cls.id)).map((s) => ({
+            id: s.id,
+            fullName: s.fullName,
+            username: s.username,
+            status: s.status,
+            mustChangePassword: s.mustChangePassword,
+            locked: !!s.lockedUntil && s.lockedUntil.getTime() > requestNow(),
+          }))}
+        />
+      )}
       {tab === "tracking" && <TrackingTab actor={actor} classId={cls.id} />}
       {tab === "settings" && (
         <SettingsPanel

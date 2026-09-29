@@ -74,3 +74,6 @@ Tránh: đặt sparkline ở hàng riêng hoặc giới hạn độ dài nhãn; 
 **2026-09-29 · Claude · animation** — Máy người dùng không thấy animation, trang "hiện cứng", máy khác thì thấy.
 Nguyên nhân: Windows tắt Settings › Accessibility › Visual effects › Animation effects → trình duyệt báo `prefers-reduced-motion: reduce`; khối CSS toàn cục ép mọi animation/transition về 0.01ms `!important`, nên cả hiệu ứng mờ dần dự phòng cũng mất.
 Tránh: "giảm chuyển động" nghĩa là bỏ trượt/phóng/lặp, không phải bỏ mọi chuyển tiếp. Giữ fade opacity; kiểm tra bằng Playwright `reducedMotion: "reduce"` trước khi báo xong.
+
+**2026-09-29 · Claude · e2e/màu** — Đổi nút theme (bỏ menu) nhưng quên sửa `tests/e2e/dev-ui.spec.ts`, E2E đỏ ở lần chạy sau. Đổi bảng màu thì axe bắt chữ cam `#C2410C` trên nền `#F3EDE4` = 4.44:1.
+Tránh: đổi UI dùng chung thì grep test E2E theo nhãn cũ; đổi màu thì chạy `pnpm test:e2e` (axe) trước khi push. Next 16 không cho 2 `next dev` cùng thư mục: đang có dev server thì chạy `E2E_PORT=3100 pnpm test:e2e`.

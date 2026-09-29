@@ -152,6 +152,7 @@ export async function listClassStudents(actor: Actor, classId: string) {
       email: users.email,
       status: users.status,
       mustChangePassword: users.mustChangePassword,
+      lockedUntil: users.lockedUntil,
       joinedAt: classMembers.joinedAt,
     })
     .from(classMembers)
@@ -302,6 +303,48 @@ export async function resetStudentPassword(actor: Actor, classId: string, studen
     targetId: studentId,
   });
   return tempPassword;
+}
+
+/**
+ * Cấp lại mật khẩu tạm cho nhiều học sinh của lớp một lần (GV xuất file Excel phát lại cho cả lớp).
+ * Mọi id phải là HS đang ở lớp; có id lạ thì trả 404 và không đổi gì.
+ */
+export async function resetStudentPasswords(actor: Actor, classId: string, studentIds: string[]) {
+  await requireTeacherOfClass(actor, classId);
+  const ids = [...new Set(studentIds)];
+  if (!ids.length) return [];
+  const members = await db
+    .select({ id: users.id, fullName: users.fullName, username: users.username })
+    .from(classMembers)
+    .innerJoin(users, eq(users.id, classMembers.userId))
+    .where(
+      and(
+        eq(classMembers.classId, classId),
+        inArray(classMembers.userId, ids),
+        eq(classMembers.role, "STUDENT"),
+        eq(classMembers.status, "ACTIVE"),
+      ),
+    )
+    .orderBy(asc(users.fullName));
+  if (members.length !== ids.length) notFound();
+  const created: { fullName: string; username: string; tempPassword: string }[] = [];
+  for (const m of members) {
+    const tempPassword = generateTempPassword();
+    await db
+      .update(users)
+      .set({ passwordHash: await hashPassword(tempPassword), mustChangePassword: true, failedLogins: 0, lockedUntil: null })
+      .where(eq(users.id, m.id));
+    await revokeAllSessions(m.id);
+    created.push({ fullName: m.fullName, username: m.username, tempPassword });
+  }
+  await db.insert(auditLogs).values({
+    actorId: actor.id,
+    action: "students.bulk_reset_password",
+    targetType: "class",
+    targetId: classId,
+    meta: { count: created.length },
+  });
+  return created;
 }
 
 export async function findClassByCode(code: string) {

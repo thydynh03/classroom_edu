@@ -17,6 +17,8 @@ export type Actor = {
   username: string;
   mustChangePassword: boolean;
   sessionId: string;
+  /** Đã xem hướng dẫn lần đầu (ProductTour) */
+  tourDone?: boolean;
 };
 
 export async function createSession(userId: string) {
@@ -72,6 +74,7 @@ export const getActor = cache(async (): Promise<Actor | null> => {
       username: users.username,
       status: users.status,
       mustChangePassword: users.mustChangePassword,
+      tourCompletedAt: users.tourCompletedAt,
       deletedAt: users.deletedAt,
     })
     .from(sessions)
@@ -96,5 +99,6 @@ export const getActor = cache(async (): Promise<Actor | null> => {
     username: r.username,
     mustChangePassword: r.mustChangePassword,
     sessionId: r.sessionId,
+    tourDone: r.tourCompletedAt !== null,
   };
 });
