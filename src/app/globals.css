@@ -191,18 +191,22 @@
 @keyframes landing-marquee {
   to { transform: translateX(-50%); }
 }
+/* Hiện dần từng khối khi cuộn tới (JS gắn .reveal-ready / .is-visible). Giảm chuyển động: chỉ mờ dần, không trượt. */
+.reveal-ready .reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1), transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal-ready .reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal-ready .reveal { transform: none; transition: opacity 0.6s ease; }
+}
 @media (prefers-reduced-motion: no-preference) {
   .landing-float { animation: landing-float 5s ease-in-out infinite; }
   .landing-marquee { animation: landing-marquee 30s linear infinite; }
-  .reveal-ready .reveal {
-    opacity: 0;
-    transform: translateY(24px);
-    transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-  .reveal-ready .reveal.is-visible {
-    opacity: 1;
-    transform: none;
-  }
   @supports (animation-timeline: view()) {
     .parallax {
       animation: landing-rise linear both;

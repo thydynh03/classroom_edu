@@ -136,9 +136,9 @@ export default async function Home() {
           </div>
 
           {/* Số liệu */}
-          <dl className="border-border mt-20 grid grid-cols-2 gap-y-8 border-b pb-10 md:grid-cols-4">
+          <dl className="mt-20 grid grid-cols-2 gap-y-8 pb-4 md:grid-cols-4">
             {STATS.map((s) => (
-              <div key={s.value} className="reveal md:border-border md:border-l md:pl-6 md:first:border-l-0 md:first:pl-0">
+              <div key={s.value} className="reveal">
                 <dt className="sr-only">{s.label}</dt>
                 <dd className="text-3xl font-extrabold tracking-tight sm:text-4xl">{s.value}</dd>
                 <dd className="text-muted mt-1 text-sm">{s.label}</dd>
@@ -148,7 +148,7 @@ export default async function Home() {
         </section>
 
         {/* Dải môn học chạy ngang */}
-        <div className="border-border overflow-hidden border-b py-5" aria-hidden>
+        <div className="overflow-hidden py-5 opacity-80" aria-hidden>
           <div className="landing-marquee flex w-max gap-10">
             {[...SUBJECTS, ...SUBJECTS].map((s, i) => (
               <span key={i} className="text-muted flex items-center gap-10 text-lg font-bold whitespace-nowrap">
@@ -176,7 +176,7 @@ export default async function Home() {
         </section>
 
         {/* Vì sao chọn */}
-        <section id="vi-sao" className="bg-surface border-border scroll-mt-16 border-y">
+        <section id="vi-sao" className="bg-surface scroll-mt-16">
           <div className="mx-auto grid max-w-6xl gap-12 px-4 py-20 lg:grid-cols-2 lg:items-center">
             <div>
               <h2 className="reveal text-4xl font-extrabold tracking-tight text-balance sm:text-5xl">
@@ -232,7 +232,7 @@ export default async function Home() {
         </section>
 
         {/* Các lớp tiêu biểu */}
-        <section className="bg-surface border-border border-y">
+        <section className="bg-surface">
           <div className="mx-auto max-w-6xl px-4 py-20">
             <div className="flex flex-wrap items-end justify-between gap-4">
               <h2 className="reveal text-4xl font-extrabold tracking-tight sm:text-5xl">
@@ -242,13 +242,13 @@ export default async function Home() {
             </div>
             <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {CLASSES.map((c) => (
-                <article key={c.name} className="reveal bg-background border-border rounded-card group border p-5 transition-transform hover:-translate-y-1">
+                <article key={c.name} className="reveal bg-background rounded-card group p-5 shadow-[0_1px_2px_rgb(0_0_0/0.04),0_8px_24px_-12px_rgb(0_0_0/0.12)] transition hover:-translate-y-1">
                   <div className={`rounded-tile flex h-28 items-end p-4 ${c.tone}`}>
                     <span className="text-5xl font-extrabold opacity-90">{c.code}</span>
                   </div>
                   <h3 className="mt-4 font-bold">{c.name}</h3>
                   <p className="text-muted text-sm">{c.teacher}</p>
-                  <div className="border-border mt-4 flex justify-between border-t pt-3 text-sm">
+                  <div className="mt-4 flex justify-between pt-1 text-sm">
                     <span className="text-muted">{c.tasks} bài tập</span>
                     <span className="text-success font-bold">{c.rate} đã nộp</span>
                   </div>
@@ -265,7 +265,7 @@ export default async function Home() {
           </h2>
           <div className="mt-10 grid gap-4 md:grid-cols-3">
             {QUOTES.map((q, i) => (
-              <figure key={q.name} className={`reveal rounded-card p-7 ${i === 1 ? "bg-foreground text-background" : "bg-surface border-border border"}`}>
+              <figure key={q.name} className={`reveal rounded-card p-7 ${i === 1 ? "bg-foreground text-background" : "bg-surface shadow-[0_8px_30px_-12px_rgb(0_0_0/0.15)]"}`}>
                 <blockquote className="text-lg leading-relaxed font-semibold">{q.text}</blockquote>
                 <figcaption className="mt-6 text-sm">
                   <span className="font-bold">{q.name}</span>
@@ -281,7 +281,7 @@ export default async function Home() {
           <h2 className="reveal text-4xl font-extrabold tracking-tight sm:text-5xl">
             Câu hỏi <span className={accent}>thường gặp</span>
           </h2>
-          <div className="divide-border border-border divide-y border-y">
+          <div className="divide-border/60 divide-y">
             {FAQ.map((f) => (
               <details key={f.q} className="reveal group py-5">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-bold">
@@ -310,7 +310,7 @@ export default async function Home() {
         </section>
       </main>
 
-      <footer className="border-border border-t">
+      <footer className="bg-surface-2/60">
         <div className="text-muted mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 py-8 text-sm sm:flex-row">
           <Logo className="text-foreground" />
           <p>© Classroom Edu · Dành cho giáo viên và học sinh Việt Nam</p>
