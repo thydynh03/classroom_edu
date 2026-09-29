@@ -64,3 +64,6 @@ Người dùng muốn cả app trên Vercel. Serverless không có process sốn
 
 ## 2026-09-29 — Tắt xác minh email GV (giữ code, bật bằng env)
 Chưa có SMTP thật trên Vercel nên GV đăng ký xong không nhận được mail và không đăng nhập được. Mặc định `REQUIRE_EMAIL_VERIFICATION` khác `"true"`: đăng ký tạo tài khoản với `emailVerifiedAt = now`, tạo phiên và vào thẳng `/teacher`; đăng nhập không chặn GV chưa xác minh. Trang `/verify-email` và luồng gửi token vẫn giữ. Khi có SMTP: đặt `REQUIRE_EMAIL_VERIFICATION="true"` trên Vercel.
+
+## 2026-09-29 — Landing/auth chạy đủ hiệu ứng, bỏ qua "giảm chuyển động"
+Người dùng muốn landing trông giống nhau trên mọi máy (laptop của họ tắt Animation effects của Windows nên trình duyệt báo `prefers-reduced-motion: reduce`). Landing/auth không còn nhánh riêng cho reduce: hero trượt vào, reveal trượt, thẻ bồng bềnh, parallax, đường hành trình, thanh tiến độ cuộn, marquee đều chạy. Phần app (không có `.landing`) vẫn tắt hẳn hiệu ứng khi reduce. Thay cho mục "chỉ mờ dần" ở LESSONS 2026-09-29.

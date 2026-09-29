@@ -9,7 +9,7 @@ export function RevealOnScroll() {
     // Mở trang luôn ở đầu (trình duyệt hay khôi phục vị trí cuộn cũ khi tải lại / quay lại). Có #mục thì giữ.
     if ("scrollRestoration" in history) history.scrollRestoration = "manual";
     if (!location.hash) window.scrollTo(0, 0);
-    // Giảm chuyển động: vẫn hiện dần bằng độ mờ, chỉ bỏ phần trượt (xem CSS .reveal-ready).
+    // Landing chạy hiệu ứng như nhau trên mọi máy, kể cả khi bật giảm chuyển động (xem CSS .reveal-ready).
     const els = Array.from(document.querySelectorAll<HTMLElement>(".reveal"));
     const io = new IntersectionObserver(
       (entries) => {

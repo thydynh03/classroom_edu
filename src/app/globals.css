@@ -149,7 +149,8 @@
   }
 }
 
-/* Phần app: tắt hẳn hiệu ứng khi máy bật "giảm chuyển động". Landing/auth có chế độ riêng (chỉ mờ dần) ở cuối file. */
+/* Phần app: tắt hẳn hiệu ứng khi máy bật "giảm chuyển động".
+   Landing/auth cố ý chạy đủ hiệu ứng trên mọi máy (người dùng chọn, xem DECISIONS 2026-09-29). */
 @media (prefers-reduced-motion: reduce) {
   html:not(:has(.landing)) *,
   html:not(:has(.landing)) *::before,
@@ -192,7 +193,7 @@
 @keyframes landing-marquee {
   to { transform: translateX(-50%); }
 }
-/* Hiện dần từng khối khi cuộn tới (JS gắn .reveal-ready / .is-visible). Giảm chuyển động: chỉ mờ dần, không trượt. */
+/* Hiện dần từng khối khi cuộn tới (JS gắn .reveal-ready / .is-visible). */
 .reveal-ready .reveal {
   opacity: 0;
   transform: translateY(28px);
@@ -202,36 +203,28 @@
   opacity: 1;
   transform: none;
 }
-@media (prefers-reduced-motion: reduce) {
-  .reveal-ready .reveal { transform: none; transition: opacity 0.6s ease; }
-}
-@media (prefers-reduced-motion: no-preference) {
-  .landing-float { animation: landing-float 5s ease-in-out infinite; }
-  @supports (animation-timeline: view()) {
-    .parallax {
-      animation: landing-rise linear both;
-      animation-timeline: view();
-    }
-    .grow-x {
-      transform-origin: left;
-      animation: landing-grow linear both;
-      animation-timeline: view();
-      animation-range: entry 10% cover 45%;
-    }
-    .scroll-progress {
-      transform-origin: left;
-      animation: landing-grow linear both;
-      animation-timeline: scroll(root);
-    }
+.landing-float { animation: landing-float 5s ease-in-out infinite; }
+@supports (animation-timeline: view()) {
+  .parallax {
+    animation: landing-rise linear both;
+    animation-timeline: view();
+  }
+  .grow-x {
+    transform-origin: left;
+    animation: landing-grow linear both;
+    animation-timeline: view();
+    animation-range: entry 10% cover 45%;
+  }
+  .scroll-progress {
+    transform-origin: left;
+    animation: landing-grow linear both;
+    animation-timeline: scroll(root);
   }
 }
-/* Dải môn học chỉ là chữ trang trí trôi ngang: chạy cả khi máy bật giảm chuyển động (chậm hơn), rê chuột thì dừng */
+/* Dải môn học trôi ngang, rê chuột thì dừng */
 .landing-marquee { animation: landing-marquee 45s linear infinite; }
 .landing-marquee:hover { animation-play-state: paused; }
-@media (prefers-reduced-motion: reduce) {
-  .landing-marquee { animation-duration: 60s; }
-}
-/* Bóng header khi cuộn chỉ là đổi kiểu, không phải chuyển động: giữ ở cả chế độ giảm chuyển động */
+/* Bóng header khi cuộn */
 @supports (animation-timeline: scroll()) {
   .landing-header {
     animation: landing-header linear both;
@@ -286,17 +279,8 @@ details[open] > .faq-answer { animation: faq-open 0.3s ease both; }
 /* Landing: hero hiện lần lượt khi vào trang, thanh tiến độ chạy tới mức đã nộp */
 @keyframes hero-in { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
 @keyframes hero-bar { from { transform: scaleX(0); } }
-@media (prefers-reduced-motion: no-preference) {
-  .hero-in { animation: hero-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) var(--d, 0ms) both; }
-  .hero-bar { transform-origin: left; animation: hero-bar 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.9s both; }
-}
-/* Máy bật "giảm chuyển động" (Windows tắt Animation effects, macOS Reduce motion): không trượt, không phóng,
-   không lặp; chỉ mờ dần nhẹ theo cùng nhịp so le để trang không hiện ra cứng. */
-@keyframes fade-in { from { opacity: 0; } }
-@media (prefers-reduced-motion: reduce) {
-  .hero-in { animation: fade-in 0.8s ease var(--d, 0ms) both; }
-  details[open] > .faq-answer { animation-name: fade-in; }
-}
+.hero-in { animation: hero-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) var(--d, 0ms) both; }
+.hero-bar { transform-origin: left; animation: hero-bar 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.9s both; }
 
 /* Landing: lưới chấm nền cho khối kêu gọi, rõ ở mép và tan dần vào giữa để chữ dễ đọc */
 .dot-grid {
