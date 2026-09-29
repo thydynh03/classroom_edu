@@ -273,3 +273,16 @@
 .nav-link:hover::after, .nav-link:focus-visible::after { transform: scaleX(1); }
 @keyframes faq-open { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
 details[open] > .faq-answer { animation: faq-open 0.3s ease both; }
+
+/* Landing: hero hiện lần lượt khi vào trang, thanh tiến độ chạy tới mức đã nộp */
+@keyframes hero-in { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+@keyframes hero-bar { from { transform: scaleX(0); } }
+@media (prefers-reduced-motion: no-preference) {
+  .hero-in { animation: hero-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) var(--d, 0ms) both; }
+  .hero-bar { transform-origin: left; animation: hero-bar 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.9s both; }
+}
+
+/* Landing + auth: màn hình rất rộng (2K/4K) thì phóng cả bố cục theo tỉ lệ (mọi kích thước dùng rem) để không trống hai bên */
+@media (min-width: 1600px) {
+  html:has(.landing) { font-size: clamp(16px, calc(0.5vw + 8px), 20px); }
+}

@@ -65,3 +65,4 @@ Cập nhật sau mỗi task. `[x]` xong · `[~]` đang làm / dở · `[ ]` chư
 - 2026-09-28: M0 hoàn tất (Claude tự viết CI + README, sửa label Select do axe báo; E2E 6/6 pass).
 - 2026-09-28: Người dùng yêu cầu Claude tự code thay agy. Hoàn thành M1–M9 (trừ deploy thật). Verify: lint, typecheck, 55 unit, 20 integration, E2E 9/9 (1 skip mobile), build pass.
 - 2026-09-28: Thêm admin, lên lịch đăng, CSP nonce (src/proxy.ts), quét virus ClamAV. Verify: 60 unit, 25 integration, E2E 9/9, build pass.
+- 2026-09-29: Landing: hero hướng C (editorial + product UI, 2 thẻ nổi, hiện so le khi vào trang), footer 3 cột, luôn mở trang ở đầu, sửa responsive tablet (menu, hành trình 2×2), màn ≥1600px phóng theo tỉ lệ (html:has(.landing) font-size clamp, container max-w-7xl). agy review: ĐẸP. Đã push lên main.
