@@ -300,6 +300,36 @@ details[open] > .faq-answer { animation: faq-open 0.3s ease both; }
   mask-image: radial-gradient(ellipse at center, transparent 30%, black 85%);
 }
 
+/* Landing: mảng chấm màu nhấn lệch sau ảnh để tạo chiều sâu, tan dần ra mép */
+.dot-accent {
+  background-image: radial-gradient(color-mix(in oklab, var(--primary) 45%, transparent) 1.5px, transparent 2px);
+  background-size: 16px 16px;
+  mask-image: radial-gradient(circle at center, black 35%, transparent 72%);
+}
+
+/* Landing: thẻ lớp. --c là màu chữ của lớp, --cbg là nền pastel (đặt qua style trong page.tsx).
+   Đầu thẻ có quầng màu ở góc để nổi hơn nền phẳng; rê chuột thì viền và bóng ngả theo màu lớp. */
+.class-card-head {
+  background:
+    radial-gradient(130% 130% at 100% 0%, color-mix(in oklab, var(--c) 32%, transparent), transparent 62%),
+    var(--cbg);
+}
+.class-card {
+  transition: translate 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.class-card:hover {
+  translate: 0 -4px;
+  border-color: color-mix(in oklab, var(--c) 45%, var(--border));
+  box-shadow: 0 24px 48px -24px color-mix(in oklab, var(--c) 60%, transparent);
+}
+
+/* Đổi sáng/tối: bỏ hiệu ứng mờ chéo mặc định, theme-toggle.tsx vẽ vòng tròn lan ra từ nút bấm */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
 /* Auth (.landing): trên nền kem, surface-2 gần trùng màu viền nên ô nhập trông như bị khóa.
    Đổi sang nền sáng, viền rõ, focus có vòng mềm; ô báo lỗi (aria-invalid) giữ viền đỏ của Input. */
 .landing input:not([type="checkbox"], [type="radio"], [type="file"], [type="hidden"]) {

@@ -22,10 +22,13 @@ if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
 
 export function Providers({ children, nonce }: { children: React.ReactNode; nonce?: string }) {
   return (
+    // Mặc định sáng, không theo hệ thống; chỉ đổi khi người dùng bấm nút (ThemeToggle).
+    // Khóa lưu mới để người từng chọn "Theo hệ thống" ở bản cũ cũng về sáng.
     <NextThemesProvider
       attribute="class"
-      defaultTheme="system"
-      enableSystem
+      defaultTheme="light"
+      enableSystem={false}
+      storageKey="ce-theme"
       disableTransitionOnChange
       nonce={nonce}
       scriptProps={{ async: true }}

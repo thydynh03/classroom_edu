@@ -31,6 +31,11 @@ const MAX_FAILED = 10;
 const LOCK_MINUTES = 15;
 let dummyHash: Promise<string> | null = null;
 
+// Xác minh email GV đang tắt (chưa có SMTP thật). Bật lại: đặt REQUIRE_EMAIL_VERIFICATION="true".
+function emailVerificationRequired() {
+  return process.env.REQUIRE_EMAIL_VERIFICATION === "true";
+}
+
 async function clientIp() {
   const h = await headers();
   return h.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
@@ -79,7 +84,7 @@ export async function loginAction(_: ActionState, fd: FormData): Promise<ActionS
     return { error: GENERIC_LOGIN_ERROR };
   }
   if (user.status !== "ACTIVE") return { error: GENERIC_LOGIN_ERROR };
-  if (user.role === "TEACHER" && !user.emailVerifiedAt) {
+  if (emailVerificationRequired() && user.role === "TEACHER" && !user.emailVerifiedAt) {
     return { error: "Bạn cần xác minh email trước. Kiểm tra hộp thư của bạn." };
   }
 
@@ -112,11 +117,23 @@ export async function registerAction(_: ActionState, fd: FormData): Promise<Acti
   if (taken.some((t) => t.email?.toLowerCase() === email)) {
     return { fieldErrors: { email: "Email này đã được đăng ký" } };
   }
+  const verify = emailVerificationRequired();
   // Role luôn là TEACHER: không bao giờ lấy role từ form.
   const [user] = await db
     .insert(users)
-    .values({ email, username, fullName, passwordHash: await hashPassword(password), role: "TEACHER" })
+    .values({
+      email,
+      username,
+      fullName,
+      passwordHash: await hashPassword(password),
+      role: "TEACHER",
+      emailVerifiedAt: verify ? null : new Date(),
+    })
     .returning({ id: users.id });
+  if (!verify) {
+    await createSession(user.id);
+    redirect(homeFor("TEACHER"));
+  }
   await issueEmailToken(user.id, email, "VERIFY_EMAIL");
   return {
     ok: true,

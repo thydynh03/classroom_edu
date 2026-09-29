@@ -61,3 +61,6 @@ Lý do: nhiều HS phổ thông không có email riêng.
 
 ## 2026-09-29 — Chuyển deploy từ Render sang Vercel
 Người dùng muốn cả app trên Vercel. Serverless không có process sống lâu nên: job chạy qua `/api/cron` (bảo vệ bằng `CRON_SECRET`; Hobby chỉ 1 lần/ngày, cron ngoài gọi thêm), bài lên lịch được đăng "lười" bằng `after()` trong layout GV/HS, migration chạy trong `vercel-build`. ClamAV tắt. Dockerfile giữ lại cho Render/VPS.
+
+## 2026-09-29 — Tắt xác minh email GV (giữ code, bật bằng env)
+Chưa có SMTP thật trên Vercel nên GV đăng ký xong không nhận được mail và không đăng nhập được. Mặc định `REQUIRE_EMAIL_VERIFICATION` khác `"true"`: đăng ký tạo tài khoản với `emailVerifiedAt = now`, tạo phiên và vào thẳng `/teacher`; đăng nhập không chặn GV chưa xác minh. Trang `/verify-email` và luồng gửi token vẫn giữ. Khi có SMTP: đặt `REQUIRE_EMAIL_VERIFICATION="true"` trên Vercel.

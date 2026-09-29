@@ -1,42 +1,43 @@
 "use client";
 
-import * as React from "react";
+import type { MouseEvent } from "react";
+import { flushSync } from "react-dom";
 import { useTheme } from "next-themes";
-import { Moon, Sun, Monitor } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
+// Một nút đổi sáng/tối. Trình duyệt có View Transitions thì giao diện mới lan ra thành vòng tròn từ chính nút này
+// (CSS tắt hiệu ứng mờ chéo mặc định ở globals.css); trình duyệt cũ đổi ngay.
 export function ThemeToggle() {
-  const { setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
+
+  function toggle(e: MouseEvent<HTMLButtonElement>) {
+    const next = resolvedTheme === "dark" ? "light" : "dark";
+    const root = document.documentElement;
+    const apply = () => {
+      // Đổi class ngay trong callback để ảnh chụp "sau" của view transition đã mang theme mới.
+      root.classList.toggle("dark", next === "dark");
+      root.style.colorScheme = next;
+      flushSync(() => setTheme(next));
+    };
+    if (typeof document.startViewTransition !== "function") return apply();
+
+    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+    const x = left + width / 2;
+    const y = top + height / 2;
+    const r = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+    document.startViewTransition(apply).ready.then(() => {
+      root.animate(
+        { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${r}px at ${x}px ${y}px)`] },
+        { duration: 600, easing: "cubic-bezier(0.4, 0, 0.2, 1)", pseudoElement: "::view-transition-new(root)" },
+      );
+    });
+  }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label="Đổi giao diện">
-          <Sun className="size-5 dark:hidden" />
-          <Moon className="size-5 hidden dark:block" />
-          <span className="sr-only">Đổi giao diện</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setTheme("light")}>
-          <Sun className="mr-2 size-4" />
-          <span>Sáng</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("dark")}>
-          <Moon className="mr-2 size-4" />
-          <span>Tối</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("system")}>
-          <Monitor className="mr-2 size-4" />
-          <span>Theo hệ thống</span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Button variant="ghost" size="icon" onClick={toggle} aria-label="Đổi giao diện sáng/tối" title="Đổi giao diện sáng/tối">
+      <Sun className="size-5 dark:hidden" aria-hidden />
+      <Moon className="hidden size-5 dark:block" aria-hidden />
+    </Button>
   );
 }

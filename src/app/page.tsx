@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -52,11 +53,12 @@ const JOURNEY = [
 
 // Thẻ lớp minh họa (dữ liệu mẫu, không phải lớp thật).
 const CLASSES = [
-  { icon: Sigma, subject: "Toán", name: "Toán 10A1", teacher: "Cô Hà", students: 42, tasks: 12, rate: 94, tone: "bg-class-sky-bg text-class-sky-fg", bar: "bg-class-sky-fg" },
-  { icon: BookOpen, subject: "Ngữ văn", name: "Ngữ văn 11B2", teacher: "Thầy Quang", students: 38, tasks: 8, rate: 89, tone: "bg-class-peach-bg text-class-peach-fg", bar: "bg-class-peach-fg" },
-  { icon: Languages, subject: "Tiếng Anh", name: "Tiếng Anh 12C", teacher: "Cô Linh", students: 40, tasks: 15, rate: 97, tone: "bg-class-mint-bg text-class-mint-fg", bar: "bg-class-mint-fg" },
-  { icon: Atom, subject: "Vật lý", name: "Vật lý 10A3", teacher: "Thầy Nam", students: 41, tasks: 10, rate: 91, tone: "bg-class-lilac-bg text-class-lilac-fg", bar: "bg-class-lilac-fg" },
+  { icon: Sigma, color: "sky", subject: "Toán", code: "TOAN10A1", name: "Toán 10A1", teacher: "Cô Hà", students: 42, tasks: 12, rate: 94, faces: ["AN", "BM", "KH"] },
+  { icon: BookOpen, color: "peach", subject: "Ngữ văn", code: "VAN11B2", name: "Ngữ văn 11B2", teacher: "Thầy Quang", students: 38, tasks: 8, rate: 89, faces: ["LT", "MQ", "PH"] },
+  { icon: Languages, color: "mint", subject: "Tiếng Anh", code: "ANH12C", name: "Tiếng Anh 12C", teacher: "Cô Linh", students: 40, tasks: 15, rate: 97, faces: ["GB", "TV", "NY"] },
+  { icon: Atom, color: "lilac", subject: "Vật lý", code: "LY10A3", name: "Vật lý 10A3", teacher: "Thầy Nam", students: 41, tasks: 10, rate: 91, faces: ["DK", "HP", "QA"] },
 ];
+const FACE_TONES = ["bg-class-butter-bg text-class-butter-fg", "bg-class-rose-bg text-class-rose-fg", "bg-class-mint-bg text-class-mint-fg"];
 
 const QUOTES = [
   { icon: Users, text: "Mở heatmap là biết ngay bạn nào chưa nộp, không phải lướt nhóm Zalo tìm bài.", name: "Giáo viên chủ nhiệm", role: "theo dõi cả lớp" },
@@ -232,12 +234,33 @@ export default async function Home() {
               </ul>
             </div>
             <div className="reveal relative">
-              <div className="rounded-card relative aspect-[4/5] overflow-hidden sm:aspect-[4/3] lg:aspect-[4/5]">
-                <Image src="/landing/classroom.webp" alt="Giáo viên đứng lớp" fill sizes="(min-width: 1024px) 560px, 100vw" className="object-cover" />
+              <div aria-hidden className="dot-accent absolute -top-10 -right-10 hidden size-56 sm:block" />
+              <div className="ring-border/70 relative aspect-[4/5] overflow-hidden rounded-[1.75rem] shadow-[0_30px_60px_-30px_rgb(0_0_0/0.35)] ring-1 sm:aspect-[4/3] lg:aspect-[4/5]">
+                <Image
+                  src="/landing/lesson.webp"
+                  alt="Học sinh thuyết trình trước lớp, giáo viên ngồi nghe"
+                  fill
+                  sizes="(min-width: 1024px) 560px, 100vw"
+                  className="object-cover object-[center_62%]"
+                />
+                <div aria-hidden className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/30 to-transparent" />
               </div>
-              <div className="parallax absolute -bottom-8 left-4 w-64 sm:-left-6 sm:w-72"><HeatmapPreview className="shadow-xl" /></div>
-              <div className="bg-surface rounded-control absolute top-5 right-5 flex items-center gap-2 px-3 py-2 text-sm font-semibold shadow-lg">
-                <ShieldCheck className="text-success size-4" aria-hidden /> Chỉ GV của lớp xem bài nộp
+              <div className="parallax absolute -bottom-8 left-4 w-64 sm:-left-6 sm:w-72"><HeatmapPreview className="shadow-2xl" /></div>
+              <div className="bg-surface/90 absolute top-5 right-5 flex items-center gap-2 rounded-full py-1.5 pr-4 pl-1.5 text-sm font-semibold shadow-lg backdrop-blur">
+                <span className="bg-success-soft text-success flex size-7 items-center justify-center rounded-full">
+                  <ShieldCheck className="size-4" aria-hidden />
+                </span>
+                Chỉ GV của lớp xem bài nộp
+              </div>
+              {/* Thẻ minh họa nhắc hạn (dữ liệu mẫu) */}
+              <div aria-hidden className="bg-surface absolute right-5 bottom-12 hidden items-center gap-3 rounded-2xl p-3 pr-4 shadow-xl sm:flex">
+                <span className="bg-primary-soft text-primary flex size-9 items-center justify-center rounded-xl">
+                  <BellRing className="size-4" />
+                </span>
+                <div>
+                  <p className="text-sm font-bold">Đã nhắc 5 bạn chưa nộp</p>
+                  <p className="text-muted text-xs">Bài 3 · còn 24 giờ đến hạn</p>
+                </div>
               </div>
             </div>
           </div>
@@ -278,25 +301,48 @@ export default async function Home() {
               </h2>
               <p className="text-muted max-w-sm text-sm">Lớp học hiển thị bằng màu pastel riêng, giáo viên dạy nhiều lớp không bị nhầm.</p>
             </div>
-            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
               {CLASSES.map(({ icon: Icon, ...c }) => (
-                <article key={c.name} className="reveal bg-background border-border/70 rounded-card overflow-hidden border shadow-[0_1px_2px_rgb(0_0_0/0.04),0_8px_24px_-12px_rgb(0_0_0/0.12)] transition-[translate,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_1px_2px_rgb(0_0_0/0.04),0_18px_36px_-16px_rgb(0_0_0/0.2)]">
-                  <div className={`flex h-24 items-start justify-between p-4 ${c.tone}`}>
-                    <span className="bg-surface/75 rounded-full px-2.5 py-1 text-xs font-bold">{c.subject}</span>
-                    <Icon className="size-9 opacity-80" strokeWidth={1.75} aria-hidden />
-                  </div>
-                  <div className="p-5">
-                    <h3 className="font-bold">{c.name}</h3>
-                    <p className="text-muted text-sm">{c.teacher} · {c.students} học sinh</p>
-                    <div className="mt-5 flex justify-between text-xs">
-                      <span className="text-muted">{c.tasks} bài tập</span>
-                      <span className="font-bold">{c.rate}% đã nộp</span>
+                // reveal ở lớp bọc: .reveal-ready .reveal ghi đè transition, nên hiệu ứng rê chuột đặt ở thẻ bên trong
+                <div key={c.name} className="reveal">
+                  <article
+                    style={{ "--c": `var(--class-${c.color}-fg)`, "--cbg": `var(--class-${c.color}-bg)` } as CSSProperties}
+                    className="class-card group bg-background border-border/70 rounded-card flex h-full flex-col overflow-hidden border shadow-[0_1px_2px_rgb(0_0_0/0.04),0_8px_24px_-12px_rgb(0_0_0/0.12)]"
+                  >
+                    <div className="class-card-head relative h-32 overflow-hidden p-4 text-(--c)">
+                      <div className="relative flex items-center justify-between gap-2">
+                        <span className="bg-surface/80 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold backdrop-blur-sm">
+                          <Icon className="size-3.5" aria-hidden />
+                          {c.subject}
+                        </span>
+                        <span className="font-mono text-[11px] font-bold tracking-wider opacity-75">{c.code}</span>
+                      </div>
+                      <Icon aria-hidden strokeWidth={1.25} className="absolute -right-4 -bottom-6 size-28 opacity-25 transition-transform duration-500 group-hover:-rotate-6" />
                     </div>
-                    <div className="bg-surface-2 mt-2 h-1.5 overflow-hidden rounded-full">
-                      <div className={`h-full rounded-full ${c.bar}`} style={{ width: `${c.rate}%` }} />
+                    <div className="flex flex-1 flex-col p-5">
+                      <h3 className="text-lg font-bold">{c.name}</h3>
+                      <p className="text-muted text-sm">{c.teacher} · {c.students} học sinh</p>
+                      <div className="mt-5 flex items-center justify-between">
+                        <div aria-hidden className="flex -space-x-2">
+                          {c.faces.map((f, i) => (
+                            <span key={f} className={`ring-background flex size-8 items-center justify-center rounded-full text-[10px] font-bold ring-2 ${FACE_TONES[i]}`}>{f}</span>
+                          ))}
+                          <span className="bg-surface-2 text-muted ring-background flex size-8 items-center justify-center rounded-full text-[10px] font-bold ring-2">+{c.students - c.faces.length}</span>
+                        </div>
+                        <span className="text-muted text-xs">{c.tasks} bài tập</span>
+                      </div>
+                      <div className="mt-auto pt-5">
+                        <div className="flex justify-between text-xs">
+                          <span className="text-muted">Nộp bài gần nhất</span>
+                          <span className="font-bold text-(--c)">{c.rate}%</span>
+                        </div>
+                        <div className="bg-surface-2 mt-2 h-2 overflow-hidden rounded-full">
+                          <div className="h-full rounded-full bg-(--c)" style={{ width: `${c.rate}%` }} />
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </article>
+                  </article>
+                </div>
               ))}
             </div>
           </div>
