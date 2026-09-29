@@ -78,15 +78,17 @@ export default async function Home() {
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
           <Logo />
           <nav className="flex items-center gap-1 sm:gap-2">
-            <a href="#vi-sao" className="text-muted hover:text-foreground hidden px-3 text-sm font-semibold md:block">Tính năng</a>
-            <a href="#hanh-trinh" className="text-muted hover:text-foreground hidden px-3 text-sm font-semibold md:block">Cách dùng</a>
-            <a href="#hoi-dap" className="text-muted hover:text-foreground hidden px-3 text-sm font-semibold md:block">Hỏi đáp</a>
+            {[["#vi-sao", "Tính năng"], ["#hanh-trinh", "Cách dùng"], ["#hoi-dap", "Hỏi đáp"]].map(([href, label]) => (
+              <a key={href} href={href} className="nav-link text-muted hover:text-foreground hidden px-3 py-2 text-sm font-semibold transition-colors md:block">{label}</a>
+            ))}
             <ThemeToggle />
-            <Link href="/login" className="text-foreground hover:bg-surface-2 rounded-control hidden h-10 items-center px-4 text-sm font-bold sm:inline-flex">
+            <Link href="/login" className="text-foreground hover:bg-surface-2 hidden h-10 rounded-full items-center px-4 text-sm font-bold sm:inline-flex">
               Đăng nhập
             </Link>
-            <Link href="/register" className="bg-primary text-on-primary hover:bg-primary-hover rounded-control inline-flex h-10 items-center px-4 text-sm font-bold">
-              Bắt đầu
+            <Link href="/register" className="bg-primary text-on-primary hover:bg-primary-hover group inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full px-4 whitespace-nowrap sm:px-5 text-sm font-bold transition-colors">
+              <span className="sm:hidden">Bắt đầu</span>
+              <span className="hidden sm:inline">Tạo lớp miễn phí</span>
+              <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
             </Link>
           </nav>
         </div>
@@ -101,18 +103,19 @@ export default async function Home() {
                 <span aria-hidden className="bg-primary size-1.5 rounded-full" />
                 Nền tảng giao bài cho lớp học Việt Nam
               </span>
-              <h1 className="mt-5 text-[2.6rem] leading-[1.08] font-extrabold tracking-tight text-balance sm:text-6xl">
-                Lớp học của bạn, <span className={accent}>gọn gàng</span> mỗi ngày
+              <h1 className="mt-6 text-[2.75rem] leading-[1.02] font-extrabold tracking-[-0.035em] sm:text-6xl lg:text-7xl">
+                Lớp học của bạn,
+                <span className={`${accent} mt-1 block tracking-[-0.02em]`}>gọn gàng mỗi ngày.</span>
               </h1>
               <p className="text-muted mt-5 max-w-xl text-lg leading-relaxed">
                 Giao bài cho nhiều lớp, học sinh nộp bằng điện thoại, chấm và trả điểm ngay trên web. Không cần lướt nhóm Zalo tìm bài nữa.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link href="/register" className="bg-primary text-on-primary hover:bg-primary-hover shadow-primary rounded-control group inline-flex h-12 items-center justify-center gap-2 px-6 font-bold">
-                  Tạo tài khoản giáo viên
+                <Link href="/register" className="bg-primary text-on-primary hover:bg-primary-hover shadow-primary group inline-flex h-12 rounded-full items-center justify-center gap-2 px-6 font-bold">
+                  Tạo lớp miễn phí
                   <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" aria-hidden />
                 </Link>
-                <Link href="/login" className="bg-surface hover:bg-surface-2 rounded-control inline-flex h-12 items-center justify-center px-6 font-bold shadow-sm">
+                <Link href="/login" className="bg-surface hover:bg-surface-2 inline-flex h-12 rounded-full items-center justify-center px-6 font-bold shadow-sm">
                   Tôi là học sinh
                 </Link>
               </div>
@@ -125,8 +128,8 @@ export default async function Home() {
 
             {/* Ảnh + thẻ giao diện nổi */}
             <div className="relative">
-              <div className="rounded-card relative aspect-[4/3] overflow-hidden sm:aspect-[5/4] lg:aspect-[4/5]">
-                <Image src="/landing/laptop.webp" alt="Học sinh làm bài trên máy tính" fill priority sizes="(min-width: 1024px) 540px, 100vw" className="object-cover" />
+              <div className="group/img rounded-[24px] relative aspect-[4/3] overflow-hidden sm:aspect-[5/4] lg:aspect-[4/5]">
+                <Image src="/landing/laptop.webp" alt="Học sinh làm bài trên máy tính" fill priority sizes="(min-width: 1024px) 540px, 100vw" className="object-cover transition-transform duration-700 group-hover/img:scale-[1.03]" />
                 <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/35 to-transparent" />
               </div>
               <div className="bg-surface/95 rounded-card absolute right-3 bottom-3 left-3 flex items-center gap-3 p-3 shadow-lg backdrop-blur sm:hidden" aria-hidden>
@@ -150,12 +153,13 @@ export default async function Home() {
           </div>
 
           {/* Số liệu */}
-          <dl className="mt-14 sm:mt-24 grid grid-cols-2 gap-y-8 pb-4 md:grid-cols-4">
-            {STATS.map((s) => (
-              <div key={s.value} className="reveal">
+          <dl className="bg-surface rounded-[24px] mt-16 grid grid-cols-2 gap-px overflow-hidden shadow-[0_1px_2px_rgb(0_0_0/0.04),0_12px_32px_-16px_rgb(0_0_0/0.14)] sm:mt-24 md:grid-cols-4">
+            {STATS.map((s, i) => (
+              <div key={s.value} className="reveal bg-surface p-5 sm:p-7 md:[&:not(:first-child)]:border-l md:border-border/60">
                 <dt className="sr-only">{s.label}</dt>
-                <dd className="text-3xl font-extrabold tracking-tight sm:text-4xl">{s.value}</dd>
-                <dd className="text-muted mt-1 text-sm">{s.label}</dd>
+                <dd aria-hidden className="text-primary font-mono text-xs font-bold">0{i + 1}</dd>
+                <dd className="mt-3 text-3xl font-extrabold tracking-[-0.03em] sm:text-[2.6rem]">{s.value}</dd>
+                <dd className="text-muted mt-1.5 text-sm leading-snug">{s.label}</dd>
               </div>
             ))}
           </dl>
@@ -298,11 +302,11 @@ export default async function Home() {
           <div className="divide-border/60 divide-y">
             {FAQ.map((f) => (
               <details key={f.q} className="reveal group py-5">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-bold">
+                <summary className="hover:text-primary flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-bold transition-colors">
                   {f.q}
                   <Plus className="text-primary size-5 shrink-0 transition-transform group-open:rotate-45" aria-hidden />
                 </summary>
-                <p className="text-muted mt-3 leading-relaxed">{f.a}</p>
+                <p className="faq-answer text-muted mt-3 max-w-2xl leading-relaxed">{f.a}</p>
               </details>
             ))}
           </div>
@@ -310,15 +314,15 @@ export default async function Home() {
 
         {/* Kêu gọi */}
         <section className="mx-auto max-w-6xl px-4 pb-20">
-          <div className="reveal rounded-card relative overflow-hidden p-10 text-center text-white sm:p-20">
+          <div className="reveal relative overflow-hidden rounded-[24px] px-6 py-16 text-center text-white sm:p-24">
             <Image src="/landing/hero.webp" alt="" fill sizes="(min-width: 1152px) 1152px, 100vw" className="object-cover" />
             <div aria-hidden className="absolute inset-0 bg-black/60" />
-            <h2 className="relative text-4xl font-extrabold tracking-tight text-balance sm:text-5xl">
-              Sẵn sàng cho <span className={`${display.className} font-medium`}>tiết học tới?</span>
+            <h2 className="relative text-4xl leading-[1.05] font-extrabold tracking-[-0.03em] text-balance sm:text-6xl">
+              Sẵn sàng cho <span className={`${display.className} block font-medium`}>tiết học tới?</span>
             </h2>
-            <p className="relative mx-auto mt-4 max-w-md">Tạo lớp đầu tiên chỉ mất một phút. Miễn phí cho giáo viên.</p>
-            <Link href="/register" className="bg-primary text-on-primary hover:bg-primary-hover rounded-control relative mt-8 inline-flex h-12 items-center gap-2 px-7 font-bold">
-              Tạo tài khoản giáo viên <ArrowRight className="size-4" aria-hidden />
+            <p className="relative mx-auto mt-5 max-w-md text-lg text-white/85">Tạo lớp đầu tiên chỉ mất một phút. Miễn phí cho giáo viên.</p>
+            <Link href="/register" className="bg-primary text-on-primary hover:bg-primary-hover group relative mt-9 inline-flex h-13 items-center gap-2 rounded-full px-8 font-bold shadow-lg">
+              Tạo tài khoản giáo viên <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" aria-hidden />
             </Link>
           </div>
         </section>

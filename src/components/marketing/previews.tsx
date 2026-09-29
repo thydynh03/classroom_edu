@@ -10,7 +10,7 @@ const HEAT = [
 
 export function Logo({ className }: { className?: string }) {
   return (
-    <span className={cn("flex items-center gap-2.5 text-lg font-extrabold", className)}>
+    <span className={cn("flex items-center gap-2.5 text-lg font-extrabold whitespace-nowrap", className)}>
       <span className="bg-primary text-on-primary shadow-primary flex size-10 items-center justify-center rounded-[14px] text-lg">
         C
       </span>
