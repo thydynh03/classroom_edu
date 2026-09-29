@@ -207,7 +207,6 @@
 }
 @media (prefers-reduced-motion: no-preference) {
   .landing-float { animation: landing-float 5s ease-in-out infinite; }
-  .landing-marquee { animation: landing-marquee 45s linear infinite; }
   @supports (animation-timeline: view()) {
     .parallax {
       animation: landing-rise linear both;
@@ -225,6 +224,12 @@
       animation-timeline: scroll(root);
     }
   }
+}
+/* Dải môn học chỉ là chữ trang trí trôi ngang: chạy cả khi máy bật giảm chuyển động (chậm hơn), rê chuột thì dừng */
+.landing-marquee { animation: landing-marquee 45s linear infinite; }
+.landing-marquee:hover { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  .landing-marquee { animation-duration: 60s; }
 }
 /* Bóng header khi cuộn chỉ là đổi kiểu, không phải chuyển động: giữ ở cả chế độ giảm chuyển động */
 @supports (animation-timeline: scroll()) {
