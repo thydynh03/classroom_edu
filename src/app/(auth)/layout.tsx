@@ -5,7 +5,7 @@ import { AssignmentPreview, GradePreview, HeatmapPreview, Logo } from "@/compone
 // Chia đôi: bên trái giới thiệu (ẩn trên mobile), bên phải là form.
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <main className="bg-background grid min-h-screen lg:grid-cols-[1.05fr_1fr]">
+    <main className="landing bg-background text-foreground grid min-h-screen lg:grid-cols-[1.05fr_1fr]">
       <aside className="bg-primary text-on-primary relative hidden overflow-hidden p-10 lg:flex lg:flex-col xl:p-14">
         <div aria-hidden className="bg-on-primary/10 absolute -top-24 -right-24 size-80 rounded-full" />
         <div aria-hidden className="bg-on-primary/10 absolute -bottom-32 -left-20 size-96 rounded-full" />
