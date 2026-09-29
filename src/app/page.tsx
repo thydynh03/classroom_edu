@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { ThemeToggle } from "@/components/layout";
 import { RevealOnScroll } from "@/components/marketing/reveal-on-scroll";
-import { AssignmentPreview, GradePreview, HeatmapPreview, Logo } from "@/components/marketing/previews";
+import { HeatmapPreview, Logo } from "@/components/marketing/previews";
 import { getActor } from "@/server/auth/session";
 import { homeFor } from "@/server/auth/guard";
 
@@ -95,55 +95,46 @@ export default async function Home() {
       </header>
 
       <main>
-        {/* Hero: 2 cột, chữ trái – ảnh phải, vừa một màn hình */}
-        <section className="mx-auto max-w-6xl px-4 pt-6 pb-10 sm:pt-12 lg:pt-14">
-          <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_1fr] lg:gap-14">
-            <div>
-              <span className="bg-primary-soft text-primary inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-semibold">
-                <span aria-hidden className="bg-primary size-1.5 rounded-full" />
-                Nền tảng giao bài cho lớp học Việt Nam
-              </span>
-              <h1 className="mt-6 text-[2.75rem] leading-[1.02] font-extrabold tracking-[-0.035em] sm:text-6xl lg:text-7xl">
+        {/* Hero C: chữ trái, ảnh học sinh làm nền + 2 thẻ giao diện sản phẩm */}
+        <section className="mx-auto max-w-6xl px-4 pt-8 pb-10 sm:pt-14 lg:pt-16">
+          <div className="grid items-center gap-12 lg:min-h-[640px] lg:grid-cols-[1.2fr_1fr] lg:gap-10">
+            <div className="max-w-[680px]">
+              <p className="text-primary text-xs font-bold tracking-[0.18em] uppercase">Nền tảng giao bài cho lớp học Việt Nam</p>
+              <h1 className="mt-5 text-[clamp(2.75rem,4.6vw,4.25rem)] leading-[0.98] font-extrabold tracking-[-0.045em]">
                 Lớp học của bạn,
-                <span className={`${accent} mt-1 block tracking-[-0.02em]`}>gọn gàng mỗi ngày.</span>
+                <span className="mt-1 block sm:whitespace-nowrap">
+                  <span className={`${accent} tracking-[-0.02em]`}>gọn gàng</span> mỗi ngày.
+                </span>
               </h1>
-              <p className="text-muted mt-5 max-w-xl text-lg leading-relaxed">
-                Giao bài cho nhiều lớp, học sinh nộp bằng điện thoại, chấm và trả điểm ngay trên web. Không cần lướt nhóm Zalo tìm bài nữa.
+              <p className="text-muted mt-6 max-w-lg text-lg leading-relaxed">
+                Giao bài cho nhiều lớp, học sinh nộp bằng điện thoại, chấm và trả điểm ngay trên web. Không cần lục nhóm Zalo tìm bài nữa.
               </p>
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link href="/register" className="bg-primary text-on-primary hover:bg-primary-hover shadow-primary group inline-flex h-12 rounded-full items-center justify-center gap-2 px-6 font-bold">
-                  Tạo lớp miễn phí
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
+                <Link href="/register" className="bg-primary text-on-primary hover:bg-primary-hover shadow-primary group inline-flex h-12 items-center justify-center gap-2 rounded-full px-6 font-bold">
+                  Tạo tài khoản giáo viên
                   <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" aria-hidden />
                 </Link>
-                <Link href="/login" className="bg-surface hover:bg-surface-2 inline-flex h-12 rounded-full items-center justify-center px-6 font-bold shadow-sm">
+                <Link href="/login" className="hover:text-primary inline-flex h-12 items-center justify-center font-bold underline-offset-4 hover:underline sm:h-auto">
                   Tôi là học sinh
                 </Link>
               </div>
-              <ul className="text-muted mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium">
-                {["Miễn phí cho giáo viên", "Không cần cài ứng dụng", "Dùng tốt trên điện thoại"].map((t) => (
-                  <li key={t} className="flex items-center gap-2"><Check className="text-primary size-4" aria-hidden />{t}</li>
-                ))}
-              </ul>
             </div>
 
-            {/* Ảnh + thẻ giao diện nổi */}
-            <div className="relative">
-              <div className="group/img rounded-[24px] relative aspect-[4/3] overflow-hidden sm:aspect-[5/4] lg:aspect-[4/5]">
-                <Image src="/landing/laptop.webp" alt="Học sinh làm bài trên máy tính" fill priority sizes="(min-width: 1024px) 540px, 100vw" className="object-cover transition-transform duration-700 group-hover/img:scale-[1.03]" />
-                <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/35 to-transparent" />
+            {/* Ảnh chân dung làm nền, thẻ tiến độ bài tập và thẻ thông báo nộp bài nổi phía trước */}
+            <div className="relative mx-auto w-full max-w-[500px] pt-10 pb-8 lg:pt-16">
+              <div className="relative ml-auto aspect-[4/5] w-[86%] overflow-hidden rounded-[28px] lg:w-[440px]">
+                <Image src="/landing/laptop.webp" alt="Học sinh làm bài trên máy tính" fill priority sizes="(min-width: 1024px) 440px, 86vw" className="object-cover object-[center_30%]" />
               </div>
-              <div className="bg-surface/95 rounded-card absolute right-3 bottom-3 left-3 flex items-center gap-3 p-3 shadow-lg backdrop-blur sm:hidden" aria-hidden>
-                <span className="bg-success-soft text-success flex size-9 shrink-0 items-center justify-center rounded-full"><Check className="size-5" /></span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-bold">Khoa vừa nộp bài</p>
-                  <p className="text-muted text-xs">Đúng hạn · Toán 10A1</p>
+              <div className="bg-surface border-border absolute top-0 left-0 w-[64%] rounded-[18px] border p-4 shadow-[0_18px_40px_-18px_rgb(0_0_0/0.25)] sm:w-64 lg:top-4" aria-hidden>
+                <p className="text-sm font-bold">Bài 3: Hàm số</p>
+                <p className="text-muted text-xs">Toán 10A1</p>
+                <div className="bg-surface-2 mt-3 h-2 overflow-hidden rounded-full">
+                  <div className="bg-primary h-full w-[76%] rounded-full" />
                 </div>
-                <span className="text-success font-mono text-xl font-bold">8,5</span>
+                <p className="text-muted mt-2 text-xs"><span className="text-foreground font-bold">32/42</span> học sinh đã nộp</p>
               </div>
-              <div className="parallax absolute -top-5 -right-3 hidden w-72 sm:block lg:-right-8"><AssignmentPreview className="shadow-xl" /></div>
-              <div className="parallax absolute -bottom-8 -left-3 hidden w-72 sm:block lg:-left-10"><GradePreview className="shadow-xl" /></div>
-              <div className="bg-surface rounded-card landing-float absolute top-[42%] -left-6 hidden items-center gap-3 p-4 shadow-xl xl:flex" aria-hidden>
-                <span className="bg-success-soft text-success flex size-9 items-center justify-center rounded-full"><Check className="size-5" /></span>
+              <div className="bg-surface border-border absolute bottom-0 left-2 flex items-center gap-3 rounded-[18px] border p-3 pr-5 shadow-[0_18px_40px_-18px_rgb(0_0_0/0.25)] sm:left-6" aria-hidden>
+                <span className="bg-success-soft text-success flex size-9 shrink-0 items-center justify-center rounded-full"><Check className="size-5" /></span>
                 <div>
                   <p className="text-sm font-bold">Khoa vừa nộp bài</p>
                   <p className="text-muted text-xs">Đúng hạn · Toán 10A1</p>
@@ -153,7 +144,7 @@ export default async function Home() {
           </div>
 
           {/* Số liệu */}
-          <dl className="bg-surface rounded-[24px] mt-16 grid grid-cols-2 gap-px overflow-hidden shadow-[0_1px_2px_rgb(0_0_0/0.04),0_12px_32px_-16px_rgb(0_0_0/0.14)] sm:mt-24 md:grid-cols-4">
+          <dl className="bg-surface rounded-[24px] mt-14 grid grid-cols-2 gap-px overflow-hidden shadow-[0_1px_2px_rgb(0_0_0/0.04),0_12px_32px_-16px_rgb(0_0_0/0.14)] sm:mt-20 md:grid-cols-4">
             {STATS.map((s, i) => (
               <div key={s.value} className="reveal bg-surface p-5 sm:p-7 md:[&:not(:first-child)]:border-l md:border-border/60">
                 <dt className="sr-only">{s.label}</dt>
