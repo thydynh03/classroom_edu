@@ -6,6 +6,9 @@ import { useEffect } from "react";
 // Không có JS thì nội dung vẫn hiện bình thường vì class "reveal-ready" chỉ được gắn ở đây.
 export function RevealOnScroll() {
   useEffect(() => {
+    // Mở trang luôn ở đầu (trình duyệt hay khôi phục vị trí cuộn cũ khi tải lại / quay lại). Có #mục thì giữ.
+    if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+    if (!location.hash) window.scrollTo(0, 0);
     // Giảm chuyển động: vẫn hiện dần bằng độ mờ, chỉ bỏ phần trượt (xem CSS .reveal-ready).
     const els = Array.from(document.querySelectorAll<HTMLElement>(".reveal"));
     const io = new IntersectionObserver(
@@ -28,7 +31,10 @@ export function RevealOnScroll() {
       else io.observe(el);
     }
     document.documentElement.classList.add("reveal-ready");
-    return () => io.disconnect();
+    return () => {
+      io.disconnect();
+      if ("scrollRestoration" in history) history.scrollRestoration = "auto";
+    };
   }, []);
   return null;
 }

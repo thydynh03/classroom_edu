@@ -319,10 +319,35 @@ export default async function Home() {
         </section>
       </main>
 
-      <footer className="bg-surface-2/60">
-        <div className="text-muted mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 py-8 text-sm sm:flex-row">
-          <Logo className="text-foreground" />
-          <p>© Classroom Edu · Dành cho giáo viên và học sinh Việt Nam</p>
+      <footer className="border-border border-t">
+        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-10 px-4 py-14 lg:grid-cols-[1.6fr_1fr_1fr]">
+          <div className="col-span-2 max-w-sm lg:col-span-1">
+            <Logo />
+            <p className="text-muted mt-4 text-sm leading-relaxed">
+              Giao bài, thu bài và trả điểm cho lớp học Việt Nam, gọn trong một nơi.
+            </p>
+          </div>
+          <nav aria-label="Sản phẩm">
+            <p className="text-sm font-bold">Sản phẩm</p>
+            <ul className="text-muted mt-4 space-y-2.5 text-sm">
+              {[["#vi-sao", "Tính năng"], ["#hanh-trinh", "Cách dùng"], ["#hoi-dap", "Hỏi đáp"]].map(([href, label]) => (
+                <li key={href}><a href={href} className="hover:text-primary transition-colors">{label}</a></li>
+              ))}
+            </ul>
+          </nav>
+          <nav aria-label="Tài khoản">
+            <p className="text-sm font-bold">Tài khoản</p>
+            <ul className="text-muted mt-4 space-y-2.5 text-sm">
+              <li><Link href="/register" className="hover:text-primary transition-colors">Tạo tài khoản giáo viên</Link></li>
+              <li><Link href="/login" className="hover:text-primary transition-colors">Đăng nhập</Link></li>
+            </ul>
+          </nav>
+        </div>
+        <div className="border-border border-t">
+          <div className="text-muted mx-auto flex max-w-6xl flex-col gap-2 px-4 py-6 text-xs sm:flex-row sm:items-center sm:justify-between">
+            <p>© {new Date().getFullYear()} Classroom Edu</p>
+            <p>Dành cho giáo viên và học sinh Việt Nam</p>
+          </div>
         </div>
       </footer>
     </div>
