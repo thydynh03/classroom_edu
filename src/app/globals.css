@@ -168,3 +168,57 @@
     var(--border) 3px 4px
   );
 }
+
+/* ── Landing: hiệu ứng khi cuộn (CSS scroll-driven, không cần JS; trình duyệt không hỗ trợ thì hiện bình thường) ── */
+@keyframes landing-reveal {
+  from { opacity: 0; transform: translateY(32px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes landing-rise {
+  from { transform: translateY(60px); }
+  to { transform: translateY(-60px); }
+}
+@keyframes landing-grow {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@keyframes landing-header {
+  to { box-shadow: 0 6px 24px rgb(0 0 0 / 0.08); border-bottom-color: var(--border); }
+}
+@keyframes landing-float {
+  50% { transform: translateY(-8px); }
+}
+@keyframes landing-marquee {
+  to { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .landing-float { animation: landing-float 5s ease-in-out infinite; }
+  .landing-marquee { animation: landing-marquee 30s linear infinite; }
+  @supports (animation-timeline: view()) {
+    .reveal {
+      animation: landing-reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 28%;
+    }
+    .parallax {
+      animation: landing-rise linear both;
+      animation-timeline: view();
+    }
+    .grow-x {
+      transform-origin: left;
+      animation: landing-grow linear both;
+      animation-timeline: view();
+      animation-range: entry 10% cover 45%;
+    }
+    .scroll-progress {
+      transform-origin: left;
+      animation: landing-grow linear both;
+      animation-timeline: scroll(root);
+    }
+    .landing-header {
+      animation: landing-header linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 120px;
+    }
+  }
+}
