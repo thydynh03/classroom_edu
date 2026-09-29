@@ -222,3 +222,35 @@
     }
   }
 }
+
+/* ── Landing: bảng màu ấm riêng (cam đất + kem), không ảnh hưởng phần app ── */
+.landing {
+  --background: #faf6f0;
+  --surface: #ffffff;
+  --surface-2: #f3ede4;
+  --border: #e9e1d5;
+  --foreground: #1c1917;
+  --muted: #6b6259;
+  --primary: #c2410c;
+  --primary-hover: #9a3412;
+  --primary-soft: #ffedd5;
+  --on-primary: #ffffff;
+  --progress: #c2410c;
+  --ring: #c2410c;
+  --shadow-primary: 0 10px 24px rgba(194, 65, 12, 0.25);
+}
+.dark .landing {
+  --background: #14110f;
+  --surface: #1c1815;
+  --surface-2: #26211c;
+  --border: #332b24;
+  --foreground: #f5efe7;
+  --muted: #a89f94;
+  --primary: #fb923c;
+  --primary-hover: #fdba74;
+  --primary-soft: rgba(251, 146, 60, 0.14);
+  --on-primary: #1c1917;
+  --progress: #fb923c;
+  --ring: #fb923c;
+  --shadow-primary: 0 10px 24px rgba(251, 146, 60, 0.2);
+}

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Playfair_Display } from "next/font/google";
@@ -7,7 +8,6 @@ import {
   CalendarClock,
   Check,
   ClipboardCheck,
-  Grid3x3,
   Plus,
   ShieldCheck,
   Smartphone,
@@ -69,7 +69,7 @@ export default async function Home() {
   if (actor) redirect(actor.mustChangePassword ? "/change-password" : homeFor(actor.role));
   const accent = `${display.className} text-primary font-medium`;
   return (
-    <div className="bg-background min-h-screen overflow-x-clip">
+    <div className="landing bg-background text-foreground min-h-screen overflow-x-clip">
       <div aria-hidden className="scroll-progress bg-primary fixed inset-x-0 top-0 z-30 h-1 scale-x-0" />
 
       <header className="landing-header bg-background/85 sticky top-0 z-20 border-b border-transparent backdrop-blur">
@@ -113,35 +113,28 @@ export default async function Home() {
             </div>
           </div>
 
-          {/* Khung "ảnh" lớn: bảng điều khiển minh họa */}
-          <div className="bg-primary rounded-card relative mt-12 overflow-hidden p-5 sm:p-10">
-            <div aria-hidden className="bg-on-primary/10 absolute -top-20 -right-20 size-72 rounded-full" />
-            <div aria-hidden className="bg-on-primary/10 absolute -bottom-28 left-1/3 size-96 rounded-full" />
-            <div className="relative grid gap-4 md:grid-cols-3">
-              <div className="parallax md:mt-10"><HeatmapPreview /></div>
-              <div className="flex flex-col gap-4">
-                <AssignmentPreview />
-                <div className="bg-surface rounded-card p-4" aria-hidden>
-                  <p className="text-muted text-xs font-semibold">Chờ chấm hôm nay</p>
-                  <p className="mt-1 font-mono text-4xl font-bold">42</p>
-                  <div className="bg-surface-2 mt-3 h-2 overflow-hidden rounded-full"><div className="bg-success h-full w-2/3 rounded-full" /></div>
-                </div>
-              </div>
-              <div className="parallax flex flex-col gap-4 md:mt-16">
-                <GradePreview />
-                <div className="bg-surface rounded-card landing-float flex items-center gap-3 p-4" aria-hidden>
-                  <span className="bg-success-soft text-success flex size-9 items-center justify-center rounded-full"><Check className="size-5" /></span>
-                  <div>
-                    <p className="text-sm font-bold">Khoa vừa nộp bài</p>
-                    <p className="text-muted text-xs">Đúng hạn · Toán 10A1</p>
-                  </div>
-                </div>
+          {/* Ảnh lớn + thẻ giao diện nổi */}
+          <div className="relative mt-12">
+            <div className="rounded-card relative aspect-[4/3] overflow-hidden sm:aspect-[21/9]">
+              <Image src="/landing/laptop.webp" alt="Học sinh làm bài trên máy tính" fill priority sizes="(min-width: 1152px) 1152px, 100vw" className="object-cover" />
+              <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/5 to-transparent" />
+              <p className="absolute bottom-5 left-5 max-w-xs text-sm font-semibold text-white sm:bottom-8 sm:left-8 sm:text-base">
+                Học sinh nộp bài từ bất cứ đâu, giáo viên thấy ngay trên bảng theo dõi.
+              </p>
+            </div>
+            <div className="parallax absolute -top-6 right-4 hidden w-72 md:block lg:-right-6"><AssignmentPreview className="shadow-xl" /></div>
+            <div className="parallax absolute right-10 -bottom-10 hidden w-80 md:block"><GradePreview className="shadow-xl" /></div>
+            <div className="bg-surface rounded-card landing-float absolute top-1/3 -left-4 hidden items-center gap-3 p-4 shadow-xl lg:flex" aria-hidden>
+              <span className="bg-success-soft text-success flex size-9 items-center justify-center rounded-full"><Check className="size-5" /></span>
+              <div>
+                <p className="text-sm font-bold">Khoa vừa nộp bài</p>
+                <p className="text-muted text-xs">Đúng hạn · Toán 10A1</p>
               </div>
             </div>
           </div>
 
           {/* Số liệu */}
-          <dl className="border-border mt-10 grid grid-cols-2 gap-y-8 border-b pb-10 md:grid-cols-4">
+          <dl className="border-border mt-20 grid grid-cols-2 gap-y-8 border-b pb-10 md:grid-cols-4">
             {STATS.map((s) => (
               <div key={s.value} className="reveal md:border-border md:border-l md:pl-6 md:first:border-l-0 md:first:pl-0">
                 <dt className="sr-only">{s.label}</dt>
@@ -171,8 +164,11 @@ export default async function Home() {
               Giáo viên nên dành thời gian cho <span className={accent}>bài giảng</span>, không phải cho việc đi tìm bài nộp lẫn trong tin nhắn.
             </p>
           </div>
-          <div className="reveal bg-class-peach-bg text-class-peach-fg rounded-card p-8">
-            <p className="font-mono text-5xl font-bold">1 nơi</p>
+          <div className="reveal rounded-card relative aspect-[4/3] overflow-hidden">
+            <Image src="/landing/writing.webp" alt="Học sinh viết bài" fill sizes="(min-width: 1024px) 460px, 100vw" className="object-cover" />
+          </div>
+          <div className="reveal bg-foreground text-background rounded-card p-8 lg:col-span-2 lg:flex lg:items-center lg:gap-10">
+            <p className="font-mono text-5xl font-bold shrink-0">1 nơi</p>
             <p className="mt-2 font-semibold">cho đề bài, bài nộp, điểm và nhận xét. Không còn gom bài, nhắc hạn và nhập điểm thủ công.</p>
           </div>
         </section>
@@ -199,17 +195,12 @@ export default async function Home() {
               </ul>
             </div>
             <div className="reveal relative">
-              <div aria-hidden className="bg-class-mint-bg rounded-card absolute inset-0 rotate-3" />
-              <div className="bg-background border-border rounded-card relative space-y-4 border p-6">
-                <div className="flex items-center gap-2">
-                  <Grid3x3 className="text-primary size-5" aria-hidden />
-                  <span className="font-bold">Heatmap theo dõi lớp</span>
-                </div>
-                <HeatmapPreview />
-                <div className="flex items-center gap-2 text-sm">
-                  <ShieldCheck className="text-success size-5" aria-hidden />
-                  <span className="text-muted">Chỉ giáo viên của lớp xem được bài nộp.</span>
-                </div>
+              <div className="rounded-card relative aspect-[4/5] overflow-hidden sm:aspect-[4/3] lg:aspect-[4/5]">
+                <Image src="/landing/classroom.webp" alt="Giáo viên đứng lớp" fill sizes="(min-width: 1024px) 560px, 100vw" className="object-cover" />
+              </div>
+              <div className="parallax absolute -bottom-8 left-4 w-64 sm:-left-6 sm:w-72"><HeatmapPreview className="shadow-xl" /></div>
+              <div className="bg-surface rounded-control absolute top-5 right-5 flex items-center gap-2 px-3 py-2 text-sm font-semibold shadow-lg">
+                <ShieldCheck className="text-success size-4" aria-hidden /> Chỉ GV của lớp xem bài nộp
               </div>
             </div>
           </div>
@@ -272,7 +263,7 @@ export default async function Home() {
           </h2>
           <div className="mt-10 grid gap-4 md:grid-cols-3">
             {QUOTES.map((q, i) => (
-              <figure key={q.name} className={`reveal rounded-card p-7 ${i === 1 ? "bg-primary text-on-primary" : "bg-surface border-border border"}`}>
+              <figure key={q.name} className={`reveal rounded-card p-7 ${i === 1 ? "bg-foreground text-background" : "bg-surface border-border border"}`}>
                 <blockquote className="text-lg leading-relaxed font-semibold">{q.text}</blockquote>
                 <figcaption className="mt-6 text-sm">
                   <span className="font-bold">{q.name}</span>
@@ -303,14 +294,14 @@ export default async function Home() {
 
         {/* Kêu gọi */}
         <section className="mx-auto max-w-6xl px-4 pb-20">
-          <div className="reveal bg-primary text-on-primary rounded-card relative overflow-hidden p-10 text-center sm:p-16">
-            <div aria-hidden className="bg-on-primary/10 absolute -top-16 -left-16 size-64 rounded-full" />
-            <div aria-hidden className="bg-on-primary/10 absolute -right-10 -bottom-24 size-72 rounded-full" />
+          <div className="reveal rounded-card relative overflow-hidden p-10 text-center text-white sm:p-20">
+            <Image src="/landing/hero.webp" alt="" fill sizes="(min-width: 1152px) 1152px, 100vw" className="object-cover" />
+            <div aria-hidden className="absolute inset-0 bg-black/60" />
             <h2 className="relative text-4xl font-extrabold tracking-tight text-balance sm:text-5xl">
               Sẵn sàng cho <span className={`${display.className} font-medium`}>tiết học tới?</span>
             </h2>
             <p className="relative mx-auto mt-4 max-w-md">Tạo lớp đầu tiên chỉ mất một phút. Miễn phí cho giáo viên.</p>
-            <Link href="/register" className="bg-on-primary text-primary rounded-control relative mt-8 inline-flex h-12 items-center gap-2 px-7 font-bold hover:opacity-90">
+            <Link href="/register" className="bg-primary text-on-primary hover:bg-primary-hover rounded-control relative mt-8 inline-flex h-12 items-center gap-2 px-7 font-bold">
               Tạo tài khoản giáo viên <ArrowRight className="size-4" aria-hidden />
             </Link>
           </div>
