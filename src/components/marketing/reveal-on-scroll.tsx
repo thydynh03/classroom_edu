@@ -25,7 +25,7 @@ export function RevealOnScroll() {
     // So le nhẹ giữa các phần tử cùng một khối cha.
     for (const el of els) {
       const idx = el.parentElement ? Array.from(el.parentElement.children).indexOf(el) : 0;
-      el.style.transitionDelay = `${Math.min(idx, 4) * 90}ms`;
+      el.style.transitionDelay = `${Math.min(idx, 4) * 70}ms`;
       const r = el.getBoundingClientRect();
       if (r.top < window.innerHeight) el.classList.add("is-visible");
       else io.observe(el);

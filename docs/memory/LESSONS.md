@@ -70,3 +70,7 @@ Tránh: giữ tỉ lệ mặc định, chỉnh `viewBox` theo khung; hoặc tác
 
 **2026-09-28 · Claude · mockup** — Mô tả chỉ số dài đè lên sparkline.
 Tránh: đặt sparkline ở hàng riêng hoặc giới hạn độ dài nhãn; test với chuỗi tiếng Việt dài nhất.
+
+**2026-09-29 · Claude · animation** — Máy người dùng không thấy animation, trang "hiện cứng", máy khác thì thấy.
+Nguyên nhân: Windows tắt Settings › Accessibility › Visual effects › Animation effects → trình duyệt báo `prefers-reduced-motion: reduce`; khối CSS toàn cục ép mọi animation/transition về 0.01ms `!important`, nên cả hiệu ứng mờ dần dự phòng cũng mất.
+Tránh: "giảm chuyển động" nghĩa là bỏ trượt/phóng/lặp, không phải bỏ mọi chuyển tiếp. Giữ fade opacity; kiểm tra bằng Playwright `reducedMotion: "reduce"` trước khi báo xong.

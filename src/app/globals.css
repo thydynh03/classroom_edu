@@ -149,10 +149,11 @@
   }
 }
 
+/* Phần app: tắt hẳn hiệu ứng khi máy bật "giảm chuyển động". Landing/auth có chế độ riêng (chỉ mờ dần) ở cuối file. */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  html:not(:has(.landing)) *,
+  html:not(:has(.landing)) *::before,
+  html:not(:has(.landing)) *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
@@ -194,8 +195,8 @@
 /* Hiện dần từng khối khi cuộn tới (JS gắn .reveal-ready / .is-visible). Giảm chuyển động: chỉ mờ dần, không trượt. */
 .reveal-ready .reveal {
   opacity: 0;
-  transform: translateY(40px);
-  transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1), transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  transform: translateY(28px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .reveal-ready .reveal.is-visible {
   opacity: 1;
@@ -206,7 +207,7 @@
 }
 @media (prefers-reduced-motion: no-preference) {
   .landing-float { animation: landing-float 5s ease-in-out infinite; }
-  .landing-marquee { animation: landing-marquee 30s linear infinite; }
+  .landing-marquee { animation: landing-marquee 45s linear infinite; }
   @supports (animation-timeline: view()) {
     .parallax {
       animation: landing-rise linear both;
@@ -223,11 +224,14 @@
       animation: landing-grow linear both;
       animation-timeline: scroll(root);
     }
-    .landing-header {
-      animation: landing-header linear both;
-      animation-timeline: scroll(root);
-      animation-range: 0 120px;
-    }
+  }
+}
+/* Bóng header khi cuộn chỉ là đổi kiểu, không phải chuyển động: giữ ở cả chế độ giảm chuyển động */
+@supports (animation-timeline: scroll()) {
+  .landing-header {
+    animation: landing-header linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 120px;
   }
 }
 
@@ -280,6 +284,39 @@ details[open] > .faq-answer { animation: faq-open 0.3s ease both; }
 @media (prefers-reduced-motion: no-preference) {
   .hero-in { animation: hero-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) var(--d, 0ms) both; }
   .hero-bar { transform-origin: left; animation: hero-bar 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.9s both; }
+}
+/* Máy bật "giảm chuyển động" (Windows tắt Animation effects, macOS Reduce motion): không trượt, không phóng,
+   không lặp; chỉ mờ dần nhẹ theo cùng nhịp so le để trang không hiện ra cứng. */
+@keyframes fade-in { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .hero-in { animation: fade-in 0.8s ease var(--d, 0ms) both; }
+  details[open] > .faq-answer { animation-name: fade-in; }
+}
+
+/* Landing: lưới chấm nền cho khối kêu gọi, rõ ở mép và tan dần vào giữa để chữ dễ đọc */
+.dot-grid {
+  background-image: radial-gradient(color-mix(in oklab, var(--foreground) 16%, transparent) 1px, transparent 1.5px);
+  background-size: 22px 22px;
+  mask-image: radial-gradient(ellipse at center, transparent 30%, black 85%);
+}
+
+/* Auth (.landing): trên nền kem, surface-2 gần trùng màu viền nên ô nhập trông như bị khóa.
+   Đổi sang nền sáng, viền rõ, focus có vòng mềm; ô báo lỗi (aria-invalid) giữ viền đỏ của Input. */
+.landing input:not([type="checkbox"], [type="radio"], [type="file"], [type="hidden"]) {
+  height: 2.75rem;
+  border-radius: 0.75rem;
+  background-color: var(--surface);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+}
+.landing input:not([type="checkbox"], [type="radio"], [type="file"], [type="hidden"], [aria-invalid="true"]) {
+  border-color: color-mix(in oklab, var(--foreground) 16%, transparent);
+}
+.landing input:not([type="checkbox"], [type="radio"], [type="file"], [type="hidden"], [aria-invalid="true"]):hover {
+  border-color: color-mix(in oklab, var(--foreground) 30%, transparent);
+}
+.landing input:not([type="checkbox"], [type="radio"], [type="file"], [type="hidden"]):focus-visible {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--primary) 18%, transparent);
 }
 
 /* Landing + auth: màn hình rất rộng (2K/4K) thì phóng cả bố cục theo tỉ lệ (mọi kích thước dùng rem) để không trống hai bên */
