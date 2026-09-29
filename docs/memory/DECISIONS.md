@@ -76,3 +76,6 @@ Người dùng muốn app GV/HS đồng bộ với landing. Bỏ bảng xanh dư
 
 ## 2026-09-29 — Hướng dẫn lần đầu lưu ở DB, xuất Excel làm trên trình duyệt
 Cột `users.tour_completed_at` (migration 0002) để tour không hiện lại trên thiết bị khác; xem lại bằng `?tour=1` (link ở Tài khoản & bảo mật). File Excel tài khoản HS tạo ở client bằng `write-excel-file` (đọc bằng `read-excel-file`), nạp động khi bấm nút; mật khẩu tạm không lưu ở server, chỉ có ở phản hồi tạo/cấp lại. Cấp lại mật khẩu hàng loạt: mọi id phải là HS đang ở lớp, có id lạ thì 404 và không đổi gì.
+
+## 2026-09-29 — GV tự đăng ký phải chờ admin duyệt
+Tắt xác minh email khiến ai cũng tạo được tài khoản GV (kể cả học sinh). Người dùng chọn "chờ admin duyệt". Cột `users.approved_at` (migration 0003, tài khoản cũ được backfill = created_at): GV tự đăng ký có `approved_at = null` → `requireActor("TEACHER")` chuyển sang `/pending-approval`, nên mọi trang và server action GV đều bị chặn ở một chỗ. Admin duyệt/từ chối ở `/admin` (từ chối = DISABLED); duyệt xong GV nhận thông báo trong app. Email đúng tên miền trong `TEACHER_AUTO_APPROVE_DOMAINS` được duyệt ngay (chỉ khớp nguyên tên miền, không khớp tên miền con). Admin tạo GV, seed và demo đều đã duyệt sẵn. Cần ít nhất một admin trên production (BOOTSTRAP_ADMIN_* trong migrate.mjs).

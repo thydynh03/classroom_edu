@@ -16,7 +16,65 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { clearLockAction, createTeacherAction, resetPasswordAction, setStatusAction, type CreateTeacherState } from "./actions";
+import {
+  approveTeacherAction,
+  clearLockAction,
+  createTeacherAction,
+  resetPasswordAction,
+  setStatusAction,
+  type CreateTeacherState,
+} from "./actions";
+
+/** Duyệt / từ chối GV tự đăng ký. Từ chối = khóa tài khoản (mở lại được ở danh sách người dùng). */
+export function PendingTeacherActions({ userId, name }: { userId: string; name: string }) {
+  const [pending, start] = useTransition();
+  return (
+    <div className="flex shrink-0 gap-1.5">
+      <Button
+        size="sm"
+        disabled={pending}
+        onClick={() =>
+          start(async () => {
+            await approveTeacherAction(userId);
+            toast.success(`Đã duyệt ${name}`);
+          })
+        }
+      >
+        Duyệt
+      </Button>
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button size="sm" variant="outline" disabled={pending}>
+            Từ chối
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Từ chối {name}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tài khoản sẽ bị khóa và không đăng nhập được. Nếu nhầm, bạn mở khóa lại ở danh sách người dùng rồi duyệt.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-danger hover:bg-danger/90"
+              onClick={() =>
+                start(async () => {
+                  const r = await setStatusAction(userId, "DISABLED");
+                  if (r.ok) toast.success(`Đã từ chối ${name}`);
+                  else toast.error(r.error);
+                })
+              }
+            >
+              Từ chối và khóa
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
 
 export function UserActions({
   userId,

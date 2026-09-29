@@ -75,6 +75,8 @@ export const users = pgTable(
     emailVerifiedAt: timestamp("email_verified_at", { withTimezone: true }),
     failedLogins: integer("failed_logins").notNull().default(0),
     lockedUntil: timestamp("locked_until", { withTimezone: true }),
+    /** GV: null = đang chờ admin duyệt (tự đăng ký). Role khác không dùng. */
+    approvedAt: timestamp("approved_at", { withTimezone: true }),
     /** Đã xem xong (hoặc bỏ qua) hướng dẫn lần đầu đăng nhập */
     tourCompletedAt: timestamp("tour_completed_at", { withTimezone: true }),
     createdBy: uuid("created_by"),

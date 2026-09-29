@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { requireActor } from "@/server/auth/guard";
-import { adminStats, listUsers } from "@/server/services/admin";
+import { adminStats, listPendingTeachers, listUsers } from "@/server/services/admin";
 import { PageHeader } from "@/components/domain/page-parts";
 import { shortDateTime } from "@/lib/dates";
 import { requestNow } from "@/lib/now";
 import { cn } from "@/lib/utils";
-import { CreateTeacherForm, UserActions } from "./user-actions";
+import { CreateTeacherForm, PendingTeacherActions, UserActions } from "./user-actions";
 
 export const metadata = { title: "Quản trị · Classroom Edu" };
 
@@ -22,7 +22,11 @@ export default async function AdminPage({
   const role = (["ADMIN", "TEACHER", "STUDENT"] as const).find((r) => r === sp.role);
   const status = (["ACTIVE", "LOCKED", "DISABLED"] as const).find((r) => r === sp.status);
   const page = Number(sp.page) || 1;
-  const [stats, list] = await Promise.all([adminStats(actor), listUsers(actor, { q: sp.q, role, status, page })]);
+  const [stats, list, pendingTeachers] = await Promise.all([
+    adminStats(actor),
+    listUsers(actor, { q: sp.q, role, status, page }),
+    listPendingTeachers(actor),
+  ]);
   const now = requestNow();
   const pages = Math.max(1, Math.ceil(list.total / list.pageSize));
   const qs = (p: number) => {
@@ -37,6 +41,30 @@ export default async function AdminPage({
   return (
     <>
       <PageHeader title="Người dùng" description="Quản lý tài khoản. Quản trị viên không xem được bài làm và điểm của học sinh." />
+      {pendingTeachers.length > 0 && (
+        <section aria-labelledby="pending-title" className="bg-warning-soft border-warning/30 rounded-card mb-6 border p-5">
+          <h2 id="pending-title" className="text-[15px] font-bold">
+            Giáo viên chờ duyệt ({pendingTeachers.length})
+          </h2>
+          <p className="text-muted mb-3 text-sm">
+            Tài khoản tự đăng ký. Kiểm tra họ tên và email trường trước khi duyệt; chưa duyệt thì chưa tạo được lớp.
+          </p>
+          <ul className="divide-border bg-surface rounded-tile divide-y">
+            {pendingTeachers.map((t) => (
+              <li key={t.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold">{t.fullName}</p>
+                  <p className="text-muted truncate text-xs">
+                    <span className="font-mono">{t.username}</span> · {t.email ?? "không có email"} · đăng ký {shortDateTime(t.createdAt)}
+                  </p>
+                </div>
+                <PendingTeacherActions userId={t.id} name={t.fullName} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <dl className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
         {[
           ["Giáo viên", stats.teachers],

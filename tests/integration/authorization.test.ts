@@ -320,6 +320,22 @@ describe("quản trị", () => {
     expect(pw.length).toBeGreaterThanOrEqual(10);
     await expect(m.admin.createTeacher(adminActor, { fullName: "X", username: "co.moi", email: "x@example.com" })).rejects.toThrow(/đã được dùng/);
   });
+
+  it("GV tự đăng ký chờ duyệt: chỉ ADMIN duyệt, duyệt xong rời danh sách chờ và có thông báo", async () => {
+    const [u] = await m.db.db
+      .insert(m.schema.users)
+      .values({ username: "gv.cho", fullName: "GV Chờ", passwordHash: "x", role: "TEACHER" })
+      .returning();
+    expect((await m.admin.listPendingTeachers(adminActor)).map((p) => p.id)).toContain(u.id);
+    await is404(m.admin.listPendingTeachers(teacherA));
+    await is404(m.admin.approveTeacher(teacherA, u.id));
+    await is404(m.admin.approveTeacher(adminActor, studentA.id));
+    await m.admin.approveTeacher(adminActor, u.id);
+    await m.admin.approveTeacher(adminActor, u.id); // gọi lại không lỗi, không thông báo trùng
+    expect((await m.admin.listPendingTeachers(adminActor)).map((p) => p.id)).not.toContain(u.id);
+    const notes = await m.notif.listNotifications(u.id);
+    expect(notes.filter((n) => n.type === "TEACHER_APPROVED")).toHaveLength(1);
+  });
 });
 
 describe("cấp lại mật khẩu hàng loạt", () => {

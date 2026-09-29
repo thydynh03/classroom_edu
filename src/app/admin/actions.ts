@@ -28,6 +28,11 @@ export async function setStatusAction(userId: string, status: "ACTIVE" | "LOCKED
   return r;
 }
 
+export async function approveTeacherAction(userId: string) {
+  await admin.approveTeacher(await adminActor(), userId);
+  revalidatePath("/admin");
+}
+
 export async function clearLockAction(userId: string) {
   const actor = await adminActor();
   await admin.clearLoginLock(actor, userId);

@@ -105,4 +105,19 @@ test.describe("luồng chính giáo viên → học sinh", () => {
     await expect(s.getByLabel("Kết quả")).toContainText("9,5");
     await expect(s.getByLabel("Kết quả")).toContainText("Đúng, trình bày gọn.");
   });
+
+  test("GV tự đăng ký phải chờ admin duyệt, không vào được phần giáo viên", async ({ page }) => {
+    const stamp = Date.now().toString(36);
+    await page.goto("/register");
+    await page.getByLabel("Họ và tên").fill("Giáo Viên Mới");
+    await page.getByLabel("Email").fill(`gv.${stamp}@example.com`);
+    await page.getByLabel("Tên đăng nhập").fill(`gv.${stamp}`);
+    await page.getByLabel("Mật khẩu").fill("matkhau-moi-456");
+    await page.locator('form button[type="submit"]').click();
+    await expect(page).toHaveURL(/\/pending-approval$/);
+    await expect(page.getByRole("heading", { name: "Tài khoản đang chờ duyệt" })).toBeVisible();
+    await expectNoSeriousA11y(page);
+    await page.goto("/teacher/classes/new");
+    await expect(page).toHaveURL(/\/pending-approval$/);
+  });
 });

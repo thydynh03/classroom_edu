@@ -73,7 +73,7 @@ type DB = ReturnType<typeof makeDb>;
 async function seed(db: DB) {
   const [teacher] = await db
     .insert(s.users)
-    .values({ username: "demo.gv", email: "demo.gv@classroom-edu.test", fullName: "Nguyễn Minh An", passwordHash: PASSWORD_HASH, role: "TEACHER", emailVerifiedAt: new Date() })
+    .values({ username: "demo.gv", email: "demo.gv@classroom-edu.test", fullName: "Nguyễn Minh An", passwordHash: PASSWORD_HASH, role: "TEACHER", emailVerifiedAt: new Date(), approvedAt: new Date() })
     .returning();
   const students = await db
     .insert(s.users)

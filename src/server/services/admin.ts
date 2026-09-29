@@ -2,7 +2,7 @@ import "server-only";
 import { and, count, desc, eq, ilike, isNull, or, sql } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { db } from "@/server/db/client";
-import { auditLogs, classes, submissions, users } from "@/server/db/schema";
+import { auditLogs, classes, notifications, submissions, users } from "@/server/db/schema";
 import type { Actor } from "@/server/auth/session";
 import { generateTempPassword, hashPassword } from "@/server/auth/password";
 import { revokeAllSessions } from "@/server/auth/session";
@@ -27,7 +27,12 @@ export async function adminStats(actor: Actor) {
     .from(submissions)
     .where(sql`${submissions.submittedAt} > now() - interval '7 days'`);
   const sum = (f: (r: (typeof byRole)[number]) => boolean) => byRole.filter(f).reduce((s, r) => s + r.n, 0);
+  const [pending] = await db
+    .select({ n: count() })
+    .from(users)
+    .where(and(eq(users.role, "TEACHER"), isNull(users.approvedAt), eq(users.status, "ACTIVE"), isNull(users.deletedAt)));
   return {
+    pendingTeachers: pending?.n ?? 0,
     teachers: sum((r) => r.role === "TEACHER"),
     students: sum((r) => r.role === "STUDENT"),
     locked: sum((r) => r.status !== "ACTIVE"),
@@ -77,6 +82,36 @@ export async function listUsers(
     db.select({ n: count() }).from(users).where(where),
   ]);
   return { rows, total: total?.n ?? 0, page, pageSize };
+}
+
+/** GV tự đăng ký đang chờ duyệt (chưa bị khóa), cũ nhất lên trước. */
+export async function listPendingTeachers(actor: Actor) {
+  requireRole(actor, "ADMIN");
+  return db
+    .select({ id: users.id, fullName: users.fullName, username: users.username, email: users.email, createdAt: users.createdAt })
+    .from(users)
+    .where(and(eq(users.role, "TEACHER"), isNull(users.approvedAt), eq(users.status, "ACTIVE"), isNull(users.deletedAt)))
+    .orderBy(users.createdAt)
+    .limit(100);
+}
+
+/** Duyệt GV: từ giờ vào được phần giáo viên; báo cho GV bằng thông báo trong app. Từ chối = khóa tài khoản (setUserStatus DISABLED). */
+export async function approveTeacher(actor: Actor, userId: string) {
+  const u = await targetUser(actor, userId);
+  if (u.role !== "TEACHER") notFound();
+  if (u.approvedAt) return;
+  await db.update(users).set({ approvedAt: new Date() }).where(eq(users.id, u.id));
+  await db
+    .insert(notifications)
+    .values({
+      recipientId: u.id,
+      type: "TEACHER_APPROVED",
+      title: "Tài khoản giáo viên của bạn đã được duyệt. Bắt đầu bằng việc tạo lớp học đầu tiên.",
+      href: "/teacher",
+      dedupeKey: `teacher_approved:${u.id}`,
+    })
+    .onConflictDoNothing();
+  await audit(actor, "user.approve_teacher", u.id);
 }
 
 function escapeLike(s: string) {
@@ -144,6 +179,7 @@ export async function createTeacher(actor: Actor, input: { fullName: string; use
       role: "TEACHER",
       mustChangePassword: true,
       emailVerifiedAt: new Date(),
+      approvedAt: new Date(),
       createdBy: actor.id,
     })
     .returning({ id: users.id });

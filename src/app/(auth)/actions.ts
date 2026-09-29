@@ -14,6 +14,7 @@ import {
   revokeOtherSessions,
 } from "@/server/auth/session";
 import { homeFor } from "@/server/auth/guard";
+import { autoApproveTeacher } from "@/server/auth/teacher-approval";
 import { newToken, sha256 } from "@/server/auth/tokens";
 import { rateLimit } from "@/server/rate-limit";
 import { appUrl, sendMail } from "@/server/mail";
@@ -128,6 +129,8 @@ export async function registerAction(_: ActionState, fd: FormData): Promise<Acti
       passwordHash: await hashPassword(password),
       role: "TEACHER",
       emailVerifiedAt: verify ? null : new Date(),
+      // Tự đăng ký: chờ admin duyệt, trừ email thuộc tên miền trường đã khai báo.
+      approvedAt: autoApproveTeacher(email) ? new Date() : null,
     })
     .returning({ id: users.id });
   if (!verify) {

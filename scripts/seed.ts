@@ -38,11 +38,12 @@ async function main() {
       passwordHash: pw,
       role: "TEACHER",
       emailVerifiedAt: new Date(),
+      approvedAt: new Date(),
     })
     .returning();
   const [teacher2] = await db
     .insert(s.users)
-    .values({ username: "thay.quang", email: "quang.pham@example.edu.vn", fullName: "Phạm Quang", passwordHash: pw, role: "TEACHER", emailVerifiedAt: new Date() })
+    .values({ username: "thay.quang", email: "quang.pham@example.edu.vn", fullName: "Phạm Quang", passwordHash: pw, role: "TEACHER", emailVerifiedAt: new Date(), approvedAt: new Date() })
     .returning();
   await db.insert(s.users).values({ username: "admin", email: "admin@example.edu.vn", fullName: "Quản trị viên", passwordHash: pw, role: "ADMIN", emailVerifiedAt: new Date() });
 
