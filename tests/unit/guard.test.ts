@@ -35,3 +35,13 @@ describe("requireActor", () => {
     await expect(requireActor("TEACHER")).rejects.toThrow("REDIRECT:/change-password");
   });
 });
+
+describe("requireRecentAuth (step-up admin)", () => {
+  it("trong 15 phút từ lúc đăng nhập/nhập lại mật khẩu thì cho, quá thì chặn", async () => {
+    const { requireRecentAuth, recentlyAuthenticated } = await import("@/server/auth/guard");
+    expect(() => requireRecentAuth({ authAt: new Date(Date.now() - 5 * 60_000) })).not.toThrow();
+    expect(() => requireRecentAuth({ authAt: new Date(Date.now() - 16 * 60_000) })).toThrow(/xác nhận lại mật khẩu/);
+    expect(() => requireRecentAuth({ authAt: undefined })).toThrow();
+    expect(recentlyAuthenticated({ authAt: new Date() })).toBe(true);
+  });
+});

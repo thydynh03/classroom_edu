@@ -64,6 +64,13 @@
       "when": 1791815433612,
       "tag": "0008_premium_push_materials_ops",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791817613460,
+      "tag": "0009_users_guard_app_role",
+      "breakpoints": true
     }
   ]
 }

@@ -2,7 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireActor } from "@/server/auth/guard";
+import { requireActor, requireRecentAuth } from "@/server/auth/guard";
+import { markReauthenticated } from "@/server/auth/session";
+import { verifyPassword } from "@/server/auth/password";
+import { db } from "@/server/db/client";
+import { auditLogs, users } from "@/server/db/schema";
+import { eq } from "drizzle-orm";
+import { rateLimit } from "@/server/rate-limit";
 import * as admin from "@/server/services/admin";
 import * as settings from "@/server/services/settings";
 import * as upgrades from "@/server/services/upgrades";
@@ -26,14 +32,22 @@ export async function setStatusAction(userId: string, status: "ACTIVE" | "LOCKED
   const actor = await adminActor();
   const parsed = z.enum(["ACTIVE", "LOCKED", "DISABLED"]).safeParse(status);
   if (!parsed.success) return { ok: false as const, error: "Trạng thái không hợp lệ" };
-  const r = await wrap(() => admin.setUserStatus(actor, userId, parsed.data));
+  const r = await wrap(async () => {
+    if (parsed.data !== "ACTIVE") requireRecentAuth(actor);
+    return admin.setUserStatus(actor, userId, parsed.data);
+  });
   revalidatePath("/admin");
   return r;
 }
 
 export async function approveTeacherAction(userId: string) {
-  await admin.approveTeacher(await adminActor(), userId);
+  const actor = await adminActor();
+  const r = await wrap(async () => {
+    requireRecentAuth(actor);
+    return admin.approveTeacher(actor, userId);
+  });
   revalidatePath("/admin");
+  return r;
 }
 
 export async function clearLockAction(userId: string) {
@@ -44,7 +58,10 @@ export async function clearLockAction(userId: string) {
 
 export async function resetPasswordAction(userId: string) {
   const actor = await adminActor();
-  return wrap(() => admin.adminResetPassword(actor, userId));
+  return wrap(async () => {
+    requireRecentAuth(actor);
+    return admin.adminResetPassword(actor, userId);
+  });
 }
 
 const teacherSchema = z.strictObject({
@@ -63,7 +80,10 @@ export async function createTeacherAction(_: CreateTeacherState, fd: FormData): 
     email: String(fd.get("email") ?? ""),
   });
   if (!parsed.success) return { fieldErrors: fieldErrorsFrom(parsed.error.issues) };
-  const r = await wrap(() => admin.createTeacher(actor, parsed.data));
+  const r = await wrap(async () => {
+    requireRecentAuth(actor);
+    return admin.createTeacher(actor, parsed.data);
+  });
   if (!r.ok) return { error: r.error };
   revalidatePath("/admin");
   return { ok: true, tempPassword: r.value, username: parsed.data.username };
@@ -132,7 +152,10 @@ export async function grantFeatureAction(_: ActionState, fd: FormData): Promise<
   if (!parsed.success) return { fieldErrors: fieldErrorsFrom(parsed.error.issues) };
   if (!parsed.data.requestId && !parsed.data.username) return { fieldErrors: { username: "Nhập tên đăng nhập của giáo viên" } };
   const months = parsed.data.months === "forever" ? null : Number(parsed.data.months);
-  const r = await wrap(() => upgrades.grantFeature(actor, { ...parsed.data, months }));
+  const r = await wrap(async () => {
+    requireRecentAuth(actor);
+    return upgrades.grantFeature(actor, { ...parsed.data, months });
+  });
   if (!r.ok) return { error: r.error };
   revalidatePath("/admin/upgrades");
   return { ok: true, message: "Đã mở khóa và báo cho giáo viên." };
@@ -141,7 +164,10 @@ export async function grantFeatureAction(_: ActionState, fd: FormData): Promise<
 export async function revokeGrantAction(grantId: string) {
   const actor = await adminActor();
   if (!idSchema.safeParse(grantId).success) return { ok: false as const, error: "Không hợp lệ" };
-  const r = await wrap(() => upgrades.revokeGrant(actor, grantId));
+  const r = await wrap(async () => {
+    requireRecentAuth(actor);
+    return upgrades.revokeGrant(actor, grantId);
+  });
   revalidatePath("/admin/upgrades");
   return r;
 }
@@ -158,4 +184,18 @@ export async function saveBillingAction(_: ActionState, fd: FormData): Promise<A
   await upgrades.updateBilling(actor, parsed.data);
   revalidatePath("/admin/settings");
   return { ok: true, message: "Đã lưu thông tin giá và thanh toán." };
+}
+
+/** Nhập lại mật khẩu để mở thao tác nhạy cảm trong 15 phút (step-up). */
+export async function reauthAction(_: ActionState, fd: FormData): Promise<ActionState> {
+  const actor = await adminActor();
+  const password = String(fd.get("password") ?? "");
+  if (!password) return { fieldErrors: { password: "Nhập mật khẩu" } };
+  if (!(await rateLimit(`reauth:${actor.id}`, 10, 15 * 60_000))) return { error: "Bạn thử quá nhiều lần. Đợi 15 phút." };
+  const [u] = await db.select({ passwordHash: users.passwordHash }).from(users).where(eq(users.id, actor.id));
+  if (!u || !(await verifyPassword(u.passwordHash, password))) return { fieldErrors: { password: "Mật khẩu không đúng" } };
+  await markReauthenticated(actor.sessionId);
+  await db.insert(auditLogs).values({ actorId: actor.id, action: "admin.reauth", targetType: "session", targetId: actor.sessionId });
+  revalidatePath("/admin", "layout");
+  return { ok: true, message: "Đã xác nhận. Thao tác nhạy cảm mở trong 15 phút." };
 }

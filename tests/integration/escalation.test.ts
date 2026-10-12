@@ -222,3 +222,32 @@ describe("giới hạn trong quyền admin", () => {
     await m.admin.setUserStatus(admin2, admin1.id, "ACTIVE");
   });
 });
+
+describe("role ứng dụng classroom_app (scripts/sql/app-role.sql)", () => {
+  it("không tạo được ADMIN kể cả tự bật cờ; không tắt được trigger", async () => {
+    const postgres = (await import("postgres")).default;
+    const url = new URL(inject("dbUrl"));
+    const owner = postgres(url.toString(), { max: 1 });
+    await owner.unsafe(`do $$ begin if not exists (select 1 from pg_roles where rolname = 'classroom_app') then create role classroom_app login password 'app-test-pass'; end if; end $$`);
+    await owner.unsafe(`alter role classroom_app with password 'app-test-pass'`);
+    await owner.unsafe(`grant usage on schema public to classroom_app; grant select, insert, update, delete on all tables in schema public to classroom_app`);
+    await owner.end();
+    url.username = "classroom_app";
+    url.password = "app-test-pass";
+    const app = postgres(url.toString(), { max: 1 });
+    try {
+      await expect(
+        app.begin(async (tx) => {
+          await tx`select set_config('app.allow_admin_insert', 'on', true)`;
+          await tx`insert into users (id, username, full_name, password_hash, role) values (gen_random_uuid(), 'esc.inject', 'x', 'x', 'ADMIN')`;
+        }),
+      ).rejects.toMatchObject({ code: "42501" });
+      await expect(app`alter table users disable trigger users_guard`).rejects.toThrow(/owner/);
+      // Đọc/ghi dữ liệu bình thường vẫn được
+      const [{ n }] = await app`select count(*)::int as n from users`;
+      expect(n).toBeGreaterThan(0);
+    } finally {
+      await app.end();
+    }
+  });
+});

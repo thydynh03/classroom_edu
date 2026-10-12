@@ -35,8 +35,9 @@ export function PendingTeacherActions({ userId, name }: { userId: string; name: 
         disabled={pending}
         onClick={() =>
           start(async () => {
-            await approveTeacherAction(userId);
-            toast.success(`Đã duyệt ${name}`);
+            const r = await approveTeacherAction(userId);
+            if (r.ok) toast.success(`Đã duyệt ${name}`);
+            else toast.error(r.error);
           })
         }
       >

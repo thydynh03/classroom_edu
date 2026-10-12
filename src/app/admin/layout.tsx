@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
-import { requireActor } from "@/server/auth/guard";
+import { recentlyAuthenticated, requireActor } from "@/server/auth/guard";
+import { ReauthBar } from "./reauth-bar";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { logoutAction } from "@/app/(auth)/actions";
 
@@ -34,6 +35,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </form>
         </div>
       </header>
+      {!recentlyAuthenticated(actor) && <ReauthBar />}
       <main id="main" className="mx-auto max-w-6xl px-4 py-6 md:px-8">{children}</main>
     </div>
   );

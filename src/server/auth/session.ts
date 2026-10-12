@@ -22,6 +22,8 @@ export type Actor = {
   tourDone?: boolean;
   /** false = GV tự đăng ký đang chờ admin duyệt */
   approved?: boolean;
+  /** Lần xác thực gần nhất (đăng nhập hoặc nhập lại mật khẩu) — step-up cho thao tác nhạy cảm */
+  authAt?: Date;
 };
 
 export async function createSession(userId: string) {
@@ -59,6 +61,11 @@ export async function revokeOtherSessions(userId: string, keepSessionId: string)
     .where(and(eq(sessions.userId, userId), ne(sessions.id, keepSessionId)));
 }
 
+/** Ghi nhận vừa nhập lại mật khẩu cho phiên hiện tại. */
+export async function markReauthenticated(sessionId: string) {
+  await db.update(sessions).set({ reauthAt: new Date() }).where(eq(sessions.id, sessionId));
+}
+
 export async function revokeAllSessions(userId: string) {
   await db.delete(sessions).where(eq(sessions.userId, userId));
 }
@@ -72,6 +79,8 @@ export const getActor = cache(async (): Promise<Actor | null> => {
     .select({
       sessionId: sessions.id,
       lastSeenAt: sessions.lastSeenAt,
+      sessionCreatedAt: sessions.createdAt,
+      reauthAt: sessions.reauthAt,
       id: users.id,
       role: users.role,
       fullName: users.fullName,
@@ -106,5 +115,6 @@ export const getActor = cache(async (): Promise<Actor | null> => {
     sessionId: r.sessionId,
     tourDone: r.tourCompletedAt !== null,
     approved: r.role !== "TEACHER" || r.approvedAt !== null,
+    authAt: r.reauthAt && r.reauthAt > r.sessionCreatedAt ? r.reauthAt : r.sessionCreatedAt,
   };
 });
