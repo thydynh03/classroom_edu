@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 import { recentlyAuthenticated, requireActor } from "@/server/auth/guard";
-import { ReauthBar } from "./reauth-bar";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { logoutAction } from "@/app/(auth)/actions";
 
@@ -35,7 +34,15 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </form>
         </div>
       </header>
-      {!recentlyAuthenticated(actor) && <ReauthBar />}
+      {!recentlyAuthenticated(actor) && (
+        <p className="bg-warning-soft border-warning/30 text-warning border-b px-4 py-2.5 text-sm font-semibold md:px-8">
+          Thao tác nhạy cảm (khóa tài khoản, cấp mật khẩu tạm, duyệt giáo viên, mở khóa tính năng) cần{" "}
+          <Link href="/admin/reauth" prefetch={false} className="underline">
+            xác nhận lại mật khẩu
+          </Link>
+          .
+        </p>
+      )}
       <main id="main" className="mx-auto max-w-6xl px-4 py-6 md:px-8">{children}</main>
     </div>
   );
