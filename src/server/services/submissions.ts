@@ -110,10 +110,13 @@ async function saveDraftInner(actor: Actor, assignmentId: string, rawContent: st
   const rule = canEdit(sub, a);
   if (!rule.ok) throw new UserError(rule.reason);
   await db.transaction(async (tx) => {
-    await tx
+    // Chỉ ghi nếu bài vẫn ở trạng thái vừa đọc: request khác đã nộp xong trong lúc này thì không kéo bài về DRAFT để nộp lần hai.
+    const saved = await tx
       .update(submissions)
       .set({ content, contentFormat: format, status: "DRAFT", ...(note !== undefined ? { note } : {}) })
-      .where(eq(submissions.id, sub.id));
+      .where(and(eq(submissions.id, sub.id), eq(submissions.status, sub.status)))
+      .returning({ id: submissions.id });
+    if (!saved.length) throw new UserError("Bài đã được nộp. Rút lại bài nếu muốn sửa.");
     await tx.delete(submissionFiles).where(eq(submissionFiles.submissionId, sub.id));
     if (fileIds.length) {
       // Chỉ nhận file do chính học sinh upload, đúng lớp, đã kiểm tra xong.
