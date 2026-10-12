@@ -103,7 +103,7 @@ async function main() {
         .insert(s.users)
         .values({ username: "hocsinh.mau", fullName: "Học sinh mẫu", passwordHash: studentHash, role: "STUDENT", mustChangePassword: true, createdBy: teacher.id })
         .returning();
-      creds.push({ role: "Giáo viên mẫu", username: "giaovien.mau", password: teacherPw }, { role: "Học sinh mẫu", username: "hocsinh.mau", password: studentPw });
+      creds.push({ role: "Giáo viên mẫu", username: "giaovien.mau", password: teacherPw }, { role: "Học sinh mẫu", username: "hocsinh.mau", password: studentPw }, { role: "5 HS mẫu khác", username: "hocsinh.mau2–6", password: "(cùng mật khẩu với hocsinh.mau)" });
 
       const [cls] = await tx
         .insert(s.classes)
@@ -114,7 +114,7 @@ async function main() {
         { classId: cls.id, userId: student.id, role: "STUDENT" },
       ]);
       const due = new Date(Date.now() + 7 * 86400_000);
-      const [, quiz] = await tx
+      const [written, quiz] = await tx
         .insert(s.assignments)
         .values([
           {
@@ -122,7 +122,17 @@ async function main() {
             groupId: uuidv7(),
             type: "WRITTEN",
             title: "Bài tập mẫu: Hàm số bậc hai",
-            body: "Làm bài 1 đến 3 trang 42 SGK.\nChụp rõ từng trang bài làm hoặc viết trực tiếp vào ô bài làm rồi bấm Nộp bài.",
+            body: [
+              "Mục tiêu: vẽ được đồ thị hàm số bậc hai và đọc được khoảng đồng biến, nghịch biến.",
+              "",
+              "Bài 1. Cho hàm số y = x² − 4x + 3.",
+              "  a) Tìm tọa độ đỉnh và trục đối xứng của parabol.",
+              "  b) Lập bảng biến thiên và vẽ đồ thị.",
+              "Bài 2. Tìm m để hàm số y = x² − 2mx + 1 đồng biến trên khoảng (2; +∞).",
+              "Bài 3. Một quả bóng được ném lên có độ cao h(t) = −5t² + 20t + 1 (mét, t tính bằng giây). Hỏi quả bóng đạt độ cao lớn nhất là bao nhiêu, sau mấy giây?",
+              "",
+              "Cách nộp: chụp rõ từng trang bài làm (bấm Chụp ảnh) hoặc gõ trực tiếp vào ô bài làm, rồi bấm Nộp bài.",
+            ].join("\n"),
             dueAt: due,
             status: "PUBLISHED",
             publishedAt: new Date(),
@@ -151,6 +161,29 @@ async function main() {
         const [row] = await tx.insert(s.questions).values({ assignmentId: quiz.id, type: q.type, prompt: q.prompt, points: 1, position: i }).returning();
         await tx.insert(s.questionOptions).values(q.opts.map(([label, isCorrect], j) => ({ questionId: row.id, label, isCorrect, position: j })));
       }
+      // Thêm vài học sinh và bài nộp để các màn Cần chấm, Theo dõi, Sổ điểm có dữ liệu ngay khi mở.
+      const extraNames = ["Nguyễn Thu Hà", "Trần Gia Bảo", "Lê Minh Châu", "Phạm Quốc Dũng", "Võ Ngọc Lan"];
+      const extras = await tx
+        .insert(s.users)
+        .values(extraNames.map((fullName, i) => ({ username: `hocsinh.mau${i + 2}`, fullName, passwordHash: studentHash, role: "STUDENT" as const, mustChangePassword: true, createdBy: teacher.id })))
+        .returning();
+      await tx.insert(s.classMembers).values(extras.map((u) => ({ classId: cls.id, userId: u.id, role: "STUDENT" as const })));
+      const ago = (hours: number) => new Date(Date.now() - hours * 3600_000);
+      const answers = [
+        "Bài 1. a) Đỉnh I(2; −1), trục đối xứng x = 2.\nb) Hàm số nghịch biến trên (−∞; 2), đồng biến trên (2; +∞). Đồ thị cắt Ox tại (1; 0) và (3; 0), cắt Oy tại (0; 3).\n\nBài 2. Hàm số đồng biến trên (m; +∞) nên cần m ≤ 2.\n\nBài 3. h(t) = −5(t − 2)² + 21. Độ cao lớn nhất là 21 m, đạt được sau 2 giây.",
+        "Bài 1. a) x = −b/2a = 2, y = 4 − 8 + 3 = −1. Đỉnh I(2; −1).\nb) Em đã vẽ đồ thị trong vở, parabol quay bề lõm lên trên.\n\nBài 2. Em ra m < 2 nhưng chưa chắc có lấy dấu bằng không ạ.\n\nBài 3. t = 2 thì h = 21 m.",
+        "Bài 1. Đỉnh I(2; −1), trục đối xứng x = 2. Bảng biến thiên: giảm rồi tăng.\nBài 2. m ≤ 2.\nBài 3. Em chưa làm kịp, em xin nộp bổ sung ạ.",
+      ];
+      const feedback = "Bài 1, 2 làm đúng. Em bổ sung bài 3 rồi nộp lại nhé.";
+      const subs = await tx
+        .insert(s.submissions)
+        .values([
+          { assignmentId: written.id, studentId: extras[0].id, status: "SUBMITTED", content: answers[0], submittedAt: ago(20), versionNo: 1 },
+          { assignmentId: written.id, studentId: extras[1].id, status: "SUBMITTED", content: answers[1], submittedAt: ago(5), versionNo: 1 },
+          { assignmentId: written.id, studentId: extras[2].id, status: "RETURNED", content: answers[2], submittedAt: ago(30), score: 7.5, feedback, returnedAt: ago(26), versionNo: 1 },
+        ])
+        .returning();
+      await tx.insert(s.gradeEvents).values({ submissionId: subs[2].id, graderId: teacher.id, score: 7.5, feedback, action: "RETURNED" });
       await tx.insert(s.auditLogs).values({ actorId: null, action: "system.handover_reset", targetType: "system", meta: { sample } });
     });
 

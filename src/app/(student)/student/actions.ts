@@ -11,7 +11,9 @@ import { track } from "@/server/observability/events";
 
 const student = () => requireActor("STUDENT");
 const writtenSchema = z.strictObject({
-  content: z.string().max(50_000, "Bài viết quá dài"),
+  content: z.string().max(100_000, "Bài viết quá dài"),
+  format: z.enum(["text", "html"]).optional(),
+  note: z.string().max(2_000, "Ghi chú quá dài").optional(),
   fileIds: z.array(z.uuid()).max(10),
 });
 const quizSchema = z.record(z.uuid(), z.array(z.uuid()).max(8));
@@ -28,18 +30,18 @@ async function run(fn: () => Promise<unknown>, okMessage: string, assignmentId: 
   return { ok: true, message: okMessage };
 }
 
-export async function saveDraftAction(assignmentId: string, input: { content: string; fileIds: string[] }): Promise<ActionState> {
+export async function saveDraftAction(assignmentId: string, input: { content: string; fileIds: string[]; note?: string; format?: "text" | "html" }): Promise<ActionState> {
   const actor = await student();
   const parsed = writtenSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
-  return run(() => subSvc.saveDraft(actor, assignmentId, parsed.data.content, parsed.data.fileIds), "Đã lưu nháp", assignmentId);
+  return run(() => subSvc.saveDraft(actor, assignmentId, parsed.data.content, parsed.data.fileIds, { note: parsed.data.note, format: parsed.data.format }), "Đã lưu nháp", assignmentId);
 }
 
-export async function submitAction(assignmentId: string, input: { content: string; fileIds: string[] }): Promise<ActionState> {
+export async function submitAction(assignmentId: string, input: { content: string; fileIds: string[]; note?: string; format?: "text" | "html" }): Promise<ActionState> {
   const actor = await student();
   const parsed = writtenSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
-  const r = await run(() => subSvc.submitWritten(actor, assignmentId, parsed.data.content, parsed.data.fileIds), "Đã nộp bài", assignmentId);
+  const r = await run(() => subSvc.submitWritten(actor, assignmentId, parsed.data.content, parsed.data.fileIds, { note: parsed.data.note, format: parsed.data.format }), "Đã nộp bài", assignmentId);
   if (r.ok) await track(actor, "submission.submit", { files: parsed.data.fileIds.length, hasText: parsed.data.content.trim().length > 0 });
   return r;
 }

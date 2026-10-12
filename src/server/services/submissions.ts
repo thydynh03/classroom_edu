@@ -13,6 +13,7 @@ import {
   users,
 } from "@/server/db/schema";
 import type { Actor } from "@/server/auth/session";
+import { answerText, normalizeAnswer, sanitizeAnswerHtml } from "@/lib/rich-text";
 import {
   requireAssignmentForStudent,
   requireAssignmentForTeacher,
@@ -61,7 +62,9 @@ export async function getStudentAssignment(actor: Actor, assignmentId: string) {
       ? {
           id: sub.id,
           status: sub.status,
-          content: sub.content,
+          content: sub.contentFormat === "html" ? sanitizeAnswerHtml(sub.content) : sub.content,
+          contentFormat: sub.contentFormat,
+          note: sub.note,
           quizAnswers: sub.quizAnswers ?? {},
           isLate: sub.isLate,
           submittedAt: sub.submittedAt,
@@ -92,11 +95,15 @@ async function getOrCreateDraft(actor: Actor, assignmentId: string) {
   return s ?? (await ownSubmission(assignmentId, actor.id))!;
 }
 
-export async function saveDraft(actor: Actor, assignmentId: string, content: string, fileIds: string[]) {
-  return (await saveDraftInner(actor, assignmentId, content, fileIds)).subId;
+export type AnswerOptions = { note?: string; format?: "text" | "html" };
+
+export async function saveDraft(actor: Actor, assignmentId: string, content: string, fileIds: string[], opts: AnswerOptions = {}) {
+  return (await saveDraftInner(actor, assignmentId, content, fileIds, opts)).subId;
 }
 
-async function saveDraftInner(actor: Actor, assignmentId: string, content: string, fileIds: string[]) {
+async function saveDraftInner(actor: Actor, assignmentId: string, rawContent: string, fileIds: string[], { note, format = "text" }: AnswerOptions) {
+  // HTML từ trình soạn thảo luôn được lọc ở server trước khi lưu, không tin dữ liệu từ client.
+  const content = normalizeAnswer(rawContent, format);
   const { a, cls } = await requireAssignmentForStudent(actor, assignmentId);
   if (a.type !== "WRITTEN") throw new UserError("Bài quiz không lưu nháp kiểu này.");
   const sub = await getOrCreateDraft(actor, assignmentId);
@@ -105,7 +112,7 @@ async function saveDraftInner(actor: Actor, assignmentId: string, content: strin
   await db.transaction(async (tx) => {
     await tx
       .update(submissions)
-      .set({ content, status: "DRAFT" })
+      .set({ content, contentFormat: format, status: "DRAFT", ...(note !== undefined ? { note } : {}) })
       .where(eq(submissions.id, sub.id));
     await tx.delete(submissionFiles).where(eq(submissionFiles.submissionId, sub.id));
     if (fileIds.length) {
@@ -125,14 +132,14 @@ async function saveDraftInner(actor: Actor, assignmentId: string, content: strin
       if (own.length) await tx.insert(submissionFiles).values(own.map((f) => ({ submissionId: sub.id, fileId: f.id })));
     }
   });
-  return { subId: sub.id, a, cls };
+  return { subId: sub.id, a, cls, content };
 }
 
-export async function submitWritten(actor: Actor, assignmentId: string, content: string, fileIds: string[]) {
+export async function submitWritten(actor: Actor, assignmentId: string, rawContent: string, fileIds: string[], opts: AnswerOptions = {}) {
   // saveDraftInner đã kiểm tra quyền (policy) — dùng lại kết quả, không truy vấn lần hai.
-  const { subId, a, cls } = await saveDraftInner(actor, assignmentId, content, fileIds);
+  const { subId, a, cls, content } = await saveDraftInner(actor, assignmentId, rawContent, fileIds, opts);
   const [hasFile] = await db.select({ id: submissionFiles.fileId }).from(submissionFiles).where(eq(submissionFiles.submissionId, subId)).limit(1);
-  if (!content.trim() && !hasFile) throw new UserError("Bài làm đang trống. Viết bài hoặc đính kèm file trước khi nộp.");
+  if (!answerText(content, opts.format ?? "text") && !hasFile) throw new UserError("Bài làm đang trống. Viết bài hoặc đính kèm file trước khi nộp.");
   const now = new Date();
   await db.transaction(async (tx) => {
     // Chỉ chuyển từ DRAFT: bấm nộp 2 lần / 2 tab cùng lúc thì lần sau không ghi đè.

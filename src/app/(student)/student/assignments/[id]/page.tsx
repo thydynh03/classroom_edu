@@ -75,7 +75,7 @@ export default async function StudentAssignmentPage({ params }: { params: Promis
         </section>
       )}
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_380px]">
+      <div className={a.type === "WRITTEN" ? "grid gap-5 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]" : "grid gap-5 lg:grid-cols-[minmax(0,1fr)_380px]"}>
         <div className="space-y-5">
           {(a.body || v.attachments.length > 0) && (
             <Panel title={a.type === "QUIZ" ? "Hướng dẫn" : "Đề bài"}>
@@ -107,6 +107,8 @@ export default async function StudentAssignmentPage({ params }: { params: Promis
             <WrittenPanel
               assignmentId={a.id}
               initialContent={sub?.content ?? ""}
+              initialNote={sub?.note ?? ""}
+              initialFormat={sub?.contentFormat ?? "text"}
               initialFiles={v.files}
               canEdit={v.edit.ok}
               editBlockedReason={v.edit.ok ? undefined : v.edit.reason}

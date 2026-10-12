@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SubmissionStatusBadge } from "@/components/domain/submission-status-badge";
 import { FileIcon } from "@/components/domain/file-uploader";
+import { RichContent } from "@/components/domain/rich-content";
 import type { DisplayStatus } from "@/server/services/submission-rules";
 import { formatScore } from "@/lib/format";
 import { cn, initials } from "@/lib/utils";
@@ -28,6 +29,8 @@ type Current = {
   studentName: string;
   status: "DRAFT" | "SUBMITTED" | "GRADED" | "RETURNED";
   content: string;
+  contentFormat: "text" | "html";
+  note: string;
   isLate: boolean;
   submittedAt: string | null;
   score: number | null;
@@ -174,7 +177,7 @@ export function GradingWorkspace({
   );
 
   const viewer = (
-    <section className="bg-surface-2 rounded-card flex min-h-0 min-w-0 flex-col gap-4 overflow-y-auto p-5" aria-label="Bài làm">
+    <section className="bg-surface-2 rounded-card flex min-h-0 w-full min-w-0 flex-1 flex-col gap-4 overflow-y-auto p-5 md:p-6" aria-label="Bài làm">
       <div className="flex flex-wrap items-center gap-3">
         <span className="bg-primary text-on-primary flex size-11 items-center justify-center rounded-full text-sm font-bold">{initials(current.studentName)}</span>
         <div className="min-w-0 flex-1">
@@ -214,9 +217,15 @@ export function GradingWorkspace({
       ) : (
         <>
           {current.content.trim() && (
-            <div className="bg-surface rounded-[16px] p-4">
-              <p className="text-muted mb-1 text-xs font-semibold">Bài viết / ghi chú của học sinh</p>
-              <p className="text-sm leading-relaxed whitespace-pre-wrap">{current.content}</p>
+            <div className="bg-surface rounded-[16px] p-5">
+              <p className="text-muted mb-2 text-xs font-semibold">Bài làm của học sinh</p>
+              <RichContent content={current.content} format={current.contentFormat} className="max-w-[75ch]" />
+            </div>
+          )}
+          {current.note.trim() && (
+            <div className="bg-warning-soft rounded-[16px] p-4">
+              <p className="text-warning mb-1 text-xs font-semibold">Ghi chú gửi giáo viên</p>
+              <p className="text-sm leading-relaxed whitespace-pre-wrap">{current.note}</p>
             </div>
           )}
           {current.files.length === 0 && !current.content.trim() && <p className="text-muted text-sm">Bài nộp không có nội dung.</p>}

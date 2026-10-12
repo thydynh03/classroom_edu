@@ -273,6 +273,9 @@ export const submissions = pgTable(
       .references(() => users.id),
     status: submissionStatus("status").notNull().default("DRAFT"),
     content: text("content").notNull().default(""),
+    /** "text" = văn bản thuần (bài cũ), "html" = từ trình soạn thảo, đã lọc bằng sanitizeAnswerHtml khi ghi. */
+    contentFormat: text("content_format").$type<"text" | "html">().notNull().default("text"),
+    note: text("note").notNull().default(""),
     quizAnswers: jsonb("quiz_answers").$type<QuizAnswers>(),
     isLate: boolean("is_late").notNull().default(false),
     submittedAt: timestamp("submitted_at", { withTimezone: true }),

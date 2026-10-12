@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { AnswerEditor, plainTextToHtml } from "@/components/domain/answer-editor";
+import { RichContent } from "@/components/domain/rich-content";
 import {
   FileList,
   FileUploader,
@@ -18,6 +20,8 @@ import { saveDraftAction, submitAction, unsubmitAction } from "../../actions";
 export function WrittenPanel({
   assignmentId,
   initialContent,
+  initialNote,
+  initialFormat,
   initialFiles,
   canEdit,
   editBlockedReason,
@@ -26,6 +30,8 @@ export function WrittenPanel({
 }: {
   assignmentId: string;
   initialContent: string;
+  initialNote: string;
+  initialFormat: "text" | "html";
   initialFiles: UploadedFileInfo[];
   canEdit: boolean;
   editBlockedReason?: string;
@@ -35,6 +41,10 @@ export function WrittenPanel({
   const router = useRouter();
   const storageKey = `draft:${assignmentId}`;
   const [content, setContent] = React.useState(initialContent);
+  const [note, setNote] = React.useState(initialNote);
+  const [format, setFormat] = React.useState(initialFormat);
+  // Nội dung nạp vào trình soạn; đổi editorKey để nạp lại (khôi phục nháp).
+  const [editorSeed, setEditorSeed] = React.useState(() => ({ key: 0, html: initialFormat === "html" ? initialContent : plainTextToHtml(initialContent) }));
   const [files, setFiles] = React.useState(initialFiles);
   const [savedAt, setSavedAt] = React.useState<Date | null>(null);
   const [saving, setSaving] = React.useState(false);
@@ -70,6 +80,8 @@ export function WrittenPanel({
     try {
       const r = await saveDraftAction(assignmentId, {
         content,
+        format,
+        note,
         fileIds: files.map((f) => f.id),
       });
       if (r.error) setError(r.error);
@@ -88,7 +100,7 @@ export function WrittenPanel({
     } finally {
       setSaving(false);
     }
-  }, [assignmentId, canEdit, content, files, storageKey]);
+  }, [assignmentId, canEdit, content, format, note, files, storageKey]);
 
   // Tự lưu 2 giây sau lần gõ cuối
   React.useEffect(() => {
@@ -98,13 +110,15 @@ export function WrittenPanel({
     } catch {}
     const t = setTimeout(save, 2000);
     return () => clearTimeout(t);
-  }, [content, files, save, storageKey]);
+  }, [content, note, files, save, storageKey]);
 
   function submit() {
     setError(null);
     start(async () => {
       const r = await submitAction(assignmentId, {
         content,
+        format,
+        note,
         fileIds: files.map((f) => f.id),
       });
       if (r.error) setError(r.error);
@@ -122,8 +136,14 @@ export function WrittenPanel({
     return (
       <div className="space-y-3">
         {content.trim() && (
-          <p className="bg-surface-2 rounded-[14px] p-3 text-sm whitespace-pre-wrap">
-            {content}
+          <div className="bg-surface-2 rounded-[14px] p-4">
+            <RichContent content={content} format={format} />
+          </div>
+        )}
+        {note.trim() && (
+          <p className="bg-warning-soft rounded-[14px] p-3 text-sm whitespace-pre-wrap">
+            <span className="text-warning block text-xs font-semibold">Ghi chú gửi giáo viên</span>
+            {note}
           </p>
         )}
         <FileList files={files} />
@@ -170,9 +190,14 @@ export function WrittenPanel({
             type="button"
             className="underline"
             onClick={() => {
+              const draft = localDraft ?? "";
+              // Nháp lưu trước khi có trình soạn thảo là văn bản thuần.
+              const html = draft.trimStart().startsWith("<") ? draft : plainTextToHtml(draft);
               dirty.current = true;
               editSeq.current++;
-              setContent(localDraft ?? "");
+              setFormat("html");
+              setContent(html);
+              setEditorSeed((s) => ({ key: s.key + 1, html }));
             }}
           >
             Khôi phục
@@ -188,19 +213,32 @@ export function WrittenPanel({
           viết vẫn được lưu trên máy này.
         </p>
       )}
+      <AnswerEditor
+        key={editorSeed.key}
+        id="content"
+        initialHtml={editorSeed.html}
+        onChange={(html) => {
+          dirty.current = true;
+          editSeq.current++;
+          setFormat("html");
+          setContent(html);
+        }}
+        onBlur={save}
+      />
       <div className="space-y-1.5">
-        <Label htmlFor="content">Bài làm / ghi chú cho giáo viên</Label>
+        <Label htmlFor="note">Ghi chú cho giáo viên (không bắt buộc)</Label>
         <Textarea
-          id="content"
-          rows={6}
-          value={content}
+          id="note"
+          rows={2}
+          maxLength={2000}
+          value={note}
           onChange={(e) => {
             dirty.current = true;
             editSeq.current++;
-            setContent(e.target.value);
+            setNote(e.target.value);
           }}
           onBlur={save}
-          placeholder="Viết bài trực tiếp ở đây, hoặc ghi chú cho giáo viên"
+          placeholder="Ví dụ: em chưa hiểu câu 2b, ảnh trang 2 hơi mờ…"
         />
       </div>
       <FileUploader

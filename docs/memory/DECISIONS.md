@@ -117,3 +117,10 @@ Cột `users.tour_completed_at` (migration 0002) để tour không hiện lại 
 
 ## 2026-09-29 — GV tự đăng ký phải chờ admin duyệt
 Tắt xác minh email khiến ai cũng tạo được tài khoản GV (kể cả học sinh). Người dùng chọn "chờ admin duyệt". Cột `users.approved_at` (migration 0003, tài khoản cũ được backfill = created_at): GV tự đăng ký có `approved_at = null` → `requireActor("TEACHER")` chuyển sang `/pending-approval`, nên mọi trang và server action GV đều bị chặn ở một chỗ. Admin duyệt/từ chối ở `/admin` (từ chối = DISABLED); duyệt xong GV nhận thông báo trong app. Email đúng tên miền trong `TEACHER_AUTO_APPROVE_DOMAINS` được duyệt ngay (chỉ khớp nguyên tên miền, không khớp tên miền con). Admin tạo GV, seed và demo đều đã duyệt sẵn. Cần ít nhất một admin trên production (BOOTSTRAP_ADMIN_* trong migrate.mjs).
+
+## 2026-10-12 — Bài làm của học sinh là rich text (HTML đã lọc), ghi chú tách cột riêng
+Người dùng yêu cầu ô bài làm là trình soạn thảo đầy đủ (đậm, nghiêng, gạch chân, màu chữ, căn lề, thụt lề, danh sách, chỉ số trên/dưới, ký hiệu). Dùng Tiptap (`src/components/domain/answer-editor.tsx`). Thay cho quyết định "văn bản thuần" ở phần bài làm; đề bài của GV vẫn là văn bản thuần.
+- `submissions.content_format` = `text` (bài cũ) hoặc `html`. HTML luôn qua `sanitizeAnswerHtml` (`src/lib/rich-text.ts`, thư viện sanitize-html, danh sách thẻ cho phép) ở server khi ghi và khi đọc ra; không tin HTML từ client.
+- Màu, căn lề, thụt lề lưu bằng `data-color` / `data-align` / `data-indent` với giá trị cố định, không lưu `style`. Màu ánh xạ sang token trong `globals.css` (`.rich-content`).
+- Không cho link, ảnh, bảng trong bài làm (ảnh nộp qua file đính kèm).
+- Ghi chú cho giáo viên lưu ở `submissions.note` (tối đa 2.000 ký tự).

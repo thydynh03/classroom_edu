@@ -161,15 +161,13 @@ export function FileUploader({
             >
               <Paperclip className="size-4" aria-hidden="true" /> Chọn file
             </button>
-            {purpose === "SUBMISSION" && (
-              <button
+            <button
                 type="button"
                 onClick={() => cameraRef.current?.click()}
                 className="bg-surface-2 rounded-control focus-visible:ring-ring inline-flex h-9 items-center gap-1.5 px-3 text-sm font-bold focus-visible:ring-2 focus-visible:outline-hidden"
               >
                 <Camera className="size-4" aria-hidden="true" /> Chụp ảnh
               </button>
-            )}
           </div>
           <p className="text-muted text-xs">
             PDF, Word, PowerPoint, Excel, ảnh, zip · tối đa {rule.maxBytes / 1024 / 1024} MB/file · {rule.maxFiles} file

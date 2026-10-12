@@ -1,3 +1,4 @@
+import { sanitizeAnswerHtml } from "@/lib/rich-text";
 import { requireActor } from "@/server/auth/guard";
 import { assignmentRoster, submissionDetailForTeacher } from "@/server/services/submissions";
 import { EmptyState, LinkButton, PageHeader } from "@/components/domain/page-parts";
@@ -50,7 +51,9 @@ export default async function GradingPage({
         id: detail.s.id,
         studentName: detail.studentName,
         status: detail.s.status,
-        content: detail.s.content,
+        content: detail.s.contentFormat === "html" ? sanitizeAnswerHtml(detail.s.content) : detail.s.content,
+        contentFormat: detail.s.contentFormat,
+        note: detail.s.note,
         isLate: detail.s.isLate,
         submittedAt: detail.s.submittedAt?.toISOString() ?? null,
         score: detail.s.score,

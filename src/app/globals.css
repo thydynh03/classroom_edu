@@ -314,3 +314,89 @@ details[open] > .faq-answer { animation: faq-open 0.3s ease both; }
 @media (min-width: 1600px) {
   html:has(.landing) { font-size: clamp(16px, calc(0.5vw + 8px), 20px); }
 }
+
+/* Bài làm soạn bằng trình soạn thảo (AnswerEditor) và khi hiển thị lại (RichContent). */
+.rich-content {
+  font-size: 1rem;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+.rich-content > * + * {
+  margin-top: 0.5em;
+}
+.rich-content h2 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+.rich-content h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.rich-content ul {
+  list-style: disc;
+  padding-left: 1.5rem;
+}
+.rich-content ol {
+  list-style: decimal;
+  padding-left: 1.5rem;
+}
+.rich-content li > ul,
+.rich-content li > ol {
+  margin-top: 0.25em;
+}
+.rich-content blockquote {
+  border-left: 3px solid var(--border);
+  padding-left: 0.9rem;
+  color: var(--muted);
+}
+.rich-content sub,
+.rich-content sup {
+  font-size: 0.75em;
+}
+.rich-content [data-color="red"] {
+  color: var(--danger);
+}
+.rich-content [data-color="blue"] {
+  color: var(--info);
+}
+.rich-content [data-color="green"] {
+  color: var(--success);
+}
+.rich-content [data-color="orange"] {
+  color: var(--primary);
+}
+.rich-content [data-align="center"] {
+  text-align: center;
+}
+.rich-content [data-align="right"] {
+  text-align: right;
+}
+.rich-content [data-align="justify"] {
+  text-align: justify;
+}
+.rich-content [data-indent="1"] {
+  padding-left: 2rem;
+}
+.rich-content [data-indent="2"] {
+  padding-left: 4rem;
+}
+.rich-content [data-indent="3"] {
+  padding-left: 6rem;
+}
+.rich-content [data-indent="4"] {
+  padding-left: 8rem;
+}
+.answer-editor-body {
+  min-height: inherit;
+  padding: 1rem 1.25rem;
+  outline: none;
+  white-space: pre-wrap;
+}
+.answer-editor-body p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--muted);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}

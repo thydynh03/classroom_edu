@@ -71,6 +71,13 @@
       "when": 1791817613460,
       "tag": "0009_users_guard_app_role",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791823203765,
+      "tag": "0010_nebulous_gladiator",
+      "breakpoints": true
     }
   ]
 }
