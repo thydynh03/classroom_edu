@@ -15,14 +15,15 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </span>
           Quản trị
         </Link>
+        {/* prefetch={false}: mỗi trang quản trị chạy nhiều truy vấn; để Next tự tải trước cả 5 trang mỗi lần mở là một loạt request đồng thời làm treo trang (LESSONS 2026-10-13). */}
         {/* Mobile: menu xuống hàng riêng, cuộn ngang nếu thiếu chỗ (không làm cả trang tràn ngang) */}
         <nav aria-label="Quản trị" className="order-last -mx-1 flex w-full gap-1 overflow-x-auto text-sm font-semibold whitespace-nowrap md:order-none md:mx-0 md:w-auto">
-          <Link href="/admin" className="hover:bg-surface-2 rounded-[10px] px-3 py-2">Người dùng</Link>
-          <Link href="/admin/audit" className="hover:bg-surface-2 rounded-[10px] px-3 py-2">Nhật ký</Link>
-          <Link href="/admin/upgrades" className="hover:bg-surface-2 rounded-[10px] px-3 py-2">Nâng cấp</Link>
-          <Link href="/admin/ops" className="hover:bg-surface-2 rounded-[10px] px-3 py-2">Hệ thống</Link>
-          <Link href="/admin/activity" className="hover:bg-surface-2 rounded-[10px] px-3 py-2">Hành vi</Link>
-          <Link href="/admin/settings" className="hover:bg-surface-2 rounded-[10px] px-3 py-2">Cài đặt</Link>
+          <Link href="/admin" prefetch={false} className="hover:bg-surface-2 rounded-[10px] px-3 py-2">Người dùng</Link>
+          <Link href="/admin/audit" prefetch={false} className="hover:bg-surface-2 rounded-[10px] px-3 py-2">Nhật ký</Link>
+          <Link href="/admin/upgrades" prefetch={false} className="hover:bg-surface-2 rounded-[10px] px-3 py-2">Nâng cấp</Link>
+          <Link href="/admin/ops" prefetch={false} className="hover:bg-surface-2 rounded-[10px] px-3 py-2">Hệ thống</Link>
+          <Link href="/admin/activity" prefetch={false} className="hover:bg-surface-2 rounded-[10px] px-3 py-2">Hành vi</Link>
+          <Link href="/admin/settings" prefetch={false} className="hover:bg-surface-2 rounded-[10px] px-3 py-2">Cài đặt</Link>
         </nav>
         <div className="ml-auto flex shrink-0 items-center gap-2">
           <span className="text-muted hidden text-sm lg:inline">{actor.fullName}</span>
