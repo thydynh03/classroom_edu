@@ -16,8 +16,8 @@ function createClient() {
   const url = (useSession ? process.env.DIRECT_URL : process.env.DATABASE_URL) ?? "postgres://missing-database-url:5432/missing";
   // Serverless: instance bị đóng băng giữa các request và pooler cắt kết nối rảnh trong lúc đó. idle_timeout đóng kết nối rảnh sớm
   // (cũng để trả backend về cho pooler session, giới hạn 15 trên gói free), max_lifetime thay kết nối định kỳ,
-  // connect_timeout để lỗi nhanh thay vì treo. max_pipeline: 1 — không gửi dồn truy vấn trên một kết nối.
-  const serverless = process.env.VERCEL ? { max: 2, max_pipeline: 1, idle_timeout: 5, max_lifetime: 300, connect_timeout: 10 } : { max: 10 };
+  // connect_timeout để lỗi nhanh thay vì treo. max_pipeline: 0 — tuyệt đối không gửi truy vấn kế tiếp khi truy vấn trước chưa xong (giá trị 1 vẫn cho dồn thêm một truy vấn).
+  const serverless = process.env.VERCEL ? { max: 3, max_pipeline: 0, idle_timeout: 5, max_lifetime: 300, connect_timeout: 10 } : { max: 10 };
   // Pooler transaction không giữ prepared statement giữa các truy vấn.
   const viaTransactionPooler = !useSession && (!!process.env.VERCEL || url.includes("pgbouncer=true") || url.includes(":6543"));
   return postgres(url, { ...serverless, prepare: !viaTransactionPooler });
