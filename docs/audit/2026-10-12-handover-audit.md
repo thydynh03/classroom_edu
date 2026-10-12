@@ -156,7 +156,7 @@ Trên Vercel, lớp chống tấn công nên dùng Vercel Firewall (custom rules
 3. **Tắt seed demo:** bỏ `tsx scripts/seed-demo.ts` khỏi `vercel-build` (khuyến nghị xóa luôn file, kèm ADR), hoặc đặt `SEED_DEMO=false` trên Vercel.
 4. **Xóa object trong bucket R2** (`att/`, `sub/`) hoặc tạo bucket mới.
 5. **Đổi secret:** mật khẩu DB, key R2, `CRON_SECRET`. Xóa `BOOTSTRAP_ADMIN_PASSWORD` khỏi env sau khi admin đăng nhập. Xóa `demo-accounts.local.md` trên máy chủ dự án.
-6. **Cấu hình production đầy đủ:** `S3_*` (R2), `SMTP_*` (Resend), `REQUIRE_EMAIL_VERIFICATION=true` khi SMTP chạy, `TEACHER_AUTO_APPROVE_DOMAINS` (tên miền trường của khách), `APP_URL` (tên miền thật).
+6. **Cấu hình production đầy đủ:** `S3_*` (R2), `SMTP_*` (Resend), `REQUIRE_EMAIL_VERIFICATION=true` khi SMTP chạy, `APP_URL` (tên miền thật). **Chưa đặt `TEACHER_AUTO_APPROVE_DOMAINS`** cho tới khi xong H0.5: hiện biến này duyệt GV mà không cần xác minh email (mục 12).
 7. Viết `docs/HANDOVER.md` cho khách: đăng nhập admin, duyệt GV, tạo lớp, phát tài khoản HS, xử lý quên mật khẩu, nơi xem log, cách backup.
 
 ---
@@ -240,6 +240,7 @@ Mỗi milestone làm theo quy trình của repo: brief → code → `pnpm lint &
 | Mốc | Nội dung | Ước tính | Tiêu chí xong |
 | --- | --- | --- | --- |
 | **H0 · Dọn bàn giao** | Backup; `scripts/handover-reset.ts` + `pnpm db:handover`; bỏ seed-demo khỏi build; xóa bucket; đổi secret; cấu hình R2/SMTP/cron ngoài; `docs/HANDOVER.md`; chuyển Vercel Pro và tài khoản sang tên khách | 0,5–1 | DB chỉ còn tài khoản đã chốt; deploy lại không sinh demo; upload ảnh và email chạy trên production |
+| **H0.5 · Chặn tạo tài khoản trái phép & leo quyền** (mục 12) | Một module tạo tài khoản duy nhất; trigger DB (vai trò không đổi được, chặn INSERT admin, chặn GV tự duyệt); tạo admin chỉ bằng CLI; duyệt theo tên miền chỉ sau khi xác minh email; bỏ "thêm HS bằng username" (thay bằng lời mời HS phải chấp nhận) và giới hạn quyền GV cấp lại mật khẩu; GV chờ duyệt bị chặn ở mọi action; bảo vệ admin cuối cùng; test leo quyền | 1,5–2 | Toàn bộ test âm tính ở mục 12.4 pass; `grep` không còn `insert(users)` ngoài module tạo tài khoản; trigger chặn được cả khi gọi SQL trực tiếp bằng user của app |
 | **H1 · Sửa lỗi chức năng & đồng thời** | Rate limit bằng Postgres; bộ đếm đăng nhập nguyên tử; quiz và chấm dùng UPDATE có điều kiện; sửa tự lưu; tự lưu quiz; hàng đợi email có thứ tự và thử lại; thống kê bỏ HS đã rời lớp; GV sửa tên HS; `bulkCreateStudents` dùng transaction; index; job dọn dẹp; hàm `clientIp()` chung | 2 | Integration test mới cho từng race (gửi request song song), 5 actor cho action mới |
 | **H2 · UX mobile** | `loading.tsx`, `error.tsx`, `not-found.tsx`, `global-error.tsx` tiếng Việt; tab bar có nhãn và vùng bấm ≥ 44px; PWA manifest; xử lý HEIC; nút "Nhắc các em chưa nộp"; loại bài "Tài liệu"; trang Lịch của HS; E2E mobile 375px | 3 | E2E mobile pass, axe không có lỗi serious, Lighthouse mobile ≥ 90 ở trang HS |
 | **H3 · Admin vận hành + observability** | ADR; `onRequestError` → `error_events`; span processor OTel → `request_samples`/`request_stats_hourly`; beacon client + Web Vitals; `job_runs`; `/admin/ops` (p50/p95/p99, lỗi, mất request, cron, hàng đợi email); email cảnh báo; `/admin/classes`, `/admin/settings` | 3–4 | Dashboard hiện số liệu thật; tự gây lỗi thì thấy trong 1 phút; không lưu PII hay nội dung bài |
@@ -248,7 +249,7 @@ Mỗi milestone làm theo quy trình của repo: brief → code → `pnpm lint &
 | **H6 · Tính năng trả phí đợt 1** | Nhập đề Word/Excel; sổ điểm + xuất Excel; thống kê từng câu | 6–9 | Mỗi tính năng có unit + integration test, nằm sau `requireFeature` |
 | **H7 · Load test & go-live** | Kịch bản k6: 300 HS nộp trong 1 phút, 50 GV mở dashboard; skill `security-review` và `engineering:deploy-checklist`; sửa landing cho khớp thực tế | 1 | p95 < 800ms ở luồng nộp bài, 0 lỗi 5xx, checklist deploy đủ |
 
-**Thứ tự gợi ý:** H0 → H1 → H2 (đủ để bàn giao bản ổn định) → H5 → H3 → H4 → H6 → H7. Nếu khách cần dùng ngay thì bàn giao sau H2 và làm tiếp các mốc còn lại.
+**Thứ tự gợi ý:** H0 → **H0.5** → H1 → H2 (đủ để bàn giao bản ổn định) → H5 → H3 → H4 → H6 → H7. H0.5 phải xong trước khi mở đăng ký GV hay phát tài khoản cho khách. Nếu khách cần dùng ngay thì bàn giao sau H2 và làm tiếp các mốc còn lại.
 
 ---
 
@@ -261,3 +262,88 @@ Mỗi milestone làm theo quy trình của repo: brief → code → `pnpm lint &
 5. Tính năng trả phí bán theo **từng GV** hay **cả trường**? Giá đã có chưa (để hiển thị trên thẻ tính năng)?
 6. Đợt đầu chọn tính năng trả phí nào (đề xuất: nhập đề Word/Excel, sổ điểm, thống kê câu hỏi)?
 7. Web Push (cho HS không có email) có làm trong đợt này không?
+8. Đóng lỗ GV chiếm tài khoản HS (mục 12.2): chọn **(a) lời mời HS phải chấp nhận + giới hạn cấp lại mật khẩu** (khuyến nghị) hay chỉ (b) giới hạn cấp lại mật khẩu?
+
+---
+
+## 12. Chặn tạo tài khoản trái phép và leo quyền (H0.5)
+
+Yêu cầu: **không được** tạo tài khoản ADMIN qua API, **không được** tạo GV đã duyệt mà không qua admin, **không được** leo lên quyền cao hơn.
+
+"API" ở đây gồm mọi server action. Mỗi hàm export trong file `"use server"` là một endpoint POST công khai: ai có action ID cũng gọi được và truyền được tham số tùy ý. Vì vậy mọi hàm export phải tự kiểm tra quyền, không dựa vào việc UI có hiện nút hay không.
+
+### 12.1 Hiện trạng: những chỗ đã an toàn
+
+Đã rà toàn bộ chỗ ghi vào bảng `users` (4 chỗ trong `src`, cộng script seed và migrate):
+
+| Đường tạo tài khoản | Vai trò | Đánh giá |
+| --- | --- | --- |
+| `registerAction` (`src/app/(auth)/actions.ts:124`) | Luôn `TEACHER`, gán cứng | ✅ Không lấy role từ form; `registerSchema` là `strictObject` nên gửi thêm `role=ADMIN` bị từ chối. ⚠️ Xem lỗ 1 bên dưới |
+| `joinSignupAction` (`src/app/account-actions.ts:73`) | Luôn `STUDENT` | ✅ |
+| `bulkCreateStudents` (`src/server/services/classes.ts:214`) | Luôn `STUDENT`, cần là GV của lớp | ✅ |
+| `createTeacher` (`src/server/services/admin.ts:175`) | `TEACHER` đã duyệt, chỉ ADMIN gọi được (`requireActor("ADMIN")` + `requireRole`) | ✅ Admin tạo nghĩa là admin đã duyệt |
+| Tạo ADMIN | Chỉ `docker/migrate.mjs` (khi chưa có admin nào và có `BOOTSTRAP_ADMIN_*`) và `scripts/seed.ts` (từ chối chạy ở production) | ✅ **Không có đường tạo admin qua web** |
+| Đổi vai trò | Không có code nào `UPDATE users SET role` | ✅ |
+| Vai trò trong phiên | `getActor()` đọc role từ DB mỗi request; cookie chỉ chứa token ngẫu nhiên | ✅ Không sửa cookie để đổi role được |
+
+Có 43 server action. 7 action cố ý công khai: đăng nhập, đăng xuất, đăng ký GV, xác minh email, quên mật khẩu, đặt lại mật khẩu, HS đăng ký bằng mã lớp. 36 action còn lại đều gọi `requireActor(...)`/`getActor()` và kiểm tra vai trò trước khi làm gì.
+
+### 12.2 Lỗ hổng tìm thấy
+
+| Mức | Lỗ | Cách khai thác | Chỗ |
+| --- | --- | --- | --- |
+| 🔴 Cao | **GV chiếm tài khoản của bất kỳ HS nào** | GV (đã duyệt) thêm username của một HS bất kỳ vào lớp mình. Username dễ đoán vì sinh từ họ tên, ví dụ `lehoanganh`. Sau đó bấm "Cấp lại mật khẩu" → nhận mật khẩu tạm → đăng nhập như HS đó, xem bài làm và điểm ở lớp của GV khác. HS không được báo gì | `addExistingStudent` (`classes.ts:237`) + `resetStudentPassword(s)` |
+| 🔴 Cao (khi bật biến) | **Tự duyệt GV theo tên miền mà không sở hữu email** | Khi `REQUIRE_EMAIL_VERIFICATION` khác `"true"` (mặc định hiện nay), `registerAction` coi email là đã xác minh. Nếu đặt `TEACHER_AUTO_APPROVE_DOMAINS=truong.edu.vn`, ai gõ `bat.ky@truong.edu.vn` (không cần có thật) cũng thành GV đã duyệt | `actions.ts:124–135` |
+| 🟠 Vừa | GV chờ duyệt vẫn gọi được action dùng `requireActor()` không truyền role | Hiện chưa khai thác được vì GV chờ duyệt chưa có lớp nào, nhưng chỉ an toàn nhờ may mắn | `files/actions.ts:20`, `account-actions.ts` |
+| 🟠 Vừa | Admin cấp lại mật khẩu cho **admin khác** → nhận mật khẩu tạm → chiếm tài khoản admin đó (che dấu vết bằng danh tính người khác) | Một admin bị lộ mật khẩu kéo theo mọi admin | `adminResetPassword` |
+| 🟡 Thấp | Admin có thể khóa hết các admin khác. Chỉ chặn tự khóa mình, chưa có quy tắc "luôn còn ít nhất 1 admin hoạt động" | — | `setUserStatus` |
+| 🟡 Thấp | Không có lớp bảo vệ ở DB: một bug sau này (ví dụ một action mới vô tình nhận `role` từ form) sẽ tạo được admin | — | — |
+
+### 12.3 Việc cần làm
+
+**A. Một cửa tạo tài khoản**
+1. Gom mọi lệnh tạo user vào `src/server/auth/accounts.ts` với các hàm chỉ định rõ vai trò: `registerTeacher` (chờ duyệt), `createTeacherByAdmin`, `createStudentByTeacher`, `signupStudentByCode`. Không hàm nào nhận tham số `role`.
+2. Thêm unit test quét `src/` và **fail nếu có `insert(users)` ngoài `accounts.ts`**, để agent sau không thêm đường tạo tài khoản mới mà không ai biết.
+
+**B. Admin chỉ tạo bằng dòng lệnh, không bao giờ qua web**
+3. Thêm script `pnpm admin:create` chạy trên máy vận hành với `DIRECT_URL`. Script hỏi xác nhận, ghi audit, gửi email cho mọi admin hiện có.
+4. Giữ bootstrap trong `migrate.mjs` cho lần đầu, nhưng ghi vào `HANDOVER.md`: xóa `BOOTSTRAP_ADMIN_PASSWORD` khỏi Vercel ngay sau khi tạo xong.
+5. Không thêm UI "tạo admin" hay "đổi vai trò". Cần đổi vai trò thì tạo tài khoản mới bằng script.
+
+**C. Không GV nào được duyệt nếu admin chưa duyệt**
+6. Duyệt theo tên miền **chỉ áp dụng khi email đã được xác minh thật**. Chuyển việc duyệt từ lúc đăng ký sang lúc `verifyEmailToken` thành công. Khi `REQUIRE_EMAIL_VERIFICATION` khác `"true"` thì bỏ qua `TEACHER_AUTO_APPROVE_DOMAINS` và ghi cảnh báo vào log.
+7. `approved_at` chỉ được đặt ở 2 chỗ: `approveTeacher` (admin) và bước xác minh email theo tên miền.
+8. GV chờ duyệt chỉ vào được `/pending-approval`, `/settings`, đăng xuất. Sửa `requireActor()`: khi không truyền role mà actor là GV chưa duyệt thì chặn. Upload dùng `requireActor("TEACHER")` hoặc `requireActor("STUDENT")` theo `purpose`.
+
+**D. Chặn GV chiếm tài khoản HS**
+9. Bỏ "thêm HS bằng username". Thay bằng **lời mời**: HS nhận thông báo "Cô/Thầy X mời em vào lớp Y" và tự bấm Đồng ý. Cách khác là HS vào bằng mã lớp như hiện nay.
+10. GV chỉ được cấp lại mật khẩu cho HS **do chính GV đó tạo** (`created_by = GV`), và chỉ khi mọi lớp HS đang học đều do GV đó dạy. Các trường hợp khác hiện thông báo "Liên hệ quản trị viên".
+11. Mỗi lần cấp lại mật khẩu: HS nhận thông báo trong app ("Mật khẩu của em đã được giáo viên X cấp lại lúc …"), đồng thời ghi audit (đã có).
+
+**E. Giới hạn trong chính quyền admin**
+12. Admin không cấp lại mật khẩu cho admin khác. Admin quên mật khẩu thì dùng email reset hoặc script CLI.
+13. Không cho khóa hay vô hiệu admin hoạt động cuối cùng.
+14. Thao tác nhạy cảm của admin (tạo GV, cấp lại mật khẩu, khóa tài khoản) yêu cầu đã đăng nhập trong 15 phút gần nhất. Quá thì hỏi lại mật khẩu.
+
+**F. Lớp bảo vệ cuối ở database** (migration mới, ghi ADR)
+15. Trigger `users_guard` BEFORE INSERT/UPDATE trên `users`:
+    - `UPDATE`: nếu `NEW.role <> OLD.role` thì báo lỗi (vai trò không đổi được).
+    - `INSERT` với `role = 'ADMIN'`: chỉ cho phép khi transaction đã `SET LOCAL app.allow_admin_insert = 'on'`. Chỉ script CLI và bootstrap đặt cờ này.
+    - Đặt `approved_at` (khi INSERT GV với giá trị khác null, hoặc UPDATE từ null sang có giá trị): chỉ cho phép khi transaction đã `SET LOCAL app.allow_teacher_approval = 'on'`. Chỉ `approveTeacher`, `createTeacherByAdmin` và bước xác minh email theo tên miền đặt cờ này.
+    - Dùng `SET LOCAL` trong transaction nên chạy được với pooler kiểu transaction của Supabase.
+16. (Khuyến nghị) App kết nối bằng một Postgres role riêng chỉ có quyền SELECT/INSERT/UPDATE/DELETE, không phải chủ bảng, nên không tắt được trigger. Migration vẫn chạy bằng role chủ qua `DIRECT_URL` (đã tách sẵn `DATABASE_URL`/`DIRECT_URL`). Kể cả khi có lỗi SQL injection, kẻ tấn công cũng không tạo được admin.
+
+### 12.4 Test bắt buộc (integration, kiểu "phải thất bại")
+
+- Gửi form đăng ký kèm `role=ADMIN`, `approvedAt`, `emailVerifiedAt` → bị từ chối, không tạo user.
+- Gọi `createTeacherAction`, `approveTeacherAction`, `setStatusAction`, `resetPasswordAction` (admin) bằng GV, HS, GV chờ duyệt, chưa đăng nhập → 404 hoặc chuyển trang, DB không đổi.
+- Đặt `TEACHER_AUTO_APPROVE_DOMAINS` trong khi tắt xác minh email → GV đăng ký vẫn chờ duyệt.
+- Bật xác minh email → chỉ được duyệt sau khi bấm link xác minh.
+- GV chờ duyệt gọi từng action của GV và `requestUploadAction` → bị chặn.
+- GV A cấp lại mật khẩu cho HS do GV B tạo, hoặc HS học cả lớp của GV B → bị từ chối, mật khẩu không đổi.
+- GV không còn thêm HS vào lớp mà HS chưa đồng ý.
+- Admin cấp lại mật khẩu cho admin khác → bị từ chối. Khóa admin cuối cùng → bị từ chối.
+- Chạy SQL trực tiếp bằng role của app: `UPDATE users SET role='ADMIN'`, `INSERT … role='ADMIN'`, `UPDATE users SET approved_at=now()` → trigger báo lỗi.
+- Unit test: không có `insert(users)` ngoài `src/server/auth/accounts.ts`.
+
+Chạy skill `security-review` trên diff của H0.5 trước khi merge.
