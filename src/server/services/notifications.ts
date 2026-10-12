@@ -1,8 +1,8 @@
 import "server-only";
-import { and, count, desc, eq, inArray, isNull } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, isNull, lt, lte, or, sql } from "drizzle-orm";
 import { db, type Tx } from "@/server/db/client";
 import { notifications, users } from "@/server/db/schema";
-import { appUrl, sendMail } from "@/server/mail";
+import { appUrl, emailBudget, sendMail, vnDayStart } from "@/server/mail";
 
 export type NotificationType =
   | "ASSIGNMENT_CREATED"
@@ -63,23 +63,80 @@ export function isQuietHours(now = new Date()) {
   return mins >= 21 * 60 + 30 || mins < 6 * 60 + 30;
 }
 
-/** Gửi email cho thông báo chưa gửi (chạy định kỳ, bỏ qua giờ yên tĩnh 21:30–6:30). */
-export async function flushNotificationEmails(limit = 50) {
-  if (isQuietHours()) return 0;
-  const rows = await db
-    .select({ id: notifications.id, title: notifications.title, href: notifications.href, type: notifications.type, email: users.email })
+const MAX_EMAIL_ATTEMPTS = 5;
+
+/**
+ * Gửi email nhắc việc (chạy định kỳ từ /api/cron hoặc scheduler):
+ * - Bỏ qua giờ yên tĩnh 21:30–6:30 (giờ VN).
+ * - Thông báo chỉ in-app, hoặc người nhận không có email → đánh dấu xong ngay (không chiếm hàng đợi).
+ * - GỘP: mỗi người tối đa 1 email/ngày, liệt kê mọi thông báo đang chờ (users.last_reminder_email_at).
+ * - Chỉ dùng phần hạn mức dành cho email nhắc (emailBudget("reminder")); hết suất thì để mai gửi tiếp.
+ * - Gửi lỗi: thử lại có giãn cách (email_next_at), quá MAX_EMAIL_ATTEMPTS lần thì bỏ, không chặn người khác.
+ */
+export async function flushNotificationEmails(now = new Date(), maxRecipients = 50) {
+  if (isQuietHours(now)) return 0;
+  await db.execute(sql`
+    update notifications n set email_sent_at = ${now.toISOString()}::timestamptz
+    from users u
+    where u.id = n.recipient_id and n.email_sent_at is null
+      and (n.type not in (${sql.join(EMAIL_TYPES.map((t) => sql`${t}`), sql`, `)}) or u.email is null or u.status <> 'ACTIVE')`);
+
+  const budget = Math.min(maxRecipients, await emailBudget("reminder", now));
+  if (budget <= 0) return 0;
+  const dayStart = vnDayStart(now);
+  const recipients = await db
+    .select({ id: users.id, email: users.email, fullName: users.fullName })
     .from(notifications)
     .innerJoin(users, eq(users.id, notifications.recipientId))
-    .where(and(isNull(notifications.emailSentAt), inArray(notifications.type, EMAIL_TYPES)))
-    .limit(limit);
+    .where(
+      and(
+        isNull(notifications.emailSentAt),
+        or(isNull(notifications.emailNextAt), lte(notifications.emailNextAt, now)),
+        or(isNull(users.lastReminderEmailAt), lt(users.lastReminderEmailAt, dayStart)),
+      ),
+    )
+    .groupBy(users.id)
+    .orderBy(sql`min(${notifications.createdAt})`)
+    .limit(budget);
+
   let sent = 0;
-  for (const r of rows) {
-    if (r.email) {
-      const ok = await sendMail(r.email, r.title, `${r.title}\n\nXem chi tiết: ${appUrl(r.href)}`);
-      if (!ok) continue;
+  for (const r of recipients) {
+    if (!r.email) continue;
+    const items = await db
+      .select({ id: notifications.id, title: notifications.title, href: notifications.href, attempts: notifications.emailAttempts })
+      .from(notifications)
+      .where(and(eq(notifications.recipientId, r.id), isNull(notifications.emailSentAt)))
+      .orderBy(asc(notifications.createdAt))
+      .limit(20);
+    if (!items.length) continue;
+    const ids = items.map((i) => i.id);
+    const subject = items.length === 1 ? items[0].title : `Classroom Edu: ${items.length} việc mới cho bạn`;
+    const text = [
+      `Chào ${r.fullName},`,
+      "",
+      ...items.map((i) => `• ${i.title}\n  ${appUrl(i.href)}`),
+      "",
+      "Email này gửi tối đa một lần mỗi ngày. Xem tất cả thông báo trong ứng dụng.",
+    ].join("\n");
+    const ok = await sendMail(r.email, subject, text, "reminder");
+    if (ok) {
       sent++;
+      await db.update(notifications).set({ emailSentAt: new Date(), emailLastError: null }).where(inArray(notifications.id, ids));
+      await db.update(users).set({ lastReminderEmailAt: new Date() }).where(eq(users.id, r.id));
+      continue;
     }
-    await db.update(notifications).set({ emailSentAt: new Date() }).where(eq(notifications.id, r.id));
+    if ((await emailBudget("reminder", now)) <= 0) break; // hết suất hôm nay: để mai gửi tiếp, không tính là lỗi
+    const attempts = Math.max(...items.map((i) => i.attempts)) + 1;
+    const giveUp = attempts >= MAX_EMAIL_ATTEMPTS;
+    await db
+      .update(notifications)
+      .set({
+        emailAttempts: attempts,
+        emailLastError: "smtp_failed",
+        emailNextAt: new Date(now.getTime() + attempts * attempts * 15 * 60_000),
+        emailSentAt: giveUp ? now : null,
+      })
+      .where(inArray(notifications.id, ids));
   }
   return sent;
 }

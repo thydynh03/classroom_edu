@@ -130,7 +130,8 @@ export async function submitWritten(actor: Actor, assignmentId: string, content:
   if (!content.trim() && !hasFile) throw new UserError("Bài làm đang trống. Viết bài hoặc đính kèm file trước khi nộp.");
   const now = new Date();
   await db.transaction(async (tx) => {
-    await tx
+    // Chỉ chuyển từ DRAFT: bấm nộp 2 lần / 2 tab cùng lúc thì lần sau không ghi đè.
+    const done = await tx
       .update(submissions)
       .set({
         status: "SUBMITTED",
@@ -141,7 +142,9 @@ export async function submitWritten(actor: Actor, assignmentId: string, content:
         returnedAt: null,
         versionNo: sql`${submissions.versionNo} + 1`,
       })
-      .where(eq(submissions.id, subId));
+      .where(and(eq(submissions.id, subId), eq(submissions.status, "DRAFT")))
+      .returning({ id: submissions.id });
+    if (!done.length) throw new UserError("Bài đã được nộp.");
     await notifyTeachers(tx, a.classId, {
       title: `Có bài nộp mới: ${a.title} (${cls.name})`,
       href: `/teacher/grading/${a.id}`,
@@ -157,7 +160,12 @@ export async function unsubmit(actor: Actor, assignmentId: string) {
   if (!a.allowLate && new Date() > a.dueAt) {
     throw new UserError("Đã quá hạn và giáo viên không nhận bài trễ, nên không rút lại được (bài sẽ không nộp lại được).");
   }
-  await db.update(submissions).set({ status: "DRAFT" }).where(eq(submissions.id, sub.id));
+  const done = await db
+    .update(submissions)
+    .set({ status: "DRAFT" })
+    .where(and(eq(submissions.id, sub.id), eq(submissions.status, "SUBMITTED")))
+    .returning({ id: submissions.id });
+  if (!done.length) throw new UserError("Giáo viên vừa chấm bài này nên không rút lại được nữa.");
 }
 
 export async function submitQuiz(actor: Actor, assignmentId: string, answers: Record<string, string[]>) {
@@ -181,7 +189,8 @@ export async function submitQuiz(actor: Actor, assignmentId: string, answers: Re
     // Chỉ lưu đáp án cho câu hỏi hợp lệ.
     const clean: Record<string, string[]> = {};
     for (const q of qs) if (answers[q.id]) clean[q.id] = answers[q.id].slice(0, 8);
-    await tx
+    // Quiz chỉ 1 lượt: chỉ cập nhật khi còn DRAFT (bấm đúp / 2 tab nộp cùng lúc thì lần sau bị từ chối).
+    const done = await tx
       .update(submissions)
       .set({
         quizAnswers: clean,
@@ -192,7 +201,9 @@ export async function submitQuiz(actor: Actor, assignmentId: string, answers: Re
         returnedAt: status === "RETURNED" ? now : null,
         versionNo: 1,
       })
-      .where(eq(submissions.id, sub.id));
+      .where(and(eq(submissions.id, sub.id), eq(submissions.status, "DRAFT")))
+      .returning({ id: submissions.id });
+    if (!done.length) throw new UserError("Bài trắc nghiệm đã được nộp.");
     await tx.insert(gradeEvents).values({ submissionId: sub.id, score, action: "AUTO" });
     await notifyTeachers(tx, a.classId, {
       title: `Có bài nộp mới: ${a.title} (${cls.name})`,
@@ -332,7 +343,7 @@ export async function saveGrade(
   const now = new Date();
   const wasGraded = s.score !== null;
   await db.transaction(async (tx) => {
-    await tx
+    const done = await tx
       .update(submissions)
       .set({
         score: input.score,
@@ -340,7 +351,9 @@ export async function saveGrade(
         status: input.returnNow ? "RETURNED" : "GRADED",
         returnedAt: input.returnNow ? now : s.returnedAt,
       })
-      .where(eq(submissions.id, s.id));
+      .where(and(eq(submissions.id, s.id), inArray(submissions.status, ["SUBMITTED", "GRADED", "RETURNED"])))
+      .returning({ id: submissions.id });
+    if (!done.length) throw new UserError("Học sinh vừa rút lại bài để sửa. Tải lại trang rồi chấm khi em nộp lại.");
     await tx.insert(gradeEvents).values({
       submissionId: s.id,
       graderId: actor.id,

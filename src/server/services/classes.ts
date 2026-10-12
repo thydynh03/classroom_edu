@@ -296,7 +296,7 @@ export async function respondInvite(actor: Actor, inviteId: string, accept: bool
  * GV chỉ được cấp lại mật khẩu cho HS khi MỌI lớp HS đang học đều do GV này dạy.
  * Nếu không, GV đăng nhập bằng mật khẩu tạm sẽ xem được bài/điểm ở lớp của GV khác → phải nhờ admin.
  */
-async function assertOnlyMyStudents(actor: Actor, studentIds: string[]) {
+async function assertOnlyMyStudents(actor: Actor, studentIds: string[], what = "cấp lại mật khẩu") {
   const outside = await db
     .selectDistinct({ fullName: users.fullName })
     .from(classMembers)
@@ -314,7 +314,7 @@ async function assertOnlyMyStudents(actor: Actor, studentIds: string[]) {
   if (outside.length) {
     const names = outside.slice(0, 3).map((o) => o.fullName).join(", ");
     throw new UserError(
-      `${names}${outside.length > 3 ? ` và ${outside.length - 3} em khác` : ""} đang học lớp của giáo viên khác nên bạn không cấp lại mật khẩu được. Hãy nhờ quản trị viên.`,
+      `${names}${outside.length > 3 ? ` và ${outside.length - 3} em khác` : ""} đang học lớp của giáo viên khác nên bạn không ${what} được. Hãy nhờ quản trị viên.`,
     );
   }
 }
@@ -332,6 +332,22 @@ export async function removeStudent(actor: Actor, classId: string, studentId: st
         eq(classMembers.role, "STUDENT"),
       ),
     );
+}
+
+/** GV sửa họ tên HS (gõ sai lúc tạo). Cùng quy tắc với cấp lại mật khẩu: HS chỉ học lớp của GV này. */
+export async function renameStudent(actor: Actor, classId: string, studentId: string, fullName: string) {
+  await requireTeacherOfClass(actor, classId);
+  if (!isUuid(studentId) || (await membershipOf(studentId, classId)) !== "STUDENT") notFound();
+  await assertOnlyMyStudents(actor, [studentId], "sửa tên");
+  const [before] = await db.select({ fullName: users.fullName }).from(users).where(eq(users.id, studentId));
+  await db.update(users).set({ fullName }).where(and(eq(users.id, studentId), eq(users.role, "STUDENT")));
+  await db.insert(auditLogs).values({
+    actorId: actor.id,
+    action: "student.rename",
+    targetType: "user",
+    targetId: studentId,
+    meta: { from: before?.fullName, to: fullName },
+  });
 }
 
 /** GV của lớp cấp lại mật khẩu tạm cho học sinh (học sinh không có email). */
@@ -466,6 +482,17 @@ export async function withStats<T extends { id: string; classId: string }>(class
       n: count(),
     })
     .from(submissions)
+    .innerJoin(assignments, eq(assignments.id, submissions.assignmentId))
+    // Chỉ tính HS đang ở lớp: bài của em đã rời lớp vẫn giữ nhưng không làm tỉ lệ vượt sĩ số.
+    .innerJoin(
+      classMembers,
+      and(
+        eq(classMembers.classId, assignments.classId),
+        eq(classMembers.userId, submissions.studentId),
+        eq(classMembers.role, "STUDENT"),
+        eq(classMembers.status, "ACTIVE"),
+      ),
+    )
     .where(inArray(submissions.assignmentId, ids))
     .groupBy(submissions.assignmentId, submissions.status, submissions.isLate);
   const classIds = classId ? [classId] : [...new Set(list.map((a) => a.classId))];

@@ -44,12 +44,21 @@ export function QuizPlayer({
   const router = useRouter();
   const answered = questions.filter((q) => (answers[q.id] ?? []).length > 0).length;
   const readOnly = mode !== "take";
+  // Câu trả lời đang làm lưu trên máy (mất mạng / tải lại trang / hết pin vẫn khôi phục được).
+  const storageKey = `quiz:${assignmentId}`;
+  const localRaw = React.useSyncExternalStore(subscribeStorage, () => readLocal(storageKey), () => null);
+  const local = React.useMemo(() => parseAnswers(localRaw), [localRaw]);
+  const canRestore = mode === "take" && local !== null && answered === 0 && Object.keys(local).length > 0;
 
   function pick(q: Q, optionId: string, checked: boolean) {
     setAnswers((a) => {
       const cur = a[q.id] ?? [];
-      if (q.type === "MULTI") return { ...a, [q.id]: checked ? [...cur, optionId] : cur.filter((x) => x !== optionId) };
-      return { ...a, [q.id]: [optionId] };
+      const next =
+        q.type === "MULTI" ? { ...a, [q.id]: checked ? [...cur, optionId] : cur.filter((x) => x !== optionId) } : { ...a, [q.id]: [optionId] };
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(next));
+      } catch {}
+      return next;
     });
   }
 
@@ -59,6 +68,9 @@ export function QuizPlayer({
       const r = await submitQuizAction(assignmentId, answers);
       if (r.error) setError(r.error);
       else {
+        try {
+          localStorage.removeItem(storageKey);
+        } catch {}
         toast.success(r.message ?? "Đã nộp");
         router.refresh();
       }
@@ -67,6 +79,14 @@ export function QuizPlayer({
 
   return (
     <div className="space-y-4">
+      {canRestore && (
+        <div role="status" className="bg-info-soft text-info rounded-control flex flex-wrap items-center gap-2 px-4 py-3 text-sm font-semibold">
+          Có bài đang làm dở trên máy này.
+          <button type="button" className="underline" onClick={() => setAnswers(local ?? {})}>
+            Khôi phục câu trả lời
+          </button>
+        </div>
+      )}
       {mode === "submitted" && (
         <p className="bg-info-soft text-info rounded-control px-4 py-3 text-sm font-semibold">
           Đã nộp. Kết quả sẽ hiện khi giáo viên cho phép xem.
@@ -154,4 +174,30 @@ export function QuizPlayer({
       )}
     </div>
   );
+}
+
+function subscribeStorage(cb: () => void) {
+  window.addEventListener("storage", cb);
+  return () => window.removeEventListener("storage", cb);
+}
+
+function readLocal(key: string) {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function parseAnswers(raw: string | null): Record<string, string[]> | null {
+  if (!raw) return null;
+  try {
+    const v = JSON.parse(raw) as unknown;
+    if (!v || typeof v !== "object" || Array.isArray(v)) return null;
+    const out: Record<string, string[]> = {};
+    for (const [k, ids] of Object.entries(v)) if (Array.isArray(ids)) out[k] = ids.filter((x): x is string => typeof x === "string");
+    return out;
+  } catch {
+    return null;
+  }
 }

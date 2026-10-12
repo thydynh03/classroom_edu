@@ -14,7 +14,7 @@ import { findClassByCode, joinClass } from "@/server/services/classes";
 import { rateLimit } from "@/server/rate-limit";
 import { passwordSchema, usernameSchema } from "@/server/validation/auth";
 import { type ActionState, fieldErrorsFrom, formToObject } from "@/lib/action";
-import { headers } from "next/headers";
+import { clientIp } from "@/server/client-ip";
 import { sql } from "drizzle-orm";
 
 /** Xem xong hoặc bỏ qua hướng dẫn lần đầu: lưu lại để lần sau không tự hiện. */
@@ -41,7 +41,7 @@ export async function joinWithCodeAction(code: string): Promise<ActionState> {
   const actor = await getActor();
   if (!actor) redirect(`/join/${encodeURIComponent(code)}`);
   if (actor.role !== "STUDENT") return { error: "Chỉ tài khoản học sinh mới tham gia lớp bằng mã." };
-  if (!rateLimit(`join:${actor.id}`, 20, 15 * 60_000)) return { error: "Bạn thử quá nhiều lần. Đợi một lát." };
+  if (!(await rateLimit(`join:${actor.id}`, 20, 15 * 60_000))) return { error: "Bạn thử quá nhiều lần. Đợi một lát." };
   const cls = await findClassByCode(code);
   if (!cls) return { error: "Mã lớp không đúng hoặc lớp đã tắt tham gia bằng mã." };
   await joinClass(actor.id, cls.id);
@@ -59,8 +59,8 @@ const joinSignupSchema = z.strictObject({
 export async function joinSignupAction(_: ActionState, fd: FormData): Promise<ActionState> {
   const parsed = joinSignupSchema.safeParse(formToObject(fd));
   if (!parsed.success) return { fieldErrors: fieldErrorsFrom(parsed.error.issues) };
-  const ip = (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
-  if (!rateLimit(`join-signup:${ip}`, 10, 60 * 60_000)) return { error: "Quá nhiều lượt đăng ký từ máy này. Thử lại sau." };
+  const ip = await clientIp();
+  if (!(await rateLimit(`join-signup:${ip}`, 10, 60 * 60_000))) return { error: "Quá nhiều lượt đăng ký từ máy này. Thử lại sau." };
   const cls = await findClassByCode(parsed.data.code);
   if (!cls) return { error: "Mã lớp không đúng hoặc lớp đã tắt tham gia bằng mã." };
   const [taken] = await db

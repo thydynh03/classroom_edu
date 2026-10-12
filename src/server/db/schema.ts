@@ -80,6 +80,8 @@ export const users = pgTable(
     approvedAt: timestamp("approved_at", { withTimezone: true }),
     /** Đã xem xong (hoặc bỏ qua) hướng dẫn lần đầu đăng nhập */
     tourCompletedAt: timestamp("tour_completed_at", { withTimezone: true }),
+    /** Lần cuối gửi email tổng hợp nhắc việc (tối đa 1 email/ngày/người) */
+    lastReminderEmailAt: timestamp("last_reminder_email_at", { withTimezone: true }),
     createdBy: uuid("created_by"),
     createdAt: createdAt(),
     updatedAt: updatedAt(),

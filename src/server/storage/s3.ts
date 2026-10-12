@@ -1,6 +1,7 @@
 import "server-only";
 import {
   CreateBucketCommand,
+  DeleteObjectCommand,
   GetObjectCommand,
   HeadBucketCommand,
   HeadObjectCommand,
@@ -89,4 +90,9 @@ export async function streamObject(key: string): Promise<AsyncIterable<Uint8Arra
   const body = r.Body as unknown as AsyncIterable<Uint8Array> | undefined;
   if (!body) throw new Error("Không đọc được object");
   return body;
+}
+
+/** Xóa object (dọn file upload dở dang). Không ném lỗi nếu object không tồn tại. */
+export async function deleteObject(key: string) {
+  await s3().send(new DeleteObjectCommand({ Bucket: bucket(), Key: key }));
 }

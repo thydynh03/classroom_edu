@@ -106,6 +106,18 @@ export async function removeStudentAction(classId: string, studentId: string) {
   revalidatePath(`/teacher/classes/${classId}`);
 }
 
+const fullNameSchema = z.string().trim().min(2, "Họ tên cần ít nhất 2 ký tự").max(100, "Họ tên quá dài");
+
+export async function renameStudentAction(classId: string, studentId: string, fullName: string): Promise<ActionState> {
+  const actor = await teacher();
+  const parsed = fullNameSchema.safeParse(fullName);
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+  const r = await guard(() => classSvc.renameStudent(actor, classId, String(studentId), parsed.data.replace(/\s+/g, " ")));
+  if (r && typeof r === "object" && "error" in r) return r;
+  revalidatePath(`/teacher/classes/${classId}`);
+  return { ok: true, message: "Đã sửa họ tên." };
+}
+
 export async function resetStudentPasswordAction(classId: string, studentId: string): Promise<{ tempPassword?: string; error?: string }> {
   const actor = await teacher();
   const r = await guard(() => classSvc.resetStudentPassword(actor, classId, String(studentId)));

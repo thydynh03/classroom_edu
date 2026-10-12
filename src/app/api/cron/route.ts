@@ -1,5 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
 import { runScheduledPublishing, scanDeadlines } from "@/server/jobs/deadlines";
+import { cleanupExpired } from "@/server/jobs/maintenance";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -12,10 +13,14 @@ function authorized(header: string | null) {
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
-/** Vercel Cron (và cron ngoài như cron-job.org) gọi: đăng bài theo lịch + nhắc hạn + gửi email chờ. */
+/**
+ * Vercel Cron và cron ngoài (Cloudflare Workers Cron Triggers, mỗi 10–15 phút — xem docs/HANDOVER.md) gọi:
+ * đăng bài theo lịch + nhắc hạn + gửi email chờ + dọn dữ liệu hết hạn.
+ */
 export async function GET(req: Request) {
   if (!authorized(req.headers.get("authorization"))) return new Response("Not found", { status: 404 });
   const published = await runScheduledPublishing();
   const deadlines = await scanDeadlines();
-  return Response.json({ published, deadlines });
+  const cleanup = await cleanupExpired();
+  return Response.json({ published, deadlines, cleanup });
 }

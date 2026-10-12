@@ -13,6 +13,7 @@ import {
   type BulkResult,
 } from "../../actions";
 import type { AccountRow } from "@/lib/student-accounts-xlsx";
+import { RenameStudent } from "./rename-student";
 import { Field, FormAlert } from "@/components/forms/field";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { Label } from "@/components/ui/label";
@@ -304,6 +305,7 @@ export function StudentsPanel({
                             <span className={cn("rounded-full px-2 py-0.5 font-semibold", st.tone)}>{st.label}</span>
                           </p>
                         </div>
+                        <RenameStudent classId={classId} studentId={s.id} fullName={s.fullName} />
                         <Button
                           variant="ghost"
                           size="sm"

@@ -8,7 +8,11 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { FileList, FileUploader, type UploadedFileInfo } from "@/components/domain/file-uploader";
+import {
+  FileList,
+  FileUploader,
+  type UploadedFileInfo,
+} from "@/components/domain/file-uploader";
 import { saveDraftAction, submitAction, unsubmitAction } from "../../actions";
 
 export function WrittenPanel({
@@ -38,7 +42,13 @@ export function WrittenPanel({
   const [error, setError] = React.useState<string | null>(null);
   const [pending, start] = useTransition();
   const dirty = React.useRef(false);
-  const online = React.useSyncExternalStore(subscribeOnline, () => navigator.onLine, () => true);
+  // Tăng mỗi lần sửa: lượt lưu chỉ coi là "đã lưu hết" nếu trong lúc chờ server không có ai gõ thêm.
+  const editSeq = React.useRef(0);
+  const online = React.useSyncExternalStore(
+    subscribeOnline,
+    () => navigator.onLine,
+    () => true
+  );
   const offline = !online || saveFailed;
   const localDraft = React.useSyncExternalStore(
     subscribeStorage,
@@ -49,22 +59,28 @@ export function WrittenPanel({
         return null;
       }
     },
-    () => null,
+    () => null
   );
   const canRestore = canEdit && !!localDraft && localDraft !== content;
 
   const save = React.useCallback(async () => {
     if (!dirty.current || !canEdit) return;
     setSaving(true);
+    const seq = editSeq.current;
     try {
-      const r = await saveDraftAction(assignmentId, { content, fileIds: files.map((f) => f.id) });
+      const r = await saveDraftAction(assignmentId, {
+        content,
+        fileIds: files.map((f) => f.id),
+      });
       if (r.error) setError(r.error);
       else {
-        dirty.current = false;
         setSavedAt(new Date());
-        try {
-          localStorage.removeItem(storageKey);
-        } catch {}
+        if (editSeq.current === seq) {
+          dirty.current = false;
+          try {
+            localStorage.removeItem(storageKey);
+          } catch {}
+        }
       }
       setSaveFailed(false);
     } catch {
@@ -87,7 +103,10 @@ export function WrittenPanel({
   function submit() {
     setError(null);
     start(async () => {
-      const r = await submitAction(assignmentId, { content, fileIds: files.map((f) => f.id) });
+      const r = await submitAction(assignmentId, {
+        content,
+        fileIds: files.map((f) => f.id),
+      });
       if (r.error) setError(r.error);
       else {
         try {
@@ -102,9 +121,15 @@ export function WrittenPanel({
   if (!canEdit) {
     return (
       <div className="space-y-3">
-        {content.trim() && <p className="bg-surface-2 rounded-[14px] p-3 text-sm whitespace-pre-wrap">{content}</p>}
+        {content.trim() && (
+          <p className="bg-surface-2 rounded-[14px] p-3 text-sm whitespace-pre-wrap">
+            {content}
+          </p>
+        )}
         <FileList files={files} />
-        {!content.trim() && files.length === 0 && <p className="text-muted text-sm">Chưa có bài làm.</p>}
+        {!content.trim() && files.length === 0 && (
+          <p className="text-muted text-sm">Chưa có bài làm.</p>
+        )}
         {status === "SUBMITTED" ? (
           <Button
             variant="outline"
@@ -121,8 +146,12 @@ export function WrittenPanel({
             <Undo2 aria-hidden="true" /> Rút lại để sửa
           </Button>
         ) : (
-          editBlockedReason && status !== "GRADED" && status !== "RETURNED" && (
-            <p className="bg-danger-soft text-danger rounded-control px-3 py-2 text-sm font-medium">{editBlockedReason}</p>
+          editBlockedReason &&
+          status !== "GRADED" &&
+          status !== "RETURNED" && (
+            <p className="bg-danger-soft text-danger rounded-control px-3 py-2 text-sm font-medium">
+              {editBlockedReason}
+            </p>
           )
         )}
       </div>
@@ -132,13 +161,17 @@ export function WrittenPanel({
   return (
     <div className="space-y-4">
       {canRestore && (
-        <div role="status" className="bg-info-soft text-info rounded-control flex flex-wrap items-center gap-2 px-3 py-2 text-sm font-semibold">
+        <div
+          role="status"
+          className="bg-info-soft text-info rounded-control flex flex-wrap items-center gap-2 px-3 py-2 text-sm font-semibold"
+        >
           Có bản nháp chưa gửi lên máy chủ trên máy này.
           <button
             type="button"
             className="underline"
             onClick={() => {
               dirty.current = true;
+              editSeq.current++;
               setContent(localDraft ?? "");
             }}
           >
@@ -147,8 +180,12 @@ export function WrittenPanel({
         </div>
       )}
       {offline && (
-        <p role="status" className="bg-warning-soft text-warning rounded-control flex items-center gap-2 px-3 py-2 text-sm font-semibold">
-          <CloudOff className="size-4" aria-hidden="true" /> Mất kết nối. Bài viết vẫn được lưu trên máy này.
+        <p
+          role="status"
+          className="bg-warning-soft text-warning rounded-control flex items-center gap-2 px-3 py-2 text-sm font-semibold"
+        >
+          <CloudOff className="size-4" aria-hidden="true" /> Mất kết nối. Bài
+          viết vẫn được lưu trên máy này.
         </p>
       )}
       <div className="space-y-1.5">
@@ -159,6 +196,7 @@ export function WrittenPanel({
           value={content}
           onChange={(e) => {
             dirty.current = true;
+            editSeq.current++;
             setContent(e.target.value);
           }}
           onBlur={save}
@@ -171,20 +209,48 @@ export function WrittenPanel({
         value={files}
         onChange={(f) => {
           dirty.current = true;
+          editSeq.current++;
           setFiles(f);
         }}
       />
-      <p className="text-muted flex items-center gap-1.5 text-xs font-semibold" aria-live="polite">
-        <span className={saving ? "bg-warning size-2 rounded-full" : "bg-success size-2 rounded-full"} aria-hidden="true" />
-        {saving ? "Đang lưu nháp…" : savedAt ? `Nháp đã lưu lúc ${savedAt.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}` : "Nháp tự lưu khi bạn gõ"}
+      <p
+        className="text-muted flex items-center gap-1.5 text-xs font-semibold"
+        aria-live="polite"
+      >
+        <span
+          className={
+            saving
+              ? "bg-warning size-2 rounded-full"
+              : "bg-success size-2 rounded-full"
+          }
+          aria-hidden="true"
+        />
+        {saving
+          ? "Đang lưu nháp…"
+          : savedAt
+            ? `Nháp đã lưu lúc ${savedAt.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}`
+            : "Nháp tự lưu khi bạn gõ"}
       </p>
-      {error && <p role="alert" className="bg-danger-soft text-danger rounded-control px-3 py-2 text-sm font-medium">{error}</p>}
+      {error && (
+        <p
+          role="alert"
+          className="bg-danger-soft text-danger rounded-control px-3 py-2 text-sm font-medium"
+        >
+          {error}
+        </p>
+      )}
       <div className="bg-surface border-border sticky bottom-24 z-10 flex items-center gap-3 rounded-[18px] border p-3 shadow-lg md:static md:border-0 md:p-0 md:shadow-none">
         <p className="text-muted text-xs md:hidden">
           Hạn nộp<b className="text-warning block text-sm">{dueLabelText}</b>
         </p>
-        <Button className="flex-1" size="lg" disabled={pending || offline} onClick={submit}>
-          <Send aria-hidden="true" /> {status === "RETURNED" ? "Nộp lại" : "Nộp bài"}
+        <Button
+          className="flex-1"
+          size="lg"
+          disabled={pending || offline}
+          onClick={submit}
+        >
+          <Send aria-hidden="true" />{" "}
+          {status === "RETURNED" ? "Nộp lại" : "Nộp bài"}
         </Button>
       </div>
     </div>

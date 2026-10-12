@@ -1,7 +1,7 @@
 "use server";
 
 import { and, eq, gt, isNull, or, sql } from "drizzle-orm";
-import { headers } from "next/headers";
+import { clientIp } from "@/server/client-ip";
 import { redirect } from "next/navigation";
 import { db } from "@/server/db/client";
 import { authTokens, users } from "@/server/db/schema";
@@ -38,18 +38,13 @@ function emailVerificationRequired() {
   return process.env.REQUIRE_EMAIL_VERIFICATION === "true";
 }
 
-async function clientIp() {
-  const h = await headers();
-  return h.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
-}
-
 export async function loginAction(_: ActionState, fd: FormData): Promise<ActionState> {
   const parsed = loginSchema.safeParse(formToObject(fd));
   if (!parsed.success) return { fieldErrors: fieldErrorsFrom(parsed.error.issues) };
   const { identifier, password } = parsed.data;
 
   const ip = await clientIp();
-  if (!rateLimit(`login:ip:${ip}`, 30, 15 * 60_000)) {
+  if (!(await rateLimit(`login:ip:${ip}`, 30, 15 * 60_000))) {
     return { error: "Bạn thử quá nhiều lần. Đợi 15 phút rồi thử lại." };
   }
 
@@ -75,14 +70,12 @@ export async function loginAction(_: ActionState, fd: FormData): Promise<ActionS
   }
   const ok = await verifyPassword(user.passwordHash, password);
   if (!ok) {
-    const failed = user.failedLogins + 1;
-    await db
-      .update(users)
-      .set({
-        failedLogins: failed >= MAX_FAILED ? 0 : failed,
-        lockedUntil: failed >= MAX_FAILED ? new Date(Date.now() + LOCK_MINUTES * 60_000) : null,
-      })
-      .where(eq(users.id, user.id));
+    // Tăng bộ đếm NGUYÊN TỬ trong DB (đoán mật khẩu song song không vượt được mốc khóa). Đủ mốc thì khóa và đếm lại.
+    await db.execute(sql`
+      update users set
+        failed_logins = case when failed_logins + 1 >= ${MAX_FAILED} then 0 else failed_logins + 1 end,
+        locked_until = case when failed_logins + 1 >= ${MAX_FAILED} then now() + make_interval(mins => ${LOCK_MINUTES}) else locked_until end
+      where id = ${user.id}`);
     return { error: GENERIC_LOGIN_ERROR };
   }
   if (user.status !== "ACTIVE") return { error: GENERIC_LOGIN_ERROR };
@@ -105,7 +98,7 @@ export async function logoutAction() {
 export async function registerAction(_: ActionState, fd: FormData): Promise<ActionState> {
   const parsed = registerSchema.safeParse(formToObject(fd));
   if (!parsed.success) return { fieldErrors: fieldErrorsFrom(parsed.error.issues) };
-  if (!rateLimit(`register:${await clientIp()}`, 5, 60 * 60_000)) {
+  if (!(await rateLimit(`register:${await clientIp()}`, 5, 60 * 60_000))) {
     return { error: "Bạn đăng ký quá nhiều lần. Thử lại sau." };
   }
   const { email, username, fullName, password } = parsed.data;
@@ -203,7 +196,7 @@ export async function forgotPasswordAction(_: ActionState, fd: FormData): Promis
       "Nếu email này có trong hệ thống, bạn sẽ nhận được liên kết đặt lại mật khẩu. Học sinh không có email hãy nhờ giáo viên cấp lại mật khẩu.",
   };
   if (!email.includes("@")) return { fieldErrors: { email: "Email không hợp lệ" } };
-  if (!rateLimit(`forgot:${await clientIp()}`, 5, 15 * 60_000)) return done;
+  if (!(await rateLimit(`forgot:${await clientIp()}`, 5, 15 * 60_000))) return done;
   const [user] = await db
     .select({ id: users.id, email: users.email, status: users.status })
     .from(users)

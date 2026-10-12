@@ -97,6 +97,13 @@ export function startScheduler() {
     () => runScheduledPublishing().catch((e) => console.error("[jobs] đăng theo lịch lỗi", (e as Error).message)),
     60_000,
   );
+  setInterval(
+    () =>
+      import("./maintenance")
+        .then((m) => m.cleanupExpired())
+        .catch((e) => console.error("[jobs] dọn dữ liệu lỗi", (e as Error).message)),
+    60 * 60_000,
+  );
 }
 
 let lastLazyRun = 0;

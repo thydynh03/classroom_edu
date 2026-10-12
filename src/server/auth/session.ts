@@ -5,6 +5,7 @@ import { cache } from "react";
 import { db } from "@/server/db/client";
 import { sessions, users } from "@/server/db/schema";
 import { newToken, sha256 } from "./tokens";
+import { clientIp } from "@/server/client-ip";
 
 const SESSION_DAYS = 14;
 const COOKIE =
@@ -26,12 +27,13 @@ export type Actor = {
 export async function createSession(userId: string) {
   const token = newToken();
   const h = await headers();
+  const ip = await clientIp();
   const expiresAt = new Date(Date.now() + SESSION_DAYS * 86400_000);
   await db.insert(sessions).values({
     userId,
     tokenHash: sha256(token),
     userAgent: h.get("user-agent")?.slice(0, 300) ?? null,
-    ip: h.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
+    ip: ip === "local" ? null : ip,
     expiresAt,
   });
   const jar = await cookies();
