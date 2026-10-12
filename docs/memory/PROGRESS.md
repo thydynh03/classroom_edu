@@ -54,6 +54,16 @@ Cập nhật sau mỗi task. `[x]` xong · `[~]` đang làm / dở · `[ ]` chư
 - [ ] Deploy thật lên Render + R2 (cần tài khoản và secret của người dùng)
 - [x] Trang quản trị `/admin`: người dùng (tìm, lọc, khóa/mở, gỡ khóa tạm, cấp mật khẩu tạm), tạo giáo viên, nhật ký
 
+## Bàn giao (plan: docs/audit/2026-10-12-handover-audit.md)
+
+- [x] H0 (phần code): `pnpm db:handover` (xóa dữ liệu, giữ admin, tạo GV/HS/lớp/bài mẫu), bỏ seed-demo khỏi build, `docs/HANDOVER.md`, `.env.example`
+- [ ] H0 (phần vận hành, người dùng làm): backup + chạy `db:handover` trên production, xóa bucket R2, cài R2 + Resend + Cloudflare Workers Cron, đặt biến Vercel, đổi secret (kể cả API key Resend đã dán vào chat), Vercel Pro
+- [x] H0.5 chặn tạo tài khoản trái phép & leo quyền (trigger DB, một cửa, `admin:create`, lời mời HS, giới hạn cấp lại mật khẩu) — còn: step-up re-auth cho admin, Postgres role riêng cho app
+- [x] H1 lỗi đồng thời, rate limit Postgres, email gộp + hạn mức, tự lưu, thống kê, sửa tên HS, dọn dẹp
+- [x] Admin: keepalive DB chỉnh được ở `/admin/settings`
+- [~] H2 UX mobile: xong loading/error/404/global-error tiếng Việt, tab bar có nhãn + 44px, PWA manifest + icon, nút "Nhắc các em chưa nộp", header admin mobile, E2E mobile. Còn: HEIC→JPEG, loại bài "Tài liệu", trang Lịch HS, Web Push
+- [ ] H3 observability (/admin/ops p95/p99, lỗi, mất request) · H4 theo dõi hành vi · H5 khung trả phí + yêu cầu mở khóa · H6 tính năng trả phí · H7 load test
+
 ## Còn mở / Phase 2 ưu tiên
 
 - Rubric, nhiều lượt làm quiz, co-teacher, xuất bảng điểm CSV.
@@ -72,6 +82,7 @@ Cập nhật sau mỗi task. `[x]` xong · `[~]` đang làm / dở · `[ ]` chư
 - 2026-09-29: Landing/auth bỏ nhánh giảm chuyển động: mọi hiệu ứng chạy như nhau trên mọi máy (xem DECISIONS). Đã push lên main.
 - 2026-09-29: App GV/HS dùng chung bảng màu cam đất + kem với landing (primary #B93C0B đạt AA). Dashboard GV/HS luôn hiện khung, ô không có số liệu có placeholder; GV chưa có lớp thấy 3 bước bắt đầu. Tài khoản dùng thử demo.gv / demo.hs seed khi deploy (scripts/seed-demo.ts, mật khẩu ở demo-accounts.local.md). Tab Học sinh: nhập họ tên từ Excel, tải file Excel mật khẩu tạm, xuất danh sách lớp, tìm kiếm, chọn nhiều em để cấp lại mật khẩu, trạng thái tài khoản. Hướng dẫn từng bước lần đầu đăng nhập cho GV/HS (làm tối xung quanh, Bỏ qua/Tiếp, phím Esc/←/→), lưu users.tour_completed_at, xem lại ở Tài khoản & bảo mật. Verify: lint, typecheck, 60 unit, 26 integration, E2E 9/9, build pass.
 - 2026-09-29: Đã push 0c38c87 (màu, dashboard trống, Excel HS, tour); Vercel log: migrate xong, seed-demo tạo demo.gv/demo.hs trên production.
+- 2026-10-12: Code theo plan: H0.5, H1, H0 (code), keepalive admin, phần lớn H2. Verify: lint, typecheck, 67 unit, 54 integration (Postgres local qua INTEGRATION_DATABASE_URL), E2E 15 pass/3 skip (Chromium có sẵn), next build pass.
 - 2026-10-12: Người dùng chốt R2 (storage) + Resend (email) → DECISIONS. Plan thêm H0.5 (chặn tạo tài khoản trái phép/leo quyền, mục 12) và mục 13 (checklist R2/Resend, giới hạn 100 email/ngày). Sửa README: R2 phải dùng `S3_FORCE_PATH_STYLE=true` (LESSONS).
 - 2026-10-12: Audit bàn giao + plan H0–H7 ở `docs/audit/2026-10-12-handover-audit.md` (chưa sửa code, chưa xóa dữ liệu; chờ người dùng chốt mục 11). Verify: lint, typecheck, 62 unit pass; test:int không chạy được (container audit không có Docker daemon).
 - 2026-09-29: GV tự đăng ký phải chờ admin duyệt (approved_at, /pending-approval, mục "Giáo viên chờ duyệt" ở /admin, TEACHER_AUTO_APPROVE_DOMAINS). Verify: lint, typecheck, 62 unit, 27 integration, E2E 10/10. Đã push lên main. Production cần có admin (BOOTSTRAP_ADMIN_*) để duyệt.

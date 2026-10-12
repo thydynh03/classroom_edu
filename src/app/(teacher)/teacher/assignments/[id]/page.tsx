@@ -11,7 +11,7 @@ import { LinkButton, PageHeader, Panel } from "@/components/domain/page-parts";
 import { dueLabel, shortDateTime } from "@/lib/dates";
 import { formatScore } from "@/lib/format";
 import { requestNow } from "@/lib/now";
-import { ArchiveButton, DeleteDraftButton, PublishButton, ReturnAllButton, ScheduleControl } from "./assignment-actions";
+import { ArchiveButton, DeleteDraftButton, PublishButton, RemindMissingButton, ReturnAllButton, ScheduleControl } from "./assignment-actions";
 import { toLocalInputValue } from "@/lib/dates";
 
 export default async function TeacherAssignmentPage({ params }: { params: Promise<{ id: string }> }) {
@@ -76,11 +76,14 @@ export default async function TeacherAssignmentPage({ params }: { params: Promis
         <Panel
           title={`Học sinh (${roster.length})`}
           action={
-            <div className="flex gap-2">
+            <div className="flex flex-wrap justify-end gap-2">
               {pending > 0 && a.type === "WRITTEN" && (
                 <LinkButton href={`/teacher/grading/${a.id}`} className="h-8 px-3 text-xs">
                   Chấm {pending} bài
                 </LinkButton>
+              )}
+              {a.status === "PUBLISHED" && roster.length - submitted > 0 && (a.allowLate || a.dueAt.getTime() > requestNow()) && (
+                <RemindMissingButton id={a.id} count={roster.length - submitted} />
               )}
               {gradedNotReturned > 0 && <ReturnAllButton id={a.id} count={gradedNotReturned} />}
             </div>

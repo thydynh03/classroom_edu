@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Archive, Send, Trash2, Undo2 } from "lucide-react";
+import { Archive, BellRing, Send, Trash2, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,6 +25,7 @@ import {
   deleteAssignmentAction,
   publishAssignmentAction,
   returnAllAction,
+  remindMissingAction,
 } from "../../actions";
 
 export function PublishButton({ id }: { id: string }) {
@@ -141,5 +142,27 @@ export function ScheduleControl({ id, scheduledLabel, defaultValue }: { id: stri
         Lên lịch
       </Button>
     </form>
+  );
+}
+
+/** Nhắc HS chưa nộp (thông báo trong app + email gộp nếu em có email). */
+export function RemindMissingButton({ id, count }: { id: string; count: number }) {
+  const [pending, start] = useTransition();
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      className="h-8 px-3 text-xs"
+      disabled={pending}
+      onClick={() =>
+        start(async () => {
+          const r = await remindMissingAction(id);
+          if (r.error) toast.error(r.error);
+          else toast.success(r.message);
+        })
+      }
+    >
+      <BellRing aria-hidden="true" /> Nhắc {count} em chưa nộp
+    </Button>
   );
 }

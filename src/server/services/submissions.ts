@@ -7,6 +7,7 @@ import {
   classes,
   files,
   gradeEvents,
+  notifications,
   submissionFiles,
   submissions,
   users,
@@ -428,4 +429,44 @@ export async function gradingQueue(actor: Actor) {
     .where(and(eq(submissions.status, "SUBMITTED"), ne(assignments.status, "ARCHIVED")))
     .groupBy(assignments.id, classes.name, classes.color)
     .orderBy(sql`min(${submissions.submittedAt})`);
+}
+
+const REMIND_WINDOW_MS = 6 * 3600_000;
+
+/**
+ * GV bấm "Nhắc các em chưa nộp": thông báo (in-app + email gộp) cho HS đang ở lớp chưa nộp bài.
+ * Mỗi em tối đa 1 lần nhắc / 6 giờ cho mỗi bài (dedupe theo khung giờ). Trả về số em được nhắc mới.
+ */
+export async function remindMissing(actor: Actor, assignmentId: string, now = new Date()) {
+  const { a, cls } = await requireAssignmentForTeacher(actor, assignmentId);
+  if (a.status !== "PUBLISHED") throw new UserError("Chỉ nhắc được bài đã đăng.");
+  if (now > a.dueAt && !a.allowLate) throw new UserError("Đã quá hạn và bài không nhận nộp trễ.");
+  const rows = await db
+    .select({ id: classMembers.userId })
+    .from(classMembers)
+    .leftJoin(submissions, and(eq(submissions.assignmentId, a.id), eq(submissions.studentId, classMembers.userId)))
+    .where(
+      and(
+        eq(classMembers.classId, a.classId),
+        eq(classMembers.role, "STUDENT"),
+        eq(classMembers.status, "ACTIVE"),
+        sql`(${submissions.id} is null or ${submissions.status} = 'DRAFT')`,
+      ),
+    );
+  if (!rows.length) return 0;
+  const bucket = Math.floor(now.getTime() / REMIND_WINDOW_MS);
+  const inserted = await db
+    .insert(notifications)
+    .values(
+      rows.map((r) => ({
+        recipientId: r.id,
+        type: "ASSIGNMENT_REMINDER",
+        title: `${actor.fullName} nhắc bạn nộp bài: ${a.title} (${cls.name})`,
+        href: `/student/assignments/${a.id}`,
+        dedupeKey: `remind:${a.id}:${r.id}:${bucket}`,
+      })),
+    )
+    .onConflictDoNothing()
+    .returning({ id: notifications.id });
+  return inserted.length;
 }

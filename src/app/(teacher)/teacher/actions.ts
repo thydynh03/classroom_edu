@@ -258,3 +258,10 @@ export async function returnAllAction(assignmentId: string): Promise<ActionState
   revalidatePath("/teacher/grading", "layout");
   return { ok: true, message: n ? `Đã trả ${n} bài.` : "Không có bài nào đã chấm mà chưa trả." };
 }
+
+export async function remindMissingAction(assignmentId: string): Promise<ActionState> {
+  const actor = await teacher();
+  const r = await guard(() => subSvc.remindMissing(actor, String(assignmentId)));
+  if (typeof r !== "number") return r;
+  return { ok: true, message: r ? `Đã nhắc ${r} học sinh chưa nộp.` : "Các em chưa nộp đã được nhắc trong 6 giờ qua." };
+}

@@ -90,7 +90,7 @@ export function MobileTabBar({
   return (
     <nav
       className={cn(
-        "fixed bottom-4 inset-x-4 z-40 mx-auto flex max-w-md items-center justify-around rounded-full bg-foreground p-1.5 text-background shadow-2xl transition-all pb-[calc(0.375rem+env(safe-area-inset-bottom,0px))]",
+        "fixed bottom-3 inset-x-3 z-40 mx-auto flex max-w-md items-center gap-1 rounded-[28px] bg-foreground p-1.5 text-background shadow-2xl mb-[env(safe-area-inset-bottom,0px)]",
         className
       )}
       aria-label={`Thanh điều hướng di động ${role === "teacher" ? "giáo viên" : "học sinh"}`}
@@ -114,17 +114,18 @@ export function MobileTabBar({
             }
             aria-current={isActive ? "page" : undefined}
             className={cn(
-              "relative flex items-center justify-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold transition-all focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+              // Luôn hiện nhãn (dễ hiểu hơn icon trơn) và vùng bấm ≥ 44px cho ngón tay.
+              "relative flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-full px-2 py-1.5 text-[11px] leading-tight font-bold transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
               isActive
                 ? "bg-surface text-foreground shadow-xs"
                 : "text-background/70 hover:text-background"
             )}
           >
             <Icon className="size-4.5 shrink-0 stroke-[2]" aria-hidden="true" />
-            {isActive && <span>{tab.label}</span>}
+            <span className="max-w-full truncate">{tab.label}</span>
             {typeof tab.badge === "number" && tab.badge > 0 && !isActive && (
               <span
-                className="absolute top-1 right-1.5 size-2 rounded-full bg-danger ring-2 ring-foreground"
+                className="absolute top-1 right-[calc(50%-1.25rem)] size-2 rounded-full bg-danger ring-2 ring-foreground"
                 aria-hidden="true"
               />
             )}

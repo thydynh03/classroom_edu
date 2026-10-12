@@ -4,6 +4,16 @@ Mỗi mục: ngày · ai gặp · triệu chứng · nguyên nhân · cách trá
 
 ---
 
+**2026-10-12 · Claude · postgres-js** — `db.execute(sql` với tham số `new Date()` lỗi `ERR_INVALID_ARG_TYPE` (Date trong SQL thô).
+Nguyên nhân: tham số `Date` trong `sql` template thô không được drizzle chuyển kiểu như ở query builder.
+Tránh: truyền `date.toISOString()` kèm `::timestamptz`; integration test bắt được nên luôn chạy `pnpm test:int`.
+
+**2026-10-12 · Claude · môi trường test** — Testcontainers không kéo được image (Docker Hub 429); Playwright báo thiếu `chromium_headless_shell-1243`.
+Tránh: integration test dùng Postgres có sẵn qua `INTEGRATION_DATABASE_URL=postgres://…/postgres` (tạo DB tạm rồi xóa). E2E chạy với config cục bộ đặt `launchOptions.executablePath` vào Chromium có sẵn (không commit), không chạy `playwright install`.
+
+**2026-10-12 · Claude · bảo mật** — Audit phát hiện GV chiếm được tài khoản HS bất kỳ: thêm HS bằng username rồi "Cấp lại mật khẩu".
+Tránh: mọi thao tác GV tác động lên tài khoản HS (cấp lại mật khẩu, sửa tên) phải kiểm tra HS chỉ học lớp của GV đó; thêm người vào nhóm phải có sự đồng ý của người đó (lời mời). Test kiểu "phải thất bại" ở `tests/integration/escalation.test.ts`.
+
 **2026-10-12 · Claude · storage/CSP** — README hướng dẫn R2 với `S3_FORCE_PATH_STYLE=false`, sẽ làm hỏng upload và ảnh trên production.
 Nguyên nhân: với `forcePathStyle: false`, SDK sinh presigned URL dạng `https://<bucket>.<account>.r2.cloudflarestorage.com`, còn CSP trong `src/proxy.ts` chỉ cho phép origin của `S3_ENDPOINT` (không có tên bucket ở đầu).
 Tránh: R2 dùng `S3_FORCE_PATH_STYLE=true`; hoặc đặt `S3_PUBLIC_ORIGIN` đúng origin mà presigned URL dùng. Đổi cấu hình storage thì kiểm tra `new URL(await getSignedUrl(...)).origin` có nằm trong CSP không.

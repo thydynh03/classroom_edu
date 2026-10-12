@@ -206,3 +206,19 @@ describe("dọn dẹp", () => {
     expect(after.status).toBe("DELETED");
   });
 });
+
+describe("nhắc HS chưa nộp", () => {
+  it("chỉ GV của lớp; chỉ nhắc em chưa nộp; không nhắc lại trong 6 giờ", async () => {
+    await expect(m.subs.remindMissing(gv2, written)).rejects.toSatisfy((e: unknown) => String((e as { digest?: string }).digest ?? "").includes("404"));
+    await expect(m.subs.remindMissing(hs1, written)).rejects.toSatisfy((e: unknown) => String((e as { digest?: string }).digest ?? "").includes("404"));
+    const now = new Date();
+    const n = await m.subs.remindMissing(gv, written, now);
+    // hs1 chưa nộp bài tự luận; hs2 đã nộp; hs3 đã vào lại lớp ở test "sửa tên" và đã nộp trước đó
+    const roster = await m.subs.assignmentRoster(gv, written);
+    const missing = roster.roster.filter((r) => !r.status || r.status === "DRAFT").length;
+    expect(n).toBe(missing);
+    expect(await m.subs.remindMissing(gv, written, new Date(now.getTime() + 3600_000))).toBe(0);
+    const notes = await m.notif.listNotifications(hs1.id);
+    expect(notes.filter((x) => x.type === "ASSIGNMENT_REMINDER")).toHaveLength(1);
+  });
+});

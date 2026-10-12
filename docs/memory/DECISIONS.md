@@ -4,6 +4,22 @@ Mỗi mục: ngày · quyết định · lý do · phương án đã loại · t
 
 ---
 
+**2026-10-12 · Keepalive DB do admin cấu hình** — Đã làm (người dùng yêu cầu). Bảng `app_settings` (key `keepalive`: bật/tắt, chu kỳ 1–144 giờ, lần ping cuối). Ping chạy trong `/api/cron`, `/api/keepalive` (CRON_SECRET) và scheduler Docker; lần gọi chưa tới hạn thì bỏ qua. App không tự thức được nên vẫn cần lịch gọi ngoài (Vercel Cron hằng ngày / Cloudflare Workers Cron); `/admin/settings` cảnh báo khi quá 2 chu kỳ chưa ping. Loại: ping từ trình duyệt admin (chỉ chạy khi admin mở trang).
+
+**2026-10-12 · Email nhắc việc gộp 1 email/ngày/người + hạn mức theo ngày** — Đã làm. `users.last_reminder_email_at`, bảng `email_sends (day, kind, count)`, `EMAIL_DAILY_LIMIT` (mặc định 100) và `EMAIL_REMINDER_SHARE` (0.7) để luôn còn suất cho email giao dịch. Gửi lỗi thì giãn cách (`email_next_at`), quá 5 lần thì bỏ; hết suất thì để hôm sau, không tính là lỗi.
+
+**2026-10-12 · Rate limit lưu ở Postgres; IP lấy qua `clientIp()`** — Đã làm (thay Map trong bộ nhớ). UPSERT nguyên tử trên bảng `rate_limits`, đúng khi chạy nhiều instance. IP: `CLIENT_IP_HEADER` nếu đặt, `x-real-ip` trên Vercel, còn lại phần tử đầu `x-forwarded-for`. Loại: Redis/Upstash (thêm dịch vụ, chưa cần ở quy mô một trường).
+
+**2026-10-12 · Chặn tạo tài khoản trái phép và leo quyền (H0.5)** — Đã làm (người dùng yêu cầu).
+- Một cửa tạo tài khoản `src/server/auth/accounts.ts`, không hàm nào nhận `role`; unit test fail nếu có `insert(users)` ở chỗ khác.
+- Trigger `users_guard` (drizzle/0005): role không đổi được; INSERT ADMIN cần `SET LOCAL app.allow_admin_insert='on'`; đặt `approved_at` cần `app.allow_teacher_approval='on'`. Không có code app nào bật cờ admin; admin chỉ tạo bằng `pnpm admin:create` hoặc bootstrap.
+- Duyệt GV theo tên miền chỉ sau khi xác minh email thật (bỏ qua khi tắt xác minh).
+- GV không tự thêm HS đã có tài khoản: gửi lời mời (`class_invites`), HS tự đồng ý. GV chỉ cấp lại mật khẩu / sửa tên HS khi mọi lớp HS đang học đều do GV đó dạy; HS nhận thông báo khi bị cấp lại mật khẩu. Khác plan: không bắt buộc `created_by = GV` (HS tự vào lớp bằng mã vẫn được GV của mình cấp lại), vì lời mời có đồng ý đã chặn đường chiếm tài khoản.
+- Admin không cấp lại mật khẩu cho admin khác; không khóa được admin hoạt động cuối cùng. GV chờ duyệt bị `requireActor()` chặn ở mọi nơi trừ trang cho phép rõ (`allowPending`).
+- Chưa làm: hỏi lại mật khẩu cho thao tác nhạy cảm của admin (step-up) và tách Postgres role riêng cho app (ghi trong audit mục 12.3-F, việc của người vận hành).
+
+**2026-10-12 · Bỏ seed dữ liệu demo khi deploy** — Đã làm. Xóa `scripts/seed-demo.ts` khỏi `vercel-build` (thay quyết định 2026-09-29 "Tài khoản dùng thử seed khi deploy"): sau khi xóa dữ liệu bàn giao, deploy không sinh lại `demo.gv`. Dữ liệu mẫu bàn giao tạo bằng `pnpm db:handover`.
+
 **2026-10-12 · Email production: Resend qua SMTP (gói free), dự phòng Brevo** — Đã chốt (người dùng).
 Lý do: code đã gửi bằng nodemailer qua SMTP nên chỉ cần đặt biến `SMTP_*` (`smtp.resend.com:465`, user `resend`, pass = API key), không sửa code. Gói free 3.000 email/tháng, tối đa 100/ngày, 1 tên miền, không chèn logo, không tự tính tiền khi vượt (chỉ tạm dừng gửi). Cần tên miền riêng của khách với SPF/DKIM (và DMARC) trên Cloudflare DNS; không gửi được từ `*.vercel.app`.
 Hệ quả: email giao dịch (xác minh, đặt lại mật khẩu, báo admin) phải được ưu tiên trong giới hạn 100/ngày. Email nhắc HS gộp thành tối đa 1 email/ngày/HS và có `EMAIL_DAILY_LIMIT` (plan H1). Nhắc HS chủ yếu bằng in-app + Web Push. Vượt giới hạn thì đổi biến sang Brevo (free 300/ngày), Resend Pro hoặc Amazon SES.
