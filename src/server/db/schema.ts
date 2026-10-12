@@ -457,3 +457,11 @@ export type ClassRow = typeof classes.$inferSelect;
 export type Assignment = typeof assignments.$inferSelect;
 export type Submission = typeof submissions.$inferSelect;
 export type ClassColor = (typeof classColor.enumValues)[number];
+
+/** Cài đặt hệ thống do admin chỉnh (vd keepalive: ping DB định kỳ để Supabase free không tạm dừng). */
+export const appSettings = pgTable("app_settings", {
+  key: text("key").primaryKey(),
+  value: jsonb("value").$type<Record<string, unknown>>().notNull(),
+  updatedBy: uuid("updated_by").references(() => users.id),
+  updatedAt: updatedAt(),
+});

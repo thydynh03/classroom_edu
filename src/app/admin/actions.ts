@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireActor } from "@/server/auth/guard";
 import * as admin from "@/server/services/admin";
+import * as settings from "@/server/services/settings";
 import { UserError } from "@/server/services/errors";
 import { usernameSchema } from "@/server/validation/auth";
 import { type ActionState, fieldErrorsFrom } from "@/lib/action";
@@ -64,4 +65,29 @@ export async function createTeacherAction(_: CreateTeacherState, fd: FormData): 
   if (!r.ok) return { error: r.error };
   revalidatePath("/admin");
   return { ok: true, tempPassword: r.value, username: parsed.data.username };
+}
+
+const keepaliveSchema = z.strictObject({
+  enabled: z.boolean(),
+  intervalHours: z.coerce
+    .number()
+    .int("Chu kỳ là số giờ nguyên")
+    .min(settings.KEEPALIVE_MIN_HOURS, `Tối thiểu ${settings.KEEPALIVE_MIN_HOURS} giờ`)
+    .max(settings.KEEPALIVE_MAX_HOURS, `Tối đa ${settings.KEEPALIVE_MAX_HOURS} giờ (6 ngày) để luôn dưới mốc 7 ngày của Supabase`),
+});
+
+export async function saveKeepaliveAction(_: ActionState, fd: FormData): Promise<ActionState> {
+  const actor = await adminActor();
+  const parsed = keepaliveSchema.safeParse({ enabled: fd.get("enabled") === "on", intervalHours: String(fd.get("intervalHours") ?? "") });
+  if (!parsed.success) return { fieldErrors: fieldErrorsFrom(parsed.error.issues) };
+  await settings.updateKeepalive(actor, parsed.data);
+  revalidatePath("/admin/settings");
+  return { ok: true, message: "Đã lưu cài đặt." };
+}
+
+export async function pingNowAction(): Promise<ActionState> {
+  const actor = await adminActor();
+  const r = await settings.runKeepalive({ force: true, actor });
+  revalidatePath("/admin/settings");
+  return r.ran && r.ok ? { ok: true, message: "Đã ping database thành công." } : { error: "Ping database thất bại. Xem log Vercel." };
 }

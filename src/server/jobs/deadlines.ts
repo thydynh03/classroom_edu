@@ -99,6 +99,13 @@ export function startScheduler() {
   );
   setInterval(
     () =>
+      import("@/server/services/settings")
+        .then((m) => m.runKeepalive())
+        .catch((e) => console.error("[jobs] keepalive lỗi", (e as Error).message)),
+    15 * 60_000,
+  );
+  setInterval(
+    () =>
       import("./maintenance")
         .then((m) => m.cleanupExpired())
         .catch((e) => console.error("[jobs] dọn dữ liệu lỗi", (e as Error).message)),

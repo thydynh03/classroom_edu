@@ -18,6 +18,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <nav aria-label="Quản trị" className="flex gap-1 text-sm font-semibold">
           <Link href="/admin" className="hover:bg-surface-2 rounded-[10px] px-3 py-1.5">Người dùng</Link>
           <Link href="/admin/audit" className="hover:bg-surface-2 rounded-[10px] px-3 py-1.5">Nhật ký</Link>
+          <Link href="/admin/settings" className="hover:bg-surface-2 rounded-[10px] px-3 py-1.5">Cài đặt</Link>
         </nav>
         <div className="ml-auto flex items-center gap-2">
           <span className="text-muted hidden text-sm sm:inline">{actor.fullName}</span>
