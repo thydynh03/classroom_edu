@@ -88,6 +88,7 @@ export default async function SettingsPage() {
             Đăng xuất khỏi thiết bị này
           </button>
         </form>
+        <p className="text-muted text-center text-xs"><Link href="/privacy" className="underline">Chính sách quyền riêng tư</Link></p>
       </div>
     </main>
   );

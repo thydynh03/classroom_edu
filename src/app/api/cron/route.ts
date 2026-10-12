@@ -3,6 +3,7 @@ import { cleanupExpired } from "@/server/jobs/maintenance";
 import { cronAuthorized } from "@/server/cron-auth";
 import { runKeepalive } from "@/server/services/settings";
 import { flushPush } from "@/server/services/push";
+import { recordJob } from "@/server/observability/errors";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -13,10 +14,13 @@ export const maxDuration = 60;
  */
 export async function GET(req: Request) {
   if (!cronAuthorized(req.headers.get("authorization"))) return new Response("Not found", { status: 404 });
-  const published = await runScheduledPublishing();
-  const deadlines = await scanDeadlines();
-  const cleanup = await cleanupExpired();
-  const push = await flushPush();
-  const keepalive = await runKeepalive();
-  return Response.json({ published, deadlines, cleanup, push, keepalive });
+  const result = await recordJob("cron", async () => {
+    const published = await runScheduledPublishing();
+    const deadlines = await scanDeadlines();
+    const cleanup = await cleanupExpired();
+    const push = await flushPush();
+    const keepalive = await runKeepalive();
+    return { published, deadlines, cleanup, push, keepalive };
+  });
+  return Response.json(result);
 }

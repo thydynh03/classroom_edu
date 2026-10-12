@@ -432,6 +432,7 @@ export default async function Home() {
             <ul className="text-muted mt-4 space-y-2.5 text-sm">
               <li><Link href="/register" className="hover:text-primary transition-colors">Tạo tài khoản giáo viên</Link></li>
               <li><Link href="/login" className="hover:text-primary transition-colors">Đăng nhập</Link></li>
+              <li><Link href="/privacy" className="hover:text-primary transition-colors">Chính sách quyền riêng tư</Link></li>
             </ul>
           </nav>
         </div>

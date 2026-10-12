@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { WrittenPanel } from "./written-panel";
 import { QuizPlayer } from "./quiz-player";
 import { requestNow } from "@/lib/now";
+import { track } from "@/server/observability/events";
 
 export const metadata = { title: "Bài tập · Classroom Edu" };
 
@@ -18,6 +19,7 @@ export default async function StudentAssignmentPage({ params }: { params: Promis
   const actor = await requireActor("STUDENT");
   const { id } = await params;
   const v = await getStudentAssignment(actor, id);
+  await track(actor, "assignment.open", { type: v.a.type });
   const { a, cls, submission: sub } = v;
   const now = requestNow();
   const remaining = a.dueAt.getTime() - now;

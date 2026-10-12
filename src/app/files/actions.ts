@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireActor } from "@/server/auth/guard";
 import { completeUpload, createUpload } from "@/server/services/files";
 import { UserError } from "@/server/services/errors";
+import { track } from "@/server/observability/events";
 
 const createSchema = z.strictObject({
   purpose: z.enum(["ATTACHMENT", "SUBMISSION"]),
@@ -33,7 +34,9 @@ export async function requestUploadAction(input: unknown): Promise<UploadTicket>
 export async function completeUploadAction(fileId: string): Promise<UploadedFile> {
   const actor = await requireActor();
   try {
-    return { ok: true, file: await completeUpload(actor, String(fileId)) };
+    const file = await completeUpload(actor, String(fileId));
+    await track(actor, "upload.complete", { image: file.mime.startsWith("image/") });
+    return { ok: true, file };
   } catch (e) {
     if (e instanceof UserError) return { ok: false, error: e.message };
     throw e;

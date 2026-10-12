@@ -20,6 +20,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Link href="/admin" className="hover:bg-surface-2 rounded-[10px] px-3 py-2">Người dùng</Link>
           <Link href="/admin/audit" className="hover:bg-surface-2 rounded-[10px] px-3 py-2">Nhật ký</Link>
           <Link href="/admin/upgrades" className="hover:bg-surface-2 rounded-[10px] px-3 py-2">Nâng cấp</Link>
+          <Link href="/admin/ops" className="hover:bg-surface-2 rounded-[10px] px-3 py-2">Hệ thống</Link>
+          <Link href="/admin/activity" className="hover:bg-surface-2 rounded-[10px] px-3 py-2">Hành vi</Link>
           <Link href="/admin/settings" className="hover:bg-surface-2 rounded-[10px] px-3 py-2">Cài đặt</Link>
         </nav>
         <div className="ml-auto flex shrink-0 items-center gap-2">

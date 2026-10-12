@@ -14,6 +14,7 @@ import {
   revokeOtherSessions,
 } from "@/server/auth/session";
 import { homeFor } from "@/server/auth/guard";
+import { track } from "@/server/observability/events";
 import { autoApproveTeacher } from "@/server/auth/teacher-approval";
 import { approveTeacherAccount, registerTeacher } from "@/server/auth/accounts";
 import { newToken, sha256 } from "@/server/auth/tokens";
@@ -85,6 +86,7 @@ export async function loginAction(_: ActionState, fd: FormData): Promise<ActionS
 
   await db.update(users).set({ failedLogins: 0, lockedUntil: null }).where(eq(users.id, user.id));
   await createSession(user.id);
+  await track({ id: user.id, role: user.role }, "login");
   const next = String(fd.get("next") ?? "");
   if (user.mustChangePassword) redirect("/change-password");
   redirect(isSafeRedirect(next) ? next : homeFor(user.role));

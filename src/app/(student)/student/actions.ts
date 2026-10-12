@@ -7,6 +7,7 @@ import * as subSvc from "@/server/services/submissions";
 import { respondInvite } from "@/server/services/classes";
 import { UserError } from "@/server/services/errors";
 import type { ActionState } from "@/lib/action";
+import { track } from "@/server/observability/events";
 
 const student = () => requireActor("STUDENT");
 const writtenSchema = z.strictObject({
@@ -38,7 +39,9 @@ export async function submitAction(assignmentId: string, input: { content: strin
   const actor = await student();
   const parsed = writtenSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
-  return run(() => subSvc.submitWritten(actor, assignmentId, parsed.data.content, parsed.data.fileIds), "Đã nộp bài", assignmentId);
+  const r = await run(() => subSvc.submitWritten(actor, assignmentId, parsed.data.content, parsed.data.fileIds), "Đã nộp bài", assignmentId);
+  if (r.ok) await track(actor, "submission.submit", { files: parsed.data.fileIds.length, hasText: parsed.data.content.trim().length > 0 });
+  return r;
 }
 
 export async function unsubmitAction(assignmentId: string): Promise<ActionState> {
@@ -50,7 +53,9 @@ export async function submitQuizAction(assignmentId: string, answers: unknown): 
   const actor = await student();
   const parsed = quizSchema.safeParse(answers);
   if (!parsed.success) return { error: "Câu trả lời không hợp lệ." };
-  return run(() => subSvc.submitQuiz(actor, assignmentId, parsed.data), "Đã nộp bài trắc nghiệm", assignmentId);
+  const r = await run(() => subSvc.submitQuiz(actor, assignmentId, parsed.data), "Đã nộp bài trắc nghiệm", assignmentId);
+  if (r.ok) await track(actor, "quiz.submit");
+  return r;
 }
 
 /** Đồng ý / từ chối lời mời vào lớp (chỉ lời mời của chính mình; id lạ → 404). */

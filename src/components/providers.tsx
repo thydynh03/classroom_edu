@@ -3,6 +3,7 @@
 import * as React from "react";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
+import { TelemetryBeacon } from "@/components/telemetry-beacon";
 
 // Next-themes injects an inline script to prevent FOUC.
 // React 19 logs a false-positive console error: "Encountered a script tag while rendering React component".
@@ -35,6 +36,7 @@ export function Providers({ children, nonce }: { children: React.ReactNode; nonc
     >
       {children}
       <Toaster />
+      <TelemetryBeacon />
     </NextThemesProvider>
   );
 }

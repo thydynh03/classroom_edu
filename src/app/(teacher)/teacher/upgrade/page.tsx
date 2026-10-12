@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/domain/page-parts";
 import { PREMIUM_FEATURES } from "@/lib/premium-features";
 import { cn } from "@/lib/utils";
 import { CancelRequestButton, RequestUpgradeDialog } from "./upgrade-actions";
+import { track } from "@/server/observability/events";
 
 export const metadata = { title: "Nâng cao · Classroom Edu" };
 
@@ -14,6 +15,7 @@ export default async function UpgradePage({ searchParams }: { searchParams: Prom
   const actor = await requireActor("TEACHER");
   const { feature: focus } = await searchParams;
   const [{ requests, grants }, billing] = await Promise.all([myUpgradeState(actor), getBilling()]);
+  await track(actor, "upgrade.view", focus ? { feature: focus.slice(0, 40) } : undefined);
 
   return (
     <>

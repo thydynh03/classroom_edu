@@ -13,6 +13,7 @@ import { importQuiz, QUIZ_IMPORT_MAX_BYTES } from "@/server/services/quiz-import
 import * as gradebookSvc from "@/server/services/gradebook";
 import * as materialSvc from "@/server/services/materials";
 import { kickPush } from "@/server/services/push";
+import { track } from "@/server/observability/events";
 import type { ParseResult } from "@/server/services/quiz-import-parse";
 import { rateLimit } from "@/server/rate-limit";
 import { UserError } from "@/server/services/errors";
@@ -54,6 +55,7 @@ export async function createClassAction(_: ActionState, fd: FormData): Promise<A
   const parsed = classSchema.safeParse(classInput(fd));
   if (!parsed.success) return { fieldErrors: fieldErrorsFrom(parsed.error.issues) };
   const cls = await classSvc.createClass(actor, parsed.data);
+  await track(actor, "class.create");
   redirect(`/teacher/classes/${cls.id}?tab=students`);
 }
 
@@ -171,6 +173,7 @@ export async function createAssignmentAction(_: ActionState, fd: FormData): Prom
   const publishAtRaw = String(fd.get("publishAt") ?? "");
   if (intent === "schedule" && !publishAtRaw) return { fieldErrors: { publishAt: "Chọn thời điểm đăng" } };
   const ids = await asgSvc.createAssignment(actor, parsed.data);
+  await track(actor, "assignment.create", { type: parsed.data.type, classes: ids.length });
   if (parsed.data.type === "WRITTEN") {
     if (intent === "publish") {
       for (const id of ids) await asgSvc.publishAssignment(actor, id);
@@ -261,6 +264,7 @@ export async function saveGradeAction(
   const r = await guard(() => subSvc.saveGrade(actor, submissionId, { ...parsed.data, returnNow: input.returnNow }));
   if (r && typeof r === "object" && "error" in r) return r;
   revalidatePath("/teacher/grading", "layout");
+  await track(actor, input.returnNow ? "grade.return" : "grade.save");
   if (input.returnNow) kickPush();
   return { ok: true, message: input.returnNow ? "Đã trả bài." : "Đã lưu điểm (chưa trả)." };
 }
@@ -304,6 +308,7 @@ export async function requestUpgradeAction(_: ActionState, fd: FormData): Promis
   const r = await guard(() => upgradeSvc.requestUpgrade(actor, parsed.data));
   if (r && typeof r === "object" && "error" in r) return r;
   revalidatePath("/teacher/upgrade");
+  await track(actor, "upgrade.request", { feature: parsed.data.featureKey });
   return { ok: true, message: "Đã gửi yêu cầu. Quản trị viên sẽ liên hệ với bạn để hoàn tất." };
 }
 
@@ -329,6 +334,7 @@ export async function importQuizAction(assignmentId: string, fd: FormData): Prom
   });
   if ("error" in r && !("questions" in r)) return { error: r.error };
   const parsed = r as ParseResult;
+  await track(actor, "quiz.import", { questions: parsed.questions.length, file: file instanceof File && file.size > 0 });
   return { ok: true, questions: parsed.questions, warnings: parsed.warnings };
 }
 
@@ -358,6 +364,7 @@ export async function createMaterialAction(classId: string, _: ActionState, fd: 
   if (!parsed.success) return { fieldErrors: fieldErrorsFrom(parsed.error.issues) };
   if (!parsed.data.body.trim() && !parsed.data.attachmentIds.length) return { fieldErrors: { body: "Viết nội dung hoặc đính kèm ít nhất một file" } };
   await materialSvc.createMaterial(actor, String(classId), parsed.data);
+  await track(actor, "material.create", { files: parsed.data.attachmentIds.length });
   kickPush();
   revalidatePath(`/teacher/classes/${classId}`);
   return { ok: true, message: "Đã đăng tài liệu. Học sinh đã nhận thông báo." };

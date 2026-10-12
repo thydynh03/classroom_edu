@@ -68,7 +68,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <ThemeToggle />
         </div>
         <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center py-10">{children}</div>
-        <p className="text-muted text-center text-xs text-balance">© Classroom Edu · Dành cho giáo viên và học sinh Việt Nam</p>
+        <p className="text-muted text-center text-xs text-balance">© Classroom Edu · Dành cho giáo viên và học sinh Việt Nam · <Link href="/privacy" className="underline">Quyền riêng tư</Link></p>
       </section>
     </main>
   );
