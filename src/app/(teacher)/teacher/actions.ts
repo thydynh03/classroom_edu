@@ -12,6 +12,7 @@ import { FEATURE_KEYS } from "@/lib/premium-features";
 import { importQuiz, QUIZ_IMPORT_MAX_BYTES } from "@/server/services/quiz-import";
 import * as gradebookSvc from "@/server/services/gradebook";
 import * as materialSvc from "@/server/services/materials";
+import { kickPush } from "@/server/services/push";
 import type { ParseResult } from "@/server/services/quiz-import-parse";
 import { rateLimit } from "@/server/rate-limit";
 import { UserError } from "@/server/services/errors";
@@ -104,6 +105,7 @@ export async function inviteStudentAction(classId: string, _: ActionState, fd: F
   const r = await classSvc.inviteExistingStudent(actor, classId, username);
   if (r === "not_found") return { fieldErrors: { username: "Không tìm thấy học sinh với tên đăng nhập này" } };
   if (r === "already") return { fieldErrors: { username: "Học sinh này đã ở trong lớp" } };
+  kickPush();
   return { ok: true, message: `Đã gửi lời mời tới ${username}. Học sinh cần bấm Đồng ý trong mục Lớp học thì mới vào lớp.` };
 }
 
@@ -170,7 +172,10 @@ export async function createAssignmentAction(_: ActionState, fd: FormData): Prom
   if (intent === "schedule" && !publishAtRaw) return { fieldErrors: { publishAt: "Chọn thời điểm đăng" } };
   const ids = await asgSvc.createAssignment(actor, parsed.data);
   if (parsed.data.type === "WRITTEN") {
-    if (intent === "publish") for (const id of ids) await asgSvc.publishAssignment(actor, id);
+    if (intent === "publish") {
+      for (const id of ids) await asgSvc.publishAssignment(actor, id);
+      kickPush();
+    }
     if (intent === "schedule") {
       const r = await guard(async () => {
         for (const id of ids) await asgSvc.scheduleAssignment(actor, id, fromLocalInputValue(publishAtRaw));
@@ -197,6 +202,7 @@ export async function publishAssignmentAction(assignmentId: string): Promise<Act
   const actor = await teacher();
   const r = await guard(() => asgSvc.publishAssignment(actor, assignmentId));
   revalidatePath(`/teacher/assignments/${assignmentId}`);
+  if (!(r && typeof r === "object" && "error" in r)) kickPush();
   return r && typeof r === "object" && "error" in r ? r : { ok: true, message: "Đã đăng bài. Học sinh đã nhận thông báo." };
 }
 
@@ -255,12 +261,14 @@ export async function saveGradeAction(
   const r = await guard(() => subSvc.saveGrade(actor, submissionId, { ...parsed.data, returnNow: input.returnNow }));
   if (r && typeof r === "object" && "error" in r) return r;
   revalidatePath("/teacher/grading", "layout");
+  if (input.returnNow) kickPush();
   return { ok: true, message: input.returnNow ? "Đã trả bài." : "Đã lưu điểm (chưa trả)." };
 }
 
 export async function returnAllAction(assignmentId: string): Promise<ActionState> {
   const actor = await teacher();
   const n = await subSvc.returnAllGraded(actor, assignmentId);
+  if (n) kickPush();
   revalidatePath(`/teacher/assignments/${assignmentId}`);
   revalidatePath("/teacher/grading", "layout");
   return { ok: true, message: n ? `Đã trả ${n} bài.` : "Không có bài nào đã chấm mà chưa trả." };
@@ -270,6 +278,7 @@ export async function remindMissingAction(assignmentId: string): Promise<ActionS
   const actor = await teacher();
   const r = await guard(() => subSvc.remindMissing(actor, String(assignmentId)));
   if (typeof r !== "number") return r;
+  if (r) kickPush();
   return { ok: true, message: r ? `Đã nhắc ${r} học sinh chưa nộp.` : "Các em chưa nộp đã được nhắc trong 6 giờ qua." };
 }
 
@@ -349,6 +358,7 @@ export async function createMaterialAction(classId: string, _: ActionState, fd: 
   if (!parsed.success) return { fieldErrors: fieldErrorsFrom(parsed.error.issues) };
   if (!parsed.data.body.trim() && !parsed.data.attachmentIds.length) return { fieldErrors: { body: "Viết nội dung hoặc đính kèm ít nhất một file" } };
   await materialSvc.createMaterial(actor, String(classId), parsed.data);
+  kickPush();
   revalidatePath(`/teacher/classes/${classId}`);
   return { ok: true, message: "Đã đăng tài liệu. Học sinh đã nhận thông báo." };
 }

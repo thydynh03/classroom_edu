@@ -90,11 +90,16 @@ export function startScheduler() {
   if (started) return;
   started = true;
   const run = () =>
-    scanDeadlines().catch((e) => console.error("[jobs] scanDeadlines lỗi", (e as Error).message));
+    scanDeadlines()
+      .then(() => import("@/server/services/push").then((m) => m.flushPush()))
+      .catch((e) => console.error("[jobs] scanDeadlines lỗi", (e as Error).message));
   setTimeout(run, 10_000);
   setInterval(run, 15 * 60_000);
   setInterval(
-    () => runScheduledPublishing().catch((e) => console.error("[jobs] đăng theo lịch lỗi", (e as Error).message)),
+    () =>
+      runScheduledPublishing()
+        .then((n) => (n ? import("@/server/services/push").then((m) => m.flushPush()) : 0))
+        .catch((e) => console.error("[jobs] đăng theo lịch lỗi", (e as Error).message)),
     60_000,
   );
   setInterval(

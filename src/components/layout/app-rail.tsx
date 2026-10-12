@@ -10,6 +10,7 @@ import {
   ClipboardList,
   Sparkles,
   CalendarCheck,
+  CalendarDays,
   Star,
   Bell,
   GraduationCap,
@@ -83,6 +84,11 @@ export function AppRail({
       label: "Hôm nay",
       href: "/student",
       icon: CalendarCheck,
+    },
+    {
+      label: "Lịch",
+      href: "/student/calendar",
+      icon: CalendarDays,
     },
     {
       label: "Lớp học",

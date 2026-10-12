@@ -7,6 +7,8 @@ import { requireActor, homeFor } from "@/server/auth/guard";
 import { shortDateTime } from "@/lib/dates";
 import { RevokeButton } from "./revoke-button";
 import { logoutAction } from "@/app/(auth)/actions";
+import { PushToggle } from "@/components/push/push-toggle";
+import { pushPublicKey } from "@/server/services/push";
 
 export const metadata = { title: "Tài khoản · Classroom Edu" };
 
@@ -43,6 +45,13 @@ export default async function SettingsPage() {
             <KeyRound className="size-4" aria-hidden="true" /> Đổi mật khẩu
           </Link>
         </section>
+        {pushPublicKey() && (
+          <section className="bg-surface border-border rounded-card border p-5">
+            <h2 className="mb-1 text-[15px] font-bold">Thông báo trên thiết bị này</h2>
+            <p className="text-muted mb-3 text-sm">Nhận nhắc hạn nộp, bài mới, bài được trả ngay trên điện thoại hoặc máy tính, kể cả khi không có email.</p>
+            <PushToggle publicKey={pushPublicKey()} />
+          </section>
+        )}
 
         {actor.role !== "ADMIN" && (
           <section className="bg-surface border-border rounded-card border p-5">

@@ -16,6 +16,8 @@ export function proxy(request: NextRequest) {
     "font-src 'self' data:",
     `connect-src 'self' ${storage}${isDev ? " ws: wss:" : ""}`.trim(),
     `media-src 'self' ${storage}`.trim(),
+    // service worker (Web Push): 'strict-dynamic' bỏ qua 'self' trong script-src nên khai báo riêng
+    "worker-src 'self'",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",

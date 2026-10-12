@@ -12,6 +12,8 @@ import { cn } from "@/lib/utils";
 import { requestNow } from "@/lib/now";
 import { ProductTour } from "@/components/onboarding/product-tour";
 import { STUDENT_TOUR } from "@/components/onboarding/tour-steps";
+import { PushToggle } from "@/components/push/push-toggle";
+import { pushPublicKey } from "@/server/services/push";
 
 export const metadata = { title: "Hôm nay · Classroom Edu" };
 
@@ -43,7 +45,13 @@ export default async function StudentHome({ searchParams }: { searchParams: Prom
     <div className="space-y-6">
       <h1 className="sr-only">Việc cần làm</h1>
       <ProductTour key={replay ? "replay" : "auto"} steps={STUDENT_TOUR} initialOpen={replay || !actor.tourDone} replay={replay} />
+      <PushToggle publicKey={pushPublicKey()} variant="banner" />
 
+      <div className="-mb-3 flex justify-end">
+        <Link href="/student/calendar" className="text-primary text-sm font-semibold hover:underline">
+          Xem lịch hạn nộp
+        </Link>
+      </div>
       <div className="grid grid-cols-7 gap-1.5" aria-hidden="true" data-tour="week">
         {days.map((d, i) => (
           <div

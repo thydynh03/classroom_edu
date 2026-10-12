@@ -2,6 +2,7 @@ import { runScheduledPublishing, scanDeadlines } from "@/server/jobs/deadlines";
 import { cleanupExpired } from "@/server/jobs/maintenance";
 import { cronAuthorized } from "@/server/cron-auth";
 import { runKeepalive } from "@/server/services/settings";
+import { flushPush } from "@/server/services/push";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -15,6 +16,7 @@ export async function GET(req: Request) {
   const published = await runScheduledPublishing();
   const deadlines = await scanDeadlines();
   const cleanup = await cleanupExpired();
+  const push = await flushPush();
   const keepalive = await runKeepalive();
-  return Response.json({ published, deadlines, cleanup, keepalive });
+  return Response.json({ published, deadlines, cleanup, push, keepalive });
 }

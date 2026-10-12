@@ -9,12 +9,14 @@ import { sessions, users } from "@/server/db/schema";
 import { getActor, createSession } from "@/server/auth/session";
 import { requireActor } from "@/server/auth/guard";
 import { signupStudent } from "@/server/auth/accounts";
+import { deletePushSubscription, savePushSubscription, sendTestPush } from "@/server/services/push";
 import { markAllRead } from "@/server/services/notifications";
 import { findClassByCode, joinClass } from "@/server/services/classes";
 import { rateLimit } from "@/server/rate-limit";
 import { passwordSchema, usernameSchema } from "@/server/validation/auth";
 import { type ActionState, fieldErrorsFrom, formToObject } from "@/lib/action";
 import { clientIp } from "@/server/client-ip";
+import { headers } from "next/headers";
 import { sql } from "drizzle-orm";
 
 /** Xem xong hoặc bỏ qua hướng dẫn lần đầu: lưu lại để lần sau không tự hiện. */
@@ -73,4 +75,32 @@ export async function joinSignupAction(_: ActionState, fd: FormData): Promise<Ac
   await joinClass(userId, cls.id);
   await createSession(userId);
   redirect(`/student/classes/${cls.id}`);
+}
+
+const pushSubSchema = z.strictObject({
+  endpoint: z.url().startsWith("https://").max(1000),
+  p256dh: z.string().regex(/^[A-Za-z0-9_-]+=*$/).max(200),
+  auth: z.string().regex(/^[A-Za-z0-9_-]+=*$/).max(100),
+});
+
+/** Lưu thiết bị nhận Web Push của người đang đăng nhập (endpoint do trình duyệt cấp). */
+export async function savePushSubscriptionAction(input: unknown): Promise<ActionState> {
+  const actor = await requireActor();
+  const parsed = pushSubSchema.safeParse(input);
+  if (!parsed.success) return { error: "Đăng ký thông báo không hợp lệ." };
+  await savePushSubscription(actor, parsed.data, (await headers()).get("user-agent"));
+  return { ok: true, message: "Đã bật thông báo trên thiết bị này." };
+}
+
+export async function deletePushSubscriptionAction(endpoint: string): Promise<ActionState> {
+  const actor = await requireActor();
+  await deletePushSubscription(actor, String(endpoint).slice(0, 1000));
+  return { ok: true, message: "Đã tắt thông báo trên thiết bị này." };
+}
+
+export async function sendTestPushAction(): Promise<ActionState> {
+  const actor = await requireActor();
+  if (!(await rateLimit(`push-test:${actor.id}`, 5, 60 * 60_000))) return { error: "Thử lại sau ít phút." };
+  const n = await sendTestPush(actor);
+  return n ? { ok: true, message: "Đã gửi thông báo thử." } : { error: "Không gửi được. Hãy bật lại thông báo trên thiết bị này." };
 }
