@@ -8,18 +8,19 @@ const globalForDb = globalThis as unknown as { pgClient?: ReturnType<typeof post
 function createClient() {
   // postgres() chỉ kết nối khi có truy vấn đầu tiên. Lúc `next build` không có DATABASE_URL,
   // dùng URL giả để import được; khi chạy thật mà thiếu biến thì truy vấn sẽ lỗi rõ ràng.
-  const url = process.env.DATABASE_URL ?? "postgres://missing-database-url:5432/missing";
-  // Serverless: mỗi instance ít kết nối để không vượt giới hạn của Postgres free.
-  // Pooler kiểu transaction (Supabase :6543, pgbouncer) không hỗ trợ prepared statement.
-  // Serverless: instance bị đóng băng giữa các request, pooler cắt kết nối rảnh trong lúc đó. Nếu giữ kết nối cũ,
-  // request đầu tiên sau khi thức dậy ghi vào socket đã chết và treo tới khi function hết giờ (LESSONS 2026-10-12).
-  // idle_timeout đóng kết nối rảnh sớm, max_lifetime thay kết nối định kỳ, connect_timeout để lỗi nhanh thay vì treo.
-  // max_pipeline: 1 — không gửi dồn nhiều truy vấn trên một kết nối. Qua pooler transaction (Supavisor), các truy vấn
-  // chạy song song (Promise.all) bị dồn chung làm backend chờ Bind mãi (active/ClientRead) và cả instance treo (LESSONS 2026-10-13).
-  const serverless = process.env.VERCEL ? { max: 5, max_pipeline: 1, idle_timeout: 10, max_lifetime: 300, connect_timeout: 10 } : { max: 10 };
-  // Pooler kiểu transaction không giữ prepared statement giữa các truy vấn: trên Vercel luôn tắt, không phụ thuộc đuôi URL.
-  const viaPooler = !!process.env.VERCEL || url.includes("pgbouncer=true") || url.includes(":6543");
-  return postgres(url, { ...serverless, prepare: !viaPooler });
+  //
+  // DB_USE_DIRECT_URL="true": app dùng DIRECT_URL (pooler kiểu session, :5432) thay cho DATABASE_URL (pooler transaction, :6543).
+  // Lý do (LESSONS 2026-10-13): postgres.js gửi Parse+Describe+Flush rồi chờ trả lời trước khi gửi Bind cho mọi truy vấn có tham số;
+  // qua pooler transaction của Supabase (Supavisor) trả lời đó thỉnh thoảng không về, backend đứng ở active/ClientRead và request treo.
+  const useSession = process.env.DB_USE_DIRECT_URL === "true" && !!process.env.DIRECT_URL;
+  const url = (useSession ? process.env.DIRECT_URL : process.env.DATABASE_URL) ?? "postgres://missing-database-url:5432/missing";
+  // Serverless: instance bị đóng băng giữa các request và pooler cắt kết nối rảnh trong lúc đó. idle_timeout đóng kết nối rảnh sớm
+  // (cũng để trả backend về cho pooler session, giới hạn 15 trên gói free), max_lifetime thay kết nối định kỳ,
+  // connect_timeout để lỗi nhanh thay vì treo. max_pipeline: 1 — không gửi dồn truy vấn trên một kết nối.
+  const serverless = process.env.VERCEL ? { max: 2, max_pipeline: 1, idle_timeout: 5, max_lifetime: 300, connect_timeout: 10 } : { max: 10 };
+  // Pooler transaction không giữ prepared statement giữa các truy vấn.
+  const viaTransactionPooler = !useSession && (!!process.env.VERCEL || url.includes("pgbouncer=true") || url.includes(":6543"));
+  return postgres(url, { ...serverless, prepare: !viaTransactionPooler });
 }
 
 const client = globalForDb.pgClient ?? createClient();
