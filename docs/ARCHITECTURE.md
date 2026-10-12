@@ -17,6 +17,8 @@ Tài liệu này mô tả code **đang chạy** (cập nhật 28/09/2026 sau khi
 | Jobs         | Vercel: `/api/cron` (CRON_SECRET) + đăng bài lười khi mở trang. Docker: `setInterval` từ `instrumentation.ts` |
 | Email        | nodemailer qua SMTP. Dev: Mailpit (UI :8025). Prod: SMTP của Resend (free 100/ngày; dự phòng Brevo)        |
 | Test         | Vitest (unit), Vitest + Testcontainers (integration), Playwright + axe-core (E2E)                           |
+| Push         | Web Push chuẩn (VAPID, `web-push`), service worker `public/sw.js`                                         |
+| Quan sát     | OpenTelemetry span processor → `request_samples`; `onRequestError` → `error_events`; beacon `/api/telemetry` |
 | Deploy       | Vercel (`vercel.json`, region sin1) + Postgres ngoài. `Dockerfile` giữ cho Render/VPS                        |
 
 Không thêm thư viện ngoài bảng này khi chưa ghi ADR vào `docs/memory/DECISIONS.md`.
@@ -102,7 +104,9 @@ Bảng: `users`, `sessions`, `auth_tokens`, `classes` (có `join_code`), `class_
 - Đổi/đặt lại mật khẩu thu hồi các phiên khác. Token reset/verify: 32 byte, lưu hash, 1 lần, hết hạn 30 phút / 24 giờ.
 - Đề bài, nhận xét là văn bản thuần (React escape) → không có HTML do người dùng nhập.
 - CSP có nonce theo request (`src/proxy.ts`, script `strict-dynamic`). Header khác (`nosniff`, `Referrer-Policy`, `X-Frame-Options`, HSTS prod) trong `next.config.ts`.
-- Rate limit trong bộ nhớ (`src/server/rate-limit.ts`) — đủ cho 1 instance; chuyển Redis khi scale.
+- Rate limit lưu ở Postgres (`rate_limits`, UPSERT nguyên tử) — đúng khi chạy nhiều instance. IP qua `src/server/client-ip.ts`.
+- Tạo tài khoản chỉ qua `src/server/auth/accounts.ts`; trigger `users_guard` (role bất biến, chặn tạo ADMIN/tự duyệt GV). Admin chỉ tạo bằng `pnpm admin:create`. Thao tác nhạy cảm của admin cần xác thực lại trong 15 phút.
+- Tính năng nâng cao chặn ở server bằng `requireFeature` (`src/server/entitlements.ts`), mở khóa theo từng GV.
 
 ## File upload
 

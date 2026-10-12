@@ -39,8 +39,8 @@ beforeAll(async () => {
   hs = await mk("pu.hs");
   hs2 = await mk("pu.hs2");
   hsNoDevice = await mk("pu.hs3");
-  await m.push.savePushSubscription(hs, { endpoint: "https://push.example/1", p256dh: "key", auth: "auth" }, "UA");
-  await m.push.savePushSubscription(hs2, { endpoint: "https://push.example/2", p256dh: "key", auth: "auth" }, "UA");
+  await m.push.savePushSubscription(hs, { endpoint: "https://fcm.googleapis.com/fcm/send/1", p256dh: "key", auth: "auth" }, "UA");
+  await m.push.savePushSubscription(hs2, { endpoint: "https://updates.push.services.mozilla.com/wpush/v2/2", p256dh: "key", auth: "auth" }, "UA");
 });
 
 const note = (recipientId: string, type: "ASSIGNMENT_CREATED" | "SUBMISSION_RECEIVED", title: string) => ({
@@ -85,11 +85,21 @@ describe("web push", () => {
   });
 
   it("thiết bị đổi người đăng nhập: đăng ký chuyển sang người mới, không gửi nhầm người cũ", async () => {
-    await m.push.savePushSubscription(hs2, { endpoint: "https://push.example/1", p256dh: "k2", auth: "a2" }, "UA");
-    const [sub] = await m.db.db.select().from(m.s.pushSubscriptions).where(eq(m.s.pushSubscriptions.endpoint, "https://push.example/1"));
+    await m.push.savePushSubscription(hs2, { endpoint: "https://fcm.googleapis.com/fcm/send/1", p256dh: "k2", auth: "a2" }, "UA");
+    const [sub] = await m.db.db.select().from(m.s.pushSubscriptions).where(eq(m.s.pushSubscriptions.endpoint, "https://fcm.googleapis.com/fcm/send/1"));
     expect(sub.userId).toBe(hs2.id);
     expect(await m.push.hasPushSubscription(hs.id)).toBe(false);
-    await m.push.deletePushSubscription(hs, "https://push.example/1"); // người khác không xóa được
+    await m.push.deletePushSubscription(hs, "https://fcm.googleapis.com/fcm/send/1"); // người khác không xóa được
     expect(await m.push.hasPushSubscription(hs2.id)).toBe(true);
+  });
+});
+
+describe("chống SSRF", () => {
+  it("chỉ nhận endpoint của dịch vụ push thật", async () => {
+    for (const bad of ["https://169.254.169.254/latest", "http://fcm.googleapis.com/x", "https://localhost:5432/x", "https://fcm.googleapis.com.evil.com/x", "https://evil.com/fcm.googleapis.com"]) {
+      await expect(m.push.savePushSubscription(hs, { endpoint: bad, p256dh: "k", auth: "a" }, null)).rejects.toThrow(/không được hỗ trợ/);
+    }
+    expect(m.push.isAllowedPushEndpoint("https://web.push.apple.com/abc")).toBe(true);
+    expect(m.push.isAllowedPushEndpoint("https://wns2-sg2p.notify.windows.com/w/?token=x")).toBe(true);
   });
 });

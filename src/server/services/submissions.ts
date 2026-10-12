@@ -93,7 +93,11 @@ async function getOrCreateDraft(actor: Actor, assignmentId: string) {
 }
 
 export async function saveDraft(actor: Actor, assignmentId: string, content: string, fileIds: string[]) {
-  const { a } = await requireAssignmentForStudent(actor, assignmentId);
+  return (await saveDraftInner(actor, assignmentId, content, fileIds)).subId;
+}
+
+async function saveDraftInner(actor: Actor, assignmentId: string, content: string, fileIds: string[]) {
+  const { a, cls } = await requireAssignmentForStudent(actor, assignmentId);
   if (a.type !== "WRITTEN") throw new UserError("Bài quiz không lưu nháp kiểu này.");
   const sub = await getOrCreateDraft(actor, assignmentId);
   const rule = canEdit(sub, a);
@@ -121,12 +125,12 @@ export async function saveDraft(actor: Actor, assignmentId: string, content: str
       if (own.length) await tx.insert(submissionFiles).values(own.map((f) => ({ submissionId: sub.id, fileId: f.id })));
     }
   });
-  return sub.id;
+  return { subId: sub.id, a, cls };
 }
 
 export async function submitWritten(actor: Actor, assignmentId: string, content: string, fileIds: string[]) {
-  const subId = await saveDraft(actor, assignmentId, content, fileIds);
-  const { a, cls } = await requireAssignmentForStudent(actor, assignmentId);
+  // saveDraftInner đã kiểm tra quyền (policy) — dùng lại kết quả, không truy vấn lần hai.
+  const { subId, a, cls } = await saveDraftInner(actor, assignmentId, content, fileIds);
   const [hasFile] = await db.select({ id: submissionFiles.fileId }).from(submissionFiles).where(eq(submissionFiles.submissionId, subId)).limit(1);
   if (!content.trim() && !hasFile) throw new UserError("Bài làm đang trống. Viết bài hoặc đính kèm file trước khi nộp.");
   const now = new Date();

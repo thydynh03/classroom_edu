@@ -19,6 +19,7 @@
     "db:seed": "tsx --env-file=.env scripts/seed.ts",
     "admin:create": "tsx scripts/create-admin.ts",
     "db:handover": "tsx scripts/handover-reset.ts",
+    "load:test": "tsx scripts/load-test.ts",
     "db:reset": "tsx --env-file=.env scripts/reset.ts && pnpm db:migrate && pnpm db:seed",
     "test:int": "vitest run --config vitest.integration.config.ts"
   },

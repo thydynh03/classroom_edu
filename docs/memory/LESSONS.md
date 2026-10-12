@@ -4,6 +4,18 @@ Mỗi mục: ngày · ai gặp · triệu chứng · nguyên nhân · cách trá
 
 ---
 
+**2026-10-12 · Claude · mammoth** — Đáp án gạch chân trong file Word không được nhận.
+Nguyên nhân: mammoth mặc định bỏ định dạng gạch chân. Tránh: `convertToHtml({ buffer }, { styleMap: ["u => u"] })`; test bằng file .docx thật (tests/fixtures).
+
+**2026-10-12 · Claude · OpenTelemetry** — Mỗi request bị ghi 2 lần, một bản luôn 200.
+Nguyên nhân: Next tạo span `BaseServer.handleRequest` cho cả lần chạy proxy.ts (không có `next.route`). Tránh: chỉ nhận span có `next.route`; kiểm chứng bằng `next start` thật, không chỉ unit test.
+
+**2026-10-12 · Claude · môi trường** — `pkill -f "next start -p 3300"` giết luôn shell đang chạy lệnh (exit 144), các bước sau trong cùng lệnh không chạy.
+Tránh: kill theo PID (`ps … | awk`), chạy server bằng tác vụ nền riêng; kiểm tra lại bản build thật sự đã được tạo.
+
+**2026-10-12 · Claude · a11y** — axe báo tương phản trên thẻ "Sắp ra mắt".
+Nguyên nhân: card dùng `opacity-90`. Tránh (nhắc lại 2026-09-28): không giảm opacity khối có chữ; dùng màu token.
+
 **2026-10-12 · Claude · postgres-js** — `db.execute(sql` với tham số `new Date()` lỗi `ERR_INVALID_ARG_TYPE` (Date trong SQL thô).
 Nguyên nhân: tham số `Date` trong `sql` template thô không được drizzle chuyển kiểu như ở query builder.
 Tránh: truyền `date.toISOString()` kèm `::timestamptz`; integration test bắt được nên luôn chạy `pnpm test:int`.

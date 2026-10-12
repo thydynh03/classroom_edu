@@ -43,7 +43,6 @@ export default async function UpgradePage({ searchParams }: { searchParams: Prom
               className={cn(
                 "bg-surface border-border rounded-card flex flex-col border p-5",
                 focus === f.key && "ring-primary ring-2",
-                f.comingSoon && "opacity-90",
               )}
             >
               <div className="mb-2 flex flex-wrap items-center gap-2">

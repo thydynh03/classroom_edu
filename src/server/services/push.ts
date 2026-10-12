@@ -6,6 +6,7 @@ import { db } from "@/server/db/client";
 import { notifications, pushSubscriptions } from "@/server/db/schema";
 import type { Actor } from "@/server/auth/session";
 import { isQuietHours, type NotificationType } from "./notifications";
+import { UserError } from "./errors";
 
 /**
  * Web Push: nhắc được cả HS không có email (cần cài PWA trên iPhone, iOS 16.4+).
@@ -22,6 +23,20 @@ const PUSH_TYPES: NotificationType[] = [
   "CLASS_INVITE",
 ];
 
+/**
+ * Chỉ nhận endpoint của dịch vụ push thật (server sẽ gửi POST tới endpoint này).
+ * Không giới hạn thì kẻ xấu đăng ký endpoint trỏ vào dịch vụ nội bộ → server tự gọi tới đó (SSRF).
+ */
+const PUSH_HOSTS = [/^fcm\.googleapis\.com$/, /^updates\.push\.services\.mozilla\.com$/, /^(web\.push|[a-z0-9-]+\.push)\.apple\.com$/, /\.notify\.windows\.com$/];
+export function isAllowedPushEndpoint(endpoint: string) {
+  try {
+    const u = new URL(endpoint);
+    return u.protocol === "https:" && !u.port && PUSH_HOSTS.some((re) => re.test(u.hostname));
+  } catch {
+    return false;
+  }
+}
+
 export function pushPublicKey() {
   return process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY ? process.env.VAPID_PUBLIC_KEY : null;
 }
@@ -37,6 +52,7 @@ function ensureVapid() {
 }
 
 export async function savePushSubscription(actor: Actor, sub: { endpoint: string; p256dh: string; auth: string }, userAgent: string | null) {
+  if (!isAllowedPushEndpoint(sub.endpoint)) throw new UserError("Dịch vụ thông báo của trình duyệt này không được hỗ trợ.");
   await db
     .insert(pushSubscriptions)
     .values({ userId: actor.id, endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth, userAgent: userAgent?.slice(0, 300) ?? null })
@@ -62,6 +78,10 @@ async function sendTo(userId: string, payload: Payload) {
   const subs = await db.select().from(pushSubscriptions).where(eq(pushSubscriptions.userId, userId));
   let ok = 0;
   for (const s of subs) {
+    if (!isAllowedPushEndpoint(s.endpoint)) {
+      await db.delete(pushSubscriptions).where(eq(pushSubscriptions.id, s.id));
+      continue;
+    }
     try {
       await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, JSON.stringify(payload), { TTL: 86400, urgency: "normal" });
       ok++;

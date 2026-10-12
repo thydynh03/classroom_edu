@@ -9,6 +9,7 @@ import { sessions, users } from "@/server/db/schema";
 import { getActor, createSession } from "@/server/auth/session";
 import { requireActor } from "@/server/auth/guard";
 import { signupStudent } from "@/server/auth/accounts";
+import { UserError } from "@/server/services/errors";
 import { track } from "@/server/observability/events";
 import { deletePushSubscription, savePushSubscription, sendTestPush } from "@/server/services/push";
 import { markAllRead } from "@/server/services/notifications";
@@ -89,7 +90,12 @@ export async function savePushSubscriptionAction(input: unknown): Promise<Action
   const actor = await requireActor();
   const parsed = pushSubSchema.safeParse(input);
   if (!parsed.success) return { error: "Đăng ký thông báo không hợp lệ." };
-  await savePushSubscription(actor, parsed.data, (await headers()).get("user-agent"));
+  try {
+    await savePushSubscription(actor, parsed.data, (await headers()).get("user-agent"));
+  } catch (e) {
+    if (e instanceof UserError) return { error: e.message };
+    throw e;
+  }
   await track(actor, "push.enable");
   return { ok: true, message: "Đã bật thông báo trên thiết bị này." };
 }

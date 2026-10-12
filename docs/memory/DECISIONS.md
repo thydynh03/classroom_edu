@@ -4,6 +4,19 @@ Mỗi mục: ngày · quyết định · lý do · phương án đã loại · t
 
 ---
 
+**2026-10-12 · Thư viện mới: mammoth, web-push, @opentelemetry/sdk-trace-node** — Đã chốt (Claude, theo plan người dùng duyệt).
+- `mammoth`: đọc .docx ở server để nhập đề (map `u => u` để giữ gạch chân). Loại: tự giải nén docx (dễ sai định dạng), xử lý ở client (không chặn được quyền ở server).
+- `web-push` + VAPID: chuẩn Web Push, không phụ thuộc nhà cung cấp. Loại: Firebase Cloud Messaging (thêm tài khoản Google, SDK nặng), OneSignal (dữ liệu HS ra bên thứ ba).
+- OpenTelemetry (NodeTracerProvider + span processor tự viết ghi vào Postgres): lấy thời gian render thật từ span `BaseServer.handleRequest` có `next.route` (span không có `next.route` là lần chạy proxy.ts, luôn 200). Loại: `@vercel/otel` + dịch vụ ngoài (thêm chi phí, khách muốn xem trong trang admin), Sentry (để dành cho stack trace sau này).
+
+**2026-10-12 · Tính năng trả phí mở khóa theo từng giáo viên, thanh toán thủ công** — Đã làm (người dùng: hệ thống nhiều GV, khách là một GV). `upgrade_requests` + `feature_grants` (có hạn, gia hạn cộng dồn), chặn ở server bằng `requireFeature`. HS không thấy màn hình trả phí. Giá/thông tin chuyển khoản admin tự sửa. Loại: cổng thanh toán tự động (payOS/VNPay) — để giai đoạn sau khi có giấy phép/hóa đơn.
+
+**2026-10-12 · Số liệu vận hành và hành vi lưu trong Postgres của app** — Đã làm. Bảng `request_samples` (7 ngày), `error_events`/`client_events`/`job_runs` (30 ngày), `user_events` (90 ngày); không lưu nội dung bài/điểm/nhận xét; lỗi DB chỉ giữ mã lỗi. Beacon trình duyệt `/api/telemetry` không cần đăng nhập, có rate limit, thay UUID trong đường dẫn bằng `[id]`. Loại: session replay (trẻ vị thành niên), Google Analytics (dữ liệu ra bên thứ ba).
+
+**2026-10-12 · Step-up admin 15 phút và Postgres role `classroom_app`** — Đã làm. Thao tác nhạy cảm của admin cần đăng nhập/nhập lại mật khẩu trong 15 phút (`sessions.reauth_at`). Trigger chặn INSERT ADMIN khi `current_user = 'classroom_app'` kể cả khi tự bật cờ (migration 0009) — chống SQL injection tạo admin. Áp dụng role là việc vận hành (scripts/sql/app-role.sql).
+
+**2026-10-12 · Email khi chưa có tên miền: Gmail SMTP tạm thời** — Ghi nhận. `classroom-edu.vercel.app`/`*.workers.dev` không dùng được với Resend (không sửa DNS được). Code không đổi (SMTP); khi có tên miền thì chuyển sang Resend theo ADR trên.
+
 **2026-10-12 · Keepalive DB do admin cấu hình** — Đã làm (người dùng yêu cầu). Bảng `app_settings` (key `keepalive`: bật/tắt, chu kỳ 1–144 giờ, lần ping cuối). Ping chạy trong `/api/cron`, `/api/keepalive` (CRON_SECRET) và scheduler Docker; lần gọi chưa tới hạn thì bỏ qua. App không tự thức được nên vẫn cần lịch gọi ngoài (Vercel Cron hằng ngày / Cloudflare Workers Cron); `/admin/settings` cảnh báo khi quá 2 chu kỳ chưa ping. Loại: ping từ trình duyệt admin (chỉ chạy khi admin mở trang).
 
 **2026-10-12 · Email nhắc việc gộp 1 email/ngày/người + hạn mức theo ngày** — Đã làm. `users.last_reminder_email_at`, bảng `email_sends (day, kind, count)`, `EMAIL_DAILY_LIMIT` (mặc định 100) và `EMAIL_REMINDER_SHARE` (0.7) để luôn còn suất cho email giao dịch. Gửi lỗi thì giãn cách (`email_next_at`), quá 5 lần thì bỏ; hết suất thì để hôm sau, không tính là lỗi.
