@@ -114,10 +114,23 @@ export function AnswerEditor({ id, initialHtml, onChange, onBlur }: { id: string
     onBlur: () => onBlur?.(),
   });
 
+  React.useEffect(() => {
+    if (!full) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setFull(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [full]);
+
+  if (!editor) {
+    return <div className="border-border bg-surface min-h-[380px] animate-pulse rounded-[16px] border" aria-hidden="true" />;
+  }
+  return <EditorShell editor={editor} id={id} full={full} onToggleFull={() => setFull((v) => !v)} />;
+}
+
+function EditorShell({ editor, id, full, onToggleFull }: { editor: Editor; id: string; full: boolean; onToggleFull: () => void }) {
   const state = useEditorState({
     editor,
     selector: ({ editor: e }) => {
-      if (!e) return null;
       const block = currentBlock(e);
       return {
         bold: e.isActive("bold"),
@@ -140,17 +153,6 @@ export function AnswerEditor({ id, initialHtml, onChange, onBlur }: { id: string
     },
   });
 
-  React.useEffect(() => {
-    if (!full) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setFull(false);
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [full]);
-
-  if (!editor || !state) {
-    return <div className="border-border bg-surface min-h-[380px] animate-pulse rounded-[16px] border" aria-hidden="true" />;
-  }
-
   const chain = () => editor.chain().focus();
   const indentBy = (d: number) => {
     if (state.inList) {
@@ -169,7 +171,7 @@ export function AnswerEditor({ id, initialHtml, onChange, onBlur }: { id: string
         </label>
         <button
           type="button"
-          onClick={() => setFull((v) => !v)}
+          onClick={onToggleFull}
           aria-pressed={full}
           className="text-muted hover:text-foreground focus-visible:ring-ring rounded-control inline-flex min-h-9 items-center gap-1.5 px-2 text-xs font-semibold focus-visible:ring-2 focus-visible:outline-hidden"
         >

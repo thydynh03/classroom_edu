@@ -75,8 +75,17 @@ export default async function StudentAssignmentPage({ params }: { params: Promis
         </section>
       )}
 
-      <div className={a.type === "WRITTEN" ? "grid gap-5 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]" : "grid gap-5 lg:grid-cols-[minmax(0,1fr)_380px]"}>
-        <div className="space-y-5">
+      {/* Bài tự luận không có đề/tài liệu: không chừa cột trống bên trái, ô bài làm chiếm cả chiều ngang. */}
+      <div
+        className={
+          a.type !== "WRITTEN"
+            ? "grid gap-5 lg:grid-cols-[minmax(0,1fr)_380px]"
+            : a.body || v.attachments.length > 0
+              ? "grid gap-5 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]"
+              : "grid max-w-4xl gap-5"
+        }
+      >
+        <div className={a.type === "WRITTEN" && !a.body && v.attachments.length === 0 ? "hidden" : "space-y-5"}>
           {(a.body || v.attachments.length > 0) && (
             <Panel title={a.type === "QUIZ" ? "Hướng dẫn" : "Đề bài"}>
               {a.body && <p className="text-[15px] leading-relaxed whitespace-pre-line">{a.body}</p>}

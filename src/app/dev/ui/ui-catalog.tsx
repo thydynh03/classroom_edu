@@ -84,6 +84,7 @@ import {
 import { ClassChip, type ClassColor } from "@/components/domain/class-chip";
 import { DeadlineChip } from "@/components/domain/deadline-chip";
 import { StatTile } from "@/components/domain/stat-tile";
+import { AnswerEditor } from "@/components/domain/answer-editor";
 import { SegmentedProgress } from "@/components/domain/segmented-progress";
 
 interface TokenItem {
@@ -1277,6 +1278,15 @@ export function UiCatalog() {
                 ))}
               </div>
             </div>
+          </div>
+        </section>
+
+        <section className="space-y-4" aria-labelledby="answer-editor-title">
+          <h2 id="answer-editor-title" className="text-xl font-bold tracking-tight text-foreground">
+            Trình soạn bài làm
+          </h2>
+          <div className="max-w-3xl">
+            <AnswerEditor id="catalog-answer" initialHtml="<p>Bài 1. Đỉnh I(2; −1).</p>" onChange={() => {}} />
           </div>
         </section>
       </main>
