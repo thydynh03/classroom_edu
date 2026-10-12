@@ -8,6 +8,7 @@ import {
   CheckSquare,
   BookOpen,
   ClipboardList,
+  Sparkles,
   CalendarCheck,
   Star,
   Bell,
@@ -69,6 +70,11 @@ export function AppRail({
       label: "Bài tập",
       href: "/teacher/assignments",
       icon: ClipboardList,
+    },
+    {
+      label: "Nâng cao",
+      href: "/teacher/upgrade",
+      icon: Sparkles,
     },
   ];
 

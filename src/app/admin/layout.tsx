@@ -19,6 +19,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <nav aria-label="Quản trị" className="order-last -mx-1 flex w-full gap-1 overflow-x-auto text-sm font-semibold whitespace-nowrap md:order-none md:mx-0 md:w-auto">
           <Link href="/admin" className="hover:bg-surface-2 rounded-[10px] px-3 py-2">Người dùng</Link>
           <Link href="/admin/audit" className="hover:bg-surface-2 rounded-[10px] px-3 py-2">Nhật ký</Link>
+          <Link href="/admin/upgrades" className="hover:bg-surface-2 rounded-[10px] px-3 py-2">Nâng cấp</Link>
           <Link href="/admin/settings" className="hover:bg-surface-2 rounded-[10px] px-3 py-2">Cài đặt</Link>
         </nav>
         <div className="ml-auto flex shrink-0 items-center gap-2">

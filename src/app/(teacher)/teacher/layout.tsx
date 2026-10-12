@@ -26,6 +26,7 @@ export default async function TeacherLayout({ children }: { children: React.Reac
           subtitle={longDateVN()}
           createHref="/teacher/assignments/new"
           notificationsHref="/teacher/notifications"
+          upgradeHref="/teacher/upgrade"
           unreadCount={unread}
           userName={actor.fullName}
         />

@@ -61,6 +61,7 @@ export const filePurpose = pgEnum("file_purpose", ["ATTACHMENT", "SUBMISSION"]);
 export const gradeAction = pgEnum("grade_action", ["GRADED", "EDITED", "RETURNED", "AUTO"]);
 export const tokenPurpose = pgEnum("token_purpose", ["VERIFY_EMAIL", "RESET_PASSWORD"]);
 export const inviteStatus = pgEnum("invite_status", ["PENDING", "ACCEPTED", "DECLINED", "CANCELLED"]);
+export const upgradeStatus = pgEnum("upgrade_status", ["NEW", "CONTACTED", "GRANTED", "REJECTED", "CANCELLED"]);
 
 export const users = pgTable(
   "users",
@@ -105,6 +106,8 @@ export const sessions = pgTable(
     ip: text("ip"),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).notNull().defaultNow(),
+    /** Lần cuối nhập lại mật khẩu (step-up cho thao tác nhạy cảm của admin) */
+    reauthAt: timestamp("reauth_at", { withTimezone: true }),
     createdAt: createdAt(),
   },
   (t) => [uniqueIndex("sessions_token_uq").on(t.tokenHash), index("sessions_user_idx").on(t.userId)],
@@ -184,6 +187,8 @@ export const assignments = pgTable(
     allowLate: boolean("allow_late").notNull().default(true),
     allowResubmit: boolean("allow_resubmit").notNull().default(true),
     showResults: showResults("show_results").notNull().default("IMMEDIATE"),
+    /** Hệ số trong sổ điểm (1, 2, 3 — kiểu điểm thường xuyên / giữa kỳ / cuối kỳ) */
+    gradeWeight: integer("grade_weight").notNull().default(1),
     status: assignmentStatus("status").notNull().default("DRAFT"),
     publishedAt: timestamp("published_at", { withTimezone: true }),
     /** Thời điểm tự đăng khi status = SCHEDULED */
@@ -331,6 +336,8 @@ export const notifications = pgTable(
     emailLastError: text("email_last_error"),
     /** Gửi lại không sớm hơn thời điểm này (giãn cách sau lỗi, hoặc đã hết suất trong ngày) */
     emailNextAt: timestamp("email_next_at", { withTimezone: true }),
+    /** Đã gửi Web Push (hoặc bỏ qua vì không có thiết bị đăng ký) */
+    pushSentAt: timestamp("push_sent_at", { withTimezone: true }),
     readAt: timestamp("read_at", { withTimezone: true }),
     createdAt: createdAt(),
   },
@@ -465,3 +472,169 @@ export const appSettings = pgTable("app_settings", {
   updatedBy: uuid("updated_by").references(() => users.id),
   updatedAt: updatedAt(),
 });
+
+/** Yêu cầu mở khóa tính năng nâng cao (GV bấm "Yêu cầu mở khóa" → admin liên hệ → mở khóa). */
+export const upgradeRequests = pgTable(
+  "upgrade_requests",
+  {
+    id: id(),
+    requesterId: uuid("requester_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    featureKey: text("feature_key").notNull(),
+    plan: text("plan").notNull(),
+    contact: text("contact"),
+    note: text("note"),
+    status: upgradeStatus("status").notNull().default("NEW"),
+    adminNote: text("admin_note"),
+    handledBy: uuid("handled_by").references(() => users.id),
+    handledAt: timestamp("handled_at", { withTimezone: true }),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex("upgrade_requests_open_uq").on(t.requesterId, t.featureKey).where(sql`${t.status} in ('NEW', 'CONTACTED')`),
+    index("upgrade_requests_status_idx").on(t.status, t.createdAt),
+  ],
+);
+
+/** Quyền dùng tính năng nâng cao theo từng GV (admin mở khóa). */
+export const featureGrants = pgTable(
+  "feature_grants",
+  {
+    id: id(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    featureKey: text("feature_key").notNull(),
+    grantedBy: uuid("granted_by").references(() => users.id),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    requestId: uuid("request_id").references(() => upgradeRequests.id, { onDelete: "set null" }),
+    createdAt: createdAt(),
+  },
+  (t) => [index("feature_grants_user_idx").on(t.userId, t.featureKey)],
+);
+
+/** Thiết bị đăng ký nhận Web Push. */
+export const pushSubscriptions = pgTable(
+  "push_subscriptions",
+  {
+    id: id(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    endpoint: text("endpoint").notNull(),
+    p256dh: text("p256dh").notNull(),
+    auth: text("auth").notNull(),
+    userAgent: text("user_agent"),
+    failedCount: integer("failed_count").notNull().default(0),
+    lastSuccessAt: timestamp("last_success_at", { withTimezone: true }),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex("push_subscriptions_endpoint_uq").on(t.endpoint), index("push_subscriptions_user_idx").on(t.userId)],
+);
+
+/** Tài liệu GV đăng cho lớp (không cần nộp bài). */
+export const classMaterials = pgTable(
+  "class_materials",
+  {
+    id: id(),
+    classId: uuid("class_id")
+      .notNull()
+      .references(() => classes.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    body: text("body").notNull().default(""),
+    createdBy: uuid("created_by")
+      .notNull()
+      .references(() => users.id),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [index("class_materials_class_idx").on(t.classId, t.createdAt)],
+);
+
+export const materialAttachments = pgTable(
+  "material_attachments",
+  {
+    materialId: uuid("material_id")
+      .notNull()
+      .references(() => classMaterials.id, { onDelete: "cascade" }),
+    fileId: uuid("file_id")
+      .notNull()
+      .references(() => files.id, { onDelete: "cascade" }),
+  },
+  (t) => [primaryKey({ columns: [t.materialId, t.fileId] })],
+);
+
+/** Mẫu thời gian xử lý request phía server (OpenTelemetry span gốc) cho dashboard p50/p95/p99. Giữ vài ngày. */
+export const requestSamples = pgTable(
+  "request_samples",
+  {
+    id: id(),
+    at: timestamp("at", { withTimezone: true }).notNull().defaultNow(),
+    method: text("method").notNull(),
+    route: text("route").notNull(),
+    status: integer("status").notNull(),
+    durationMs: integer("duration_ms").notNull(),
+  },
+  (t) => [index("request_samples_at_idx").on(t.at)],
+);
+
+/** Lỗi server (onRequestError). Không lưu body, cookie hay dữ liệu người dùng. */
+export const errorEvents = pgTable(
+  "error_events",
+  {
+    id: id(),
+    at: timestamp("at", { withTimezone: true }).notNull().defaultNow(),
+    route: text("route").notNull(),
+    routeType: text("route_type").notNull(),
+    method: text("method"),
+    digest: text("digest"),
+    message: text("message").notNull(),
+  },
+  (t) => [index("error_events_at_idx").on(t.at)],
+);
+
+/** Sự kiện từ trình duyệt: request không tới được server, quá thời gian, Web Vitals. */
+export const clientEvents = pgTable(
+  "client_events",
+  {
+    id: id(),
+    at: timestamp("at", { withTimezone: true }).notNull().defaultNow(),
+    kind: text("kind").notNull(),
+    route: text("route").notNull(),
+    value: numeric("value", { precision: 12, scale: 3, mode: "number" }),
+    device: text("device"),
+    network: text("network"),
+  },
+  (t) => [index("client_events_at_idx").on(t.at, t.kind)],
+);
+
+/** Lịch sử chạy job định kỳ (/api/cron, scheduler). */
+export const jobRuns = pgTable(
+  "job_runs",
+  {
+    id: id(),
+    job: text("job").notNull(),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull(),
+    finishedAt: timestamp("finished_at", { withTimezone: true }),
+    ok: boolean("ok").notNull().default(false),
+    result: jsonb("result").$type<Record<string, unknown>>(),
+  },
+  (t) => [index("job_runs_started_idx").on(t.job, t.startedAt)],
+);
+
+/** Hành vi người dùng (ghi ở server tại điểm nghiệp vụ). Không chứa nội dung bài, điểm, nhận xét. */
+export const userEvents = pgTable(
+  "user_events",
+  {
+    id: id(),
+    at: timestamp("at", { withTimezone: true }).notNull().defaultNow(),
+    userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
+    role: text("role").notNull(),
+    event: text("event").notNull(),
+    device: text("device"),
+    meta: jsonb("meta").$type<Record<string, string | number | boolean>>(),
+  },
+  (t) => [index("user_events_at_idx").on(t.at), index("user_events_user_idx").on(t.userId, t.at)],
+);

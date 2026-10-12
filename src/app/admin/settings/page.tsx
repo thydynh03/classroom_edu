@@ -5,12 +5,14 @@ import { PageHeader } from "@/components/domain/page-parts";
 import { shortDateTime } from "@/lib/dates";
 import { requestNow } from "@/lib/now";
 import { KeepaliveForm } from "./keepalive-form";
+import { BillingForm } from "./billing-form";
+import { getBilling } from "@/server/services/upgrades";
 
 export const metadata = { title: "Cài đặt · Quản trị · Classroom Edu" };
 
 export default async function AdminSettingsPage() {
   await requireActor("ADMIN");
-  const s = await getKeepalive();
+  const [s, billing] = await Promise.all([getKeepalive(), getBilling()]);
   const now = requestNow();
   const next = nextKeepaliveAt(s);
   // Lần ping cuối đã quá 2 chu kỳ: lịch gọi từ bên ngoài (cron) có lẽ không chạy.
@@ -57,6 +59,11 @@ export default async function AdminSettingsPage() {
         )}
 
         <KeepaliveForm enabled={s.enabled} intervalHours={s.intervalHours} min={KEEPALIVE_MIN_HOURS} max={KEEPALIVE_MAX_HOURS} />
+      </section>
+      <section aria-labelledby="billing-title" className="bg-surface border-border rounded-card mt-6 max-w-2xl border p-5">
+        <h2 id="billing-title" className="text-[15px] font-bold">Giá và thông tin thanh toán</h2>
+        <p className="text-muted mt-1 text-sm">Hiện trên trang Nâng cao của giáo viên. Ví dụ: số tài khoản, nội dung chuyển khoản, Zalo liên hệ.</p>
+        <BillingForm priceText={billing.priceText} paymentInfo={billing.paymentInfo} />
       </section>
     </>
   );

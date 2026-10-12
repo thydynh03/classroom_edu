@@ -1,6 +1,6 @@
 import * as React from "react";
 import Link from "next/link";
-import { Bell, LogOut, Plus, Settings } from "lucide-react";
+import { Bell, LogOut, Plus, Settings, Sparkles } from "lucide-react";
 import { cn, initials } from "@/lib/utils";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { logoutAction } from "@/app/(auth)/actions";
@@ -13,6 +13,8 @@ export interface TopBarProps {
   notificationsHref: string;
   unreadCount?: number;
   userName: string;
+  /** Link "Nâng cao" trong menu tài khoản (GV, trên mobile) */
+  upgradeHref?: string;
   className?: string;
 }
 
@@ -24,6 +26,7 @@ export function TopBar({
   notificationsHref,
   unreadCount = 0,
   userName,
+  upgradeHref,
   className,
 }: TopBarProps) {
   return (
@@ -77,7 +80,7 @@ export function TopBar({
           >
             {initials(userName)}
           </summary>
-          <AccountMenu userName={userName} />
+          <AccountMenu userName={userName} upgradeHref={upgradeHref} />
         </details>
         <form action={logoutAction} className="hidden md:block">
           <button
@@ -94,7 +97,7 @@ export function TopBar({
   );
 }
 
-function AccountMenu({ userName }: { userName: string }) {
+function AccountMenu({ userName, upgradeHref }: { userName: string; upgradeHref?: string }) {
   return (
     <div className="bg-surface border-border rounded-control absolute right-0 z-30 mt-2 w-56 border p-1.5 shadow-lg">
       <div className="text-muted px-3 py-2 text-xs font-semibold">{userName}</div>
@@ -104,6 +107,11 @@ function AccountMenu({ userName }: { userName: string }) {
       >
         <Settings className="size-4" aria-hidden="true" /> Tài khoản & bảo mật
       </Link>
+      {upgradeHref && (
+        <Link href={upgradeHref} className="hover:bg-surface-2 flex items-center gap-2 rounded-[10px] px-3 py-2 text-sm font-medium">
+          <Sparkles className="size-4" aria-hidden="true" /> Tính năng nâng cao
+        </Link>
+      )}
       <form action={logoutAction}>
         <button
           type="submit"

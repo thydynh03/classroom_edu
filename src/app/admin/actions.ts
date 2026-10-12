@@ -5,6 +5,8 @@ import { z } from "zod";
 import { requireActor } from "@/server/auth/guard";
 import * as admin from "@/server/services/admin";
 import * as settings from "@/server/services/settings";
+import * as upgrades from "@/server/services/upgrades";
+import { FEATURE_KEYS } from "@/lib/premium-features";
 import { UserError } from "@/server/services/errors";
 import { usernameSchema } from "@/server/validation/auth";
 import { type ActionState, fieldErrorsFrom } from "@/lib/action";
@@ -90,4 +92,70 @@ export async function pingNowAction(): Promise<ActionState> {
   const r = await settings.runKeepalive({ force: true, actor });
   revalidatePath("/admin/settings");
   return r.ran && r.ok ? { ok: true, message: "Đã ping database thành công." } : { error: "Ping database thất bại. Xem log Vercel." };
+}
+
+// ---------------------------------------------------------------- Nâng cấp / mở khóa
+
+const idSchema = z.uuid();
+
+export async function markContactedAction(requestId: string, adminNote?: string) {
+  const actor = await adminActor();
+  if (!idSchema.safeParse(requestId).success) return { ok: false as const, error: "Không hợp lệ" };
+  const r = await wrap(() => upgrades.markContacted(actor, requestId, adminNote?.slice(0, 500)));
+  revalidatePath("/admin/upgrades");
+  return r;
+}
+
+export async function rejectRequestAction(requestId: string, adminNote?: string) {
+  const actor = await adminActor();
+  if (!idSchema.safeParse(requestId).success) return { ok: false as const, error: "Không hợp lệ" };
+  const r = await wrap(() => upgrades.rejectRequest(actor, requestId, adminNote?.slice(0, 500)));
+  revalidatePath("/admin/upgrades");
+  return r;
+}
+
+const grantSchema = z.strictObject({
+  requestId: z.uuid().optional(),
+  username: z.string().trim().min(1).max(64).optional(),
+  featureKey: z.enum(FEATURE_KEYS),
+  months: z.enum(["1", "3", "6", "12", "forever"]),
+});
+
+export async function grantFeatureAction(_: ActionState, fd: FormData): Promise<ActionState> {
+  const actor = await adminActor();
+  const parsed = grantSchema.safeParse({
+    requestId: String(fd.get("requestId") ?? "") || undefined,
+    username: String(fd.get("username") ?? "") || undefined,
+    featureKey: String(fd.get("featureKey") ?? ""),
+    months: String(fd.get("months") ?? "1"),
+  });
+  if (!parsed.success) return { fieldErrors: fieldErrorsFrom(parsed.error.issues) };
+  if (!parsed.data.requestId && !parsed.data.username) return { fieldErrors: { username: "Nhập tên đăng nhập của giáo viên" } };
+  const months = parsed.data.months === "forever" ? null : Number(parsed.data.months);
+  const r = await wrap(() => upgrades.grantFeature(actor, { ...parsed.data, months }));
+  if (!r.ok) return { error: r.error };
+  revalidatePath("/admin/upgrades");
+  return { ok: true, message: "Đã mở khóa và báo cho giáo viên." };
+}
+
+export async function revokeGrantAction(grantId: string) {
+  const actor = await adminActor();
+  if (!idSchema.safeParse(grantId).success) return { ok: false as const, error: "Không hợp lệ" };
+  const r = await wrap(() => upgrades.revokeGrant(actor, grantId));
+  revalidatePath("/admin/upgrades");
+  return r;
+}
+
+const billingSchema = z.strictObject({
+  priceText: z.string().trim().min(1, "Nhập giá hoặc \"Liên hệ\"").max(300),
+  paymentInfo: z.string().trim().max(1000),
+});
+
+export async function saveBillingAction(_: ActionState, fd: FormData): Promise<ActionState> {
+  const actor = await adminActor();
+  const parsed = billingSchema.safeParse({ priceText: String(fd.get("priceText") ?? ""), paymentInfo: String(fd.get("paymentInfo") ?? "") });
+  if (!parsed.success) return { fieldErrors: fieldErrorsFrom(parsed.error.issues) };
+  await upgrades.updateBilling(actor, parsed.data);
+  revalidatePath("/admin/settings");
+  return { ok: true, message: "Đã lưu thông tin giá và thanh toán." };
 }

@@ -7,6 +7,9 @@ import { requireActor } from "@/server/auth/guard";
 import * as classSvc from "@/server/services/classes";
 import * as asgSvc from "@/server/services/assignments";
 import * as subSvc from "@/server/services/submissions";
+import * as upgradeSvc from "@/server/services/upgrades";
+import { FEATURE_KEYS } from "@/lib/premium-features";
+import { rateLimit } from "@/server/rate-limit";
 import { UserError } from "@/server/services/errors";
 import { assignmentSchema, gradeSchema, questionsSchema } from "@/server/validation/assignment";
 import { type ActionState, fieldErrorsFrom } from "@/lib/action";
@@ -264,4 +267,35 @@ export async function remindMissingAction(assignmentId: string): Promise<ActionS
   const r = await guard(() => subSvc.remindMissing(actor, String(assignmentId)));
   if (typeof r !== "number") return r;
   return { ok: true, message: r ? `Đã nhắc ${r} học sinh chưa nộp.` : "Các em chưa nộp đã được nhắc trong 6 giờ qua." };
+}
+
+// ---------------------------------------------------------------- Nâng cao (mua tính năng)
+
+const upgradeSchema = z.strictObject({
+  featureKey: z.enum(FEATURE_KEYS),
+  plan: z.enum(["MONTH", "YEAR", "INTEREST"]),
+  contact: z.string().trim().max(100).optional(),
+  note: z.string().trim().max(500).optional(),
+});
+
+export async function requestUpgradeAction(_: ActionState, fd: FormData): Promise<ActionState> {
+  const actor = await teacher();
+  const parsed = upgradeSchema.safeParse({
+    featureKey: String(fd.get("featureKey") ?? ""),
+    plan: String(fd.get("plan") ?? "MONTH"),
+    contact: String(fd.get("contact") ?? "") || undefined,
+    note: String(fd.get("note") ?? "") || undefined,
+  });
+  if (!parsed.success) return { fieldErrors: fieldErrorsFrom(parsed.error.issues) };
+  if (!(await rateLimit(`upgrade:${actor.id}`, 10, 60 * 60_000))) return { error: "Bạn gửi quá nhiều yêu cầu. Thử lại sau." };
+  const r = await guard(() => upgradeSvc.requestUpgrade(actor, parsed.data));
+  if (r && typeof r === "object" && "error" in r) return r;
+  revalidatePath("/teacher/upgrade");
+  return { ok: true, message: "Đã gửi yêu cầu. Quản trị viên sẽ liên hệ với bạn để hoàn tất." };
+}
+
+export async function cancelUpgradeAction(featureKey: string) {
+  const actor = await teacher();
+  await upgradeSvc.cancelMyRequest(actor, String(featureKey).slice(0, 40));
+  revalidatePath("/teacher/upgrade");
 }
