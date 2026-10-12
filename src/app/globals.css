@@ -30,6 +30,11 @@
 
   /* Pastel class colors */
   --class-sky-bg: #dfebff;
+  /* Màu series biểu đồ (thứ tự cố định, đã chạy validate_palette trên nền --surface) */
+  --chart-1: #2a78d6;
+  --chart-2: #eb6834;
+  --chart-3: #1baf7a;
+  --chart-4: #eda100;
   --class-sky-fg: #2360c4;
   --class-mint-bg: #dcf3e7;
   --class-mint-fg: #167046;
@@ -78,6 +83,10 @@
 
   /* Pastel class colors (Dark) */
   --class-sky-bg: rgba(122, 162, 255, 0.14);
+  --chart-1: #3987e5;
+  --chart-2: #d95926;
+  --chart-3: #199e70;
+  --chart-4: #c98500;
   --class-sky-fg: #7aa2ff;
   --class-mint-bg: rgba(63, 210, 192, 0.13);
   --class-mint-fg: #3fd2c0;

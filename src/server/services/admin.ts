@@ -2,7 +2,7 @@ import "server-only";
 import { and, count, desc, eq, ilike, isNull, ne, or, sql } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { db } from "@/server/db/client";
-import { auditLogs, classes, notifications, submissions, users } from "@/server/db/schema";
+import { auditLogs, classes, notifications, submissions, userEvents, users } from "@/server/db/schema";
 import type { Actor } from "@/server/auth/session";
 import { generateTempPassword, hashPassword } from "@/server/auth/password";
 import { approveTeacherAccount, createTeacherByAdmin } from "@/server/auth/accounts";
@@ -18,28 +18,63 @@ import { UserError } from "./errors";
 
 export async function adminStats(actor: Actor) {
   requireRole(actor, "ADMIN");
-  const byRole = await db
-    .select({ role: users.role, status: users.status, n: count() })
-    .from(users)
-    .where(isNull(users.deletedAt))
-    .groupBy(users.role, users.status);
-  const [cls] = await db.select({ n: count() }).from(classes).where(and(isNull(classes.deletedAt), eq(classes.status, "ACTIVE")));
-  const [subs] = await db
-    .select({ n: count() })
-    .from(submissions)
-    .where(sql`${submissions.submittedAt} > now() - interval '7 days'`);
+  // Chạy song song: mỗi truy vấn là một lượt đi về tới database.
+  const [byRole, [cls], [subs], [pending]] = await Promise.all([
+    db.select({ role: users.role, status: users.status, n: count() }).from(users).where(isNull(users.deletedAt)).groupBy(users.role, users.status),
+    db.select({ n: count() }).from(classes).where(and(isNull(classes.deletedAt), eq(classes.status, "ACTIVE"))),
+    db.select({ n: count() }).from(submissions).where(sql`${submissions.submittedAt} > now() - interval '7 days'`),
+    db.select({ n: count() }).from(users).where(and(eq(users.role, "TEACHER"), isNull(users.approvedAt), eq(users.status, "ACTIVE"), isNull(users.deletedAt))),
+  ]);
   const sum = (f: (r: (typeof byRole)[number]) => boolean) => byRole.filter(f).reduce((s, r) => s + r.n, 0);
-  const [pending] = await db
-    .select({ n: count() })
-    .from(users)
-    .where(and(eq(users.role, "TEACHER"), isNull(users.approvedAt), eq(users.status, "ACTIVE"), isNull(users.deletedAt)));
   return {
     pendingTeachers: pending?.n ?? 0,
+    admins: sum((r) => r.role === "ADMIN"),
     teachers: sum((r) => r.role === "TEACHER"),
     students: sum((r) => r.role === "STUDENT"),
     locked: sum((r) => r.status !== "ACTIVE"),
     activeClasses: cls?.n ?? 0,
     submissions7d: subs?.n ?? 0,
+  };
+}
+
+const CHART_DAYS = 14;
+
+/** Số liệu tổng hợp cho biểu đồ ở trang quản trị. Chỉ là số đếm, không có nội dung bài làm hay điểm. */
+export async function adminCharts(actor: Actor) {
+  requireRole(actor, "ADMIN");
+  const day = (col: unknown) => sql<string>`to_char((${col} at time zone 'Asia/Ho_Chi_Minh')::date, 'YYYY-MM-DD')`;
+  const [subDays, activeDays, statusRows, deviceRows, [today]] = await Promise.all([
+    db
+      .select({ d: day(submissions.submittedAt), n: count() })
+      .from(submissions)
+      .where(sql`${submissions.submittedAt} > now() - interval '15 days'`)
+      .groupBy(sql`1`),
+    db
+      .select({ d: day(userEvents.at), n: sql<number>`count(distinct ${userEvents.userId})::int` })
+      .from(userEvents)
+      .where(sql`${userEvents.at} > now() - interval '15 days'`)
+      .groupBy(sql`1`),
+    db.select({ status: submissions.status, n: count() }).from(submissions).groupBy(submissions.status),
+    db
+      .select({ device: userEvents.device, n: sql<number>`count(distinct ${userEvents.userId})::int` })
+      .from(userEvents)
+      .where(sql`${userEvents.at} > now() - interval '30 days'`)
+      .groupBy(userEvents.device),
+    db.select({ d: sql<string>`to_char((now() at time zone 'Asia/Ho_Chi_Minh')::date, 'YYYY-MM-DD')` }).from(sql`(select 1) as t`),
+  ]);
+  // Dãy 14 ngày liên tục theo giờ Việt Nam, ngày không có số liệu = 0.
+  const end = new Date(`${today.d}T00:00:00Z`);
+  const days = Array.from({ length: CHART_DAYS }, (_, i) => new Date(end.getTime() - (CHART_DAYS - 1 - i) * 86400_000).toISOString().slice(0, 10));
+  const pick = (rows: { d: string; n: number }[]) => days.map((d) => rows.find((r) => r.d === d)?.n ?? 0);
+  const statusOf = (s: string) => statusRows.find((r) => r.status === s)?.n ?? 0;
+  const deviceOf = (...keys: string[]) => deviceRows.filter((r) => keys.includes((r.device ?? "").toLowerCase())).reduce((s, r) => s + r.n, 0);
+  const knownDevices = deviceOf("mobile", "desktop", "tablet");
+  return {
+    days: days.map((d) => `${d.slice(8, 10)}/${d.slice(5, 7)}`),
+    submissionsPerDay: pick(subDays),
+    activeUsersPerDay: pick(activeDays),
+    submissionStatus: { draft: statusOf("DRAFT"), submitted: statusOf("SUBMITTED"), graded: statusOf("GRADED"), returned: statusOf("RETURNED") },
+    devices: { mobile: deviceOf("mobile"), desktop: deviceOf("desktop"), tablet: deviceOf("tablet"), other: deviceRows.reduce((s, r) => s + r.n, 0) - knownDevices },
   };
 }
 

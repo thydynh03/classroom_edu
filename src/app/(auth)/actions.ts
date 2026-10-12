@@ -14,6 +14,7 @@ import {
   revokeOtherSessions,
 } from "@/server/auth/session";
 import { homeFor } from "@/server/auth/guard";
+import { after } from "next/server";
 import { track } from "@/server/observability/events";
 import { autoApproveTeacher } from "@/server/auth/teacher-approval";
 import { approveTeacherAccount, registerTeacher } from "@/server/auth/accounts";
@@ -84,9 +85,12 @@ export async function loginAction(_: ActionState, fd: FormData): Promise<ActionS
     return { error: "Bạn cần xác minh email trước. Kiểm tra hộp thư của bạn." };
   }
 
-  await db.update(users).set({ failedLogins: 0, lockedUntil: null }).where(eq(users.id, user.id));
-  await createSession(user.id);
-  await track({ id: user.id, role: user.role }, "login");
+  // Hai lệnh ghi độc lập chạy song song; ghi sự kiện "login" sau khi đã trả phản hồi.
+  await Promise.all([
+    user.failedLogins || user.lockedUntil ? db.update(users).set({ failedLogins: 0, lockedUntil: null }).where(eq(users.id, user.id)) : null,
+    createSession(user.id),
+  ]);
+  after(() => track({ id: user.id, role: user.role }, "login"));
   const next = String(fd.get("next") ?? "");
   if (user.mustChangePassword) redirect("/change-password");
   redirect(isSafeRedirect(next) ? next : homeFor(user.role));

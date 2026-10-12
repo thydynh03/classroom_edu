@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireActor } from "@/server/auth/guard";
-import { adminStats, listPendingTeachers, listUsers } from "@/server/services/admin";
+import { adminCharts, adminStats, listPendingTeachers, listUsers } from "@/server/services/admin";
+import { DonutChart, LineChart } from "@/components/domain/charts";
 import { PageHeader } from "@/components/domain/page-parts";
 import { shortDateTime } from "@/lib/dates";
 import { requestNow } from "@/lib/now";
@@ -22,8 +23,9 @@ export default async function AdminPage({
   const role = (["ADMIN", "TEACHER", "STUDENT"] as const).find((r) => r === sp.role);
   const status = (["ACTIVE", "LOCKED", "DISABLED"] as const).find((r) => r === sp.status);
   const page = Number(sp.page) || 1;
-  const [stats, list, pendingTeachers] = await Promise.all([
+  const [stats, charts, list, pendingTeachers] = await Promise.all([
     adminStats(actor),
+    adminCharts(actor),
     listUsers(actor, { q: sp.q, role, status, page }),
     listPendingTeachers(actor),
   ]);
@@ -40,7 +42,54 @@ export default async function AdminPage({
 
   return (
     <>
-      <PageHeader title="Người dùng" description="Quản lý tài khoản. Quản trị viên không xem được bài làm và điểm của học sinh." />
+      <PageHeader title="Tổng quan" description="Số liệu tổng hợp và quản lý tài khoản. Quản trị viên không xem được bài làm và điểm của học sinh." />
+      <section aria-label="Biểu đồ tổng quan" className="mb-6 grid gap-4 lg:grid-cols-3">
+        <div className="bg-surface border-border rounded-card border p-5 lg:col-span-3">
+          <LineChart
+            title="Hoạt động 14 ngày qua"
+            labels={charts.days}
+            series={[
+              { label: "Người dùng hoạt động", values: charts.activeUsersPerDay },
+              { label: "Bài nộp", values: charts.submissionsPerDay },
+            ]}
+          />
+        </div>
+        <div className="bg-surface border-border rounded-card border p-5">
+          <DonutChart
+            title="Tài khoản theo vai trò"
+            unit="tài khoản"
+            slices={[
+              { label: "Học sinh", value: stats.students },
+              { label: "Giáo viên", value: stats.teachers },
+              { label: "Quản trị", value: stats.admins },
+            ]}
+          />
+        </div>
+        <div className="bg-surface border-border rounded-card border p-5">
+          <DonutChart
+            title="Bài làm theo trạng thái"
+            unit="bài làm"
+            slices={[
+              { label: "Chờ chấm", value: charts.submissionStatus.submitted },
+              { label: "Đã trả", value: charts.submissionStatus.returned },
+              { label: "Đã chấm, chưa trả", value: charts.submissionStatus.graded },
+              { label: "Đang làm (nháp)", value: charts.submissionStatus.draft },
+            ]}
+          />
+        </div>
+        <div className="bg-surface border-border rounded-card border p-5">
+          <DonutChart
+            title="Thiết bị (30 ngày)"
+            unit="người dùng"
+            slices={[
+              { label: "Điện thoại", value: charts.devices.mobile },
+              { label: "Máy tính", value: charts.devices.desktop },
+              { label: "Máy tính bảng", value: charts.devices.tablet },
+              { label: "Khác", value: charts.devices.other },
+            ]}
+          />
+        </div>
+      </section>
       {pendingTeachers.length > 0 && (
         <section aria-labelledby="pending-title" className="bg-warning-soft border-warning/30 rounded-card mb-6 border p-5">
           <h2 id="pending-title" className="text-[15px] font-bold">
