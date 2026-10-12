@@ -37,11 +37,13 @@ pnpm test:e2e                              # Playwright, cần DB đã seed
 
 ## Deploy (Vercel)
 
+> Hướng dẫn bàn giao và vận hành đầy đủ (biến môi trường, R2, Resend, cron, staging, xóa dữ liệu, tạo admin): **`docs/HANDOVER.md`**.
+
 Cả app (giao diện + server actions) chạy trên Vercel, region `bom1` (gần Supabase ap-south-1). `pnpm vercel-build` chạy migration + tạo admin đầu tiên (`docker/migrate.mjs`) rồi mới `next build`.
 
-- Job nền: không có `setInterval` trên serverless. Bài lên lịch được đăng khi có người mở trang GV/HS (tối đa 1 lần/phút) và qua `/api/cron`. Vercel Hobby chỉ cho cron **1 lần/ngày**, nên muốn nhắc hạn đều hơn thì tạo cron miễn phí ở cron-job.org gọi `GET /api/cron` mỗi 15 phút với header `Authorization: Bearer <CRON_SECRET>`.
+- Job nền: không có `setInterval` trên serverless. Bài lên lịch được đăng khi có người mở trang GV/HS (tối đa 1 lần/phút) và qua `/api/cron`. Vercel Hobby chỉ cho cron **1 lần/ngày**, nên dùng Cloudflare Workers Cron (hoặc cron-job.org) gọi `GET /api/cron` mỗi 15 phút với header `Authorization: Bearer <CRON_SECRET>` (HANDOVER mục 5).
 - ClamAV không chạy được trên Vercel: để trống `CLAMAV_HOST` (tắt quét).
-- Rate limit đăng nhập nằm trong bộ nhớ từng instance, nên trên serverless chỉ mang tính tương đối (khóa tài khoản sau 10 lần sai vẫn lưu trong DB).
+- Rate limit lưu trong Postgres (bảng `rate_limits`) nên đúng cả khi nhiều instance chạy song song.
 
 Biến môi trường (Project → Settings → Environment Variables; secret thì bạn tự đặt, không commit):
 
