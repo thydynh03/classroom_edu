@@ -6,6 +6,8 @@ const isProd = process.env.NODE_ENV === "production";
 const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
+  // Nhập đề Word/Excel gửi file qua server action (tối đa 4 MB; Vercel giới hạn body 4,5 MB).
+  experimental: { serverActions: { bodySizeLimit: "4.5mb" } },
   async headers() {
     return [
       {

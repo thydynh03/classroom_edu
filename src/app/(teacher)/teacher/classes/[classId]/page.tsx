@@ -12,11 +12,20 @@ import { StudentsPanel } from "./students-panel";
 import { SettingsPanel } from "./settings-panel";
 import { cn } from "@/lib/utils";
 import { requestNow } from "@/lib/now";
+import { hasFeature } from "@/server/entitlements";
+import { classGradebook } from "@/server/services/gradebook";
+import { LockedFeature } from "@/components/domain/locked-feature";
+import { dueLabel } from "@/lib/dates";
+import { GradebookTable } from "./gradebook-table";
+import { MaterialsPanel } from "./materials-panel";
+import { listMaterials } from "@/server/services/materials";
 
 const TABS = [
   { id: "assignments", label: "Bài tập" },
   { id: "students", label: "Học sinh" },
   { id: "tracking", label: "Theo dõi" },
+  { id: "gradebook", label: "Sổ điểm" },
+  { id: "materials", label: "Tài liệu" },
   { id: "settings", label: "Cài đặt" },
 ] as const;
 type Tab = (typeof TABS)[number]["id"];
@@ -80,6 +89,8 @@ export default async function ClassDetailPage({
         />
       )}
       {tab === "tracking" && <TrackingTab actor={actor} classId={cls.id} />}
+      {tab === "gradebook" && <GradebookTab actor={actor} classId={cls.id} />}
+      {tab === "materials" && <MaterialsTab actor={actor} classId={cls.id} />}
       {tab === "settings" && (
         <SettingsPanel
           cls={cls}
@@ -118,4 +129,24 @@ async function TrackingTab({ actor, classId }: { actor: Awaited<ReturnType<typeo
       <Heatmap cols={cols} rows={rows} />
     </section>
   );
+}
+
+async function GradebookTab({ actor, classId }: { actor: Awaited<ReturnType<typeof requireActor>>; classId: string }) {
+  if (!(await hasFeature(actor, "GRADEBOOK"))) return <LockedFeature feature="GRADEBOOK" />;
+  const gb = await classGradebook(actor, classId);
+  return (
+    <section className="bg-surface border-border rounded-card border p-5">
+      <h2 className="mb-3 text-[15px] font-bold">Sổ điểm</h2>
+      <GradebookTable
+        className={gb.cls.name}
+        cols={gb.cols.map((c) => ({ id: c.id, title: c.title, weight: c.weight, dueLabel: dueLabel(c.dueAt) }))}
+        rows={gb.rows}
+      />
+    </section>
+  );
+}
+
+async function MaterialsTab({ actor, classId }: { actor: Awaited<ReturnType<typeof requireActor>>; classId: string }) {
+  const list = await listMaterials(actor, classId);
+  return <MaterialsPanel classId={classId} materials={list} />;
 }

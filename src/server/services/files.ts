@@ -3,7 +3,7 @@ import { and, eq, or } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { uuidv7 } from "uuidv7";
 import { db } from "@/server/db/client";
-import { assignmentAttachments, assignments, auditLogs, classMembers, files, submissionFiles, submissions } from "@/server/db/schema";
+import { assignmentAttachments, assignments, auditLogs, classMaterials, classMembers, files, materialAttachments, submissionFiles, submissions } from "@/server/db/schema";
 import type { Actor } from "@/server/auth/session";
 import {
   isUuid,
@@ -133,7 +133,16 @@ async function canReadFile(actor: Actor, f: typeof files.$inferSelect) {
         ),
       )
       .limit(1);
-    return !!link;
+    if (link) return true;
+    // Tài liệu của lớp: mọi thành viên đang ở lớp (GV, HS) đều tải được.
+    const [mat] = await db
+      .select({ id: classMaterials.id })
+      .from(materialAttachments)
+      .innerJoin(classMaterials, eq(classMaterials.id, materialAttachments.materialId))
+      .innerJoin(classMembers, and(eq(classMembers.classId, classMaterials.classId), eq(classMembers.userId, actor.id), eq(classMembers.status, "ACTIVE")))
+      .where(eq(materialAttachments.fileId, f.id))
+      .limit(1);
+    return !!mat;
   }
   // File bài nộp: chỉ GV của lớp chứa bài nộp (học sinh chủ bài đã khớp uploader ở trên).
   if ((await membershipOf(actor.id, f.classId)) !== "TEACHER") return false;

@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { publishAssignmentAction, saveQuestionsAction } from "../../../actions";
 import { cn } from "@/lib/utils";
+import { ImportQuiz, type ImportedQuestion } from "./import-quiz";
 
 type QType = "SINGLE" | "MULTI" | "TRUE_FALSE";
 type Opt = { key: string; label: string; isCorrect: boolean };
@@ -36,11 +37,13 @@ export function QuestionEditor({
   initial,
   locked,
   isDraft,
+  canImport,
 }: {
   assignmentId: string;
   initial: { type: QType; prompt: string; points: number; options: { label: string; isCorrect: boolean }[] }[];
   locked: boolean;
   isDraft: boolean;
+  canImport: boolean;
 }) {
   const [qs, setQs] = React.useState<Q[]>(() =>
     initial.length
@@ -119,8 +122,17 @@ export function QuestionEditor({
       </div>
     );
 
+  function importQuestions(list: ImportedQuestion[], mode: "append" | "replace") {
+    const mapped = list.map((q) => ({ ...q, key: k(), options: q.options.map((o) => ({ ...o, key: k() })) }));
+    setQs((all) => (mode === "replace" ? mapped : [...all.filter((q) => q.prompt.trim() || q.options.some((o) => o.label.trim())), ...mapped]));
+    toast.success(`Đã thêm ${mapped.length} câu. Kiểm tra lại rồi bấm Lưu.`);
+  }
+
   return (
     <div className="space-y-4">
+      <div className="flex flex-wrap justify-end gap-2">
+        <ImportQuiz assignmentId={assignmentId} unlocked={canImport} onImport={importQuestions} />
+      </div>
       {qs.map((q, i) => (
         <fieldset key={q.key} className="bg-surface border-border rounded-card space-y-4 border p-5">
           <div className="flex flex-wrap items-center gap-2">

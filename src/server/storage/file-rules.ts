@@ -17,6 +17,7 @@ export const ALLOWED_TYPES: Record<string, string[]> = {
   "image/png": ["png"],
   "image/webp": ["webp"],
   "image/heic": ["heic"],
+  "image/heif": ["heif", "heic"],
   "application/zip": ["zip"],
 };
 
@@ -56,6 +57,7 @@ export function magicMatches(mime: string, head: Uint8Array) {
     case "image/webp":
       return eq([0x52, 0x49, 0x46, 0x46]) && String.fromCharCode(...h(12).slice(8)) === "WEBP";
     case "image/heic":
+    case "image/heif":
       return String.fromCharCode(...h(8).slice(4)) === "ftyp";
     case "application/zip":
     case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":

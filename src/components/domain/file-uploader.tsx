@@ -10,11 +10,13 @@ export type UploadedFileInfo = { id: string; name: string; mime: string; size: n
 type Pending = { key: string; name: string; progress: "uploading" | "error"; error?: string };
 
 /**
- * Ảnh JPEG/PNG/WebP được vẽ lại qua canvas: thu nhỏ (cạnh dài ≤ 2000px) và
- * mất toàn bộ EXIF (kể cả vị trí GPS) trước khi upload.
+ * Ảnh JPEG/PNG/WebP/HEIC được vẽ lại qua canvas: thu nhỏ (cạnh dài ≤ 2000px), chuyển sang JPEG và
+ * mất toàn bộ EXIF (kể cả vị trí GPS) trước khi upload. HEIC (ảnh iPhone) giải mã được trên iOS/Safari
+ * nên GV mở được trên mọi trình duyệt; trình duyệt không giải mã được HEIC thì giữ nguyên file.
  */
 async function prepareImage(file: File): Promise<File> {
-  if (!/^image\/(jpeg|png|webp)$/.test(file.type)) return file;
+  const isHeic = /^image\/hei[cf]$/.test(file.type) || /\.hei[cf]$/i.test(file.name);
+  if (!/^image\/(jpeg|png|webp)$/.test(file.type) && !isHeic) return file;
   try {
     const bitmap = await createImageBitmap(file);
     const scale = Math.min(1, 2000 / Math.max(bitmap.width, bitmap.height));

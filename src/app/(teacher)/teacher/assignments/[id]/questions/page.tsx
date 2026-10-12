@@ -3,13 +3,14 @@ import { requireActor } from "@/server/auth/guard";
 import { getAssignmentForEdit } from "@/server/services/assignments";
 import { PageHeader } from "@/components/domain/page-parts";
 import { QuestionEditor } from "./question-editor";
+import { hasFeature } from "@/server/entitlements";
 
 export const metadata = { title: "Câu hỏi quiz · Classroom Edu" };
 
 export default async function QuestionsPage({ params }: { params: Promise<{ id: string }> }) {
   const actor = await requireActor("TEACHER");
   const { id } = await params;
-  const { a, cls, questions, hasSubmissions } = await getAssignmentForEdit(actor, id);
+  const [{ a, cls, questions, hasSubmissions }, canImport] = await Promise.all([getAssignmentForEdit(actor, id), hasFeature(actor, "QUIZ_IMPORT")]);
   if (a.type !== "QUIZ") notFound();
   return (
     <div className="mx-auto max-w-3xl">
@@ -22,6 +23,7 @@ export default async function QuestionsPage({ params }: { params: Promise<{ id: 
         assignmentId={a.id}
         locked={hasSubmissions}
         isDraft={a.status === "DRAFT"}
+        canImport={canImport}
         initial={questions.map((q) => ({
           type: q.type,
           prompt: q.prompt,

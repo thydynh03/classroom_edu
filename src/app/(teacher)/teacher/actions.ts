@@ -9,6 +9,10 @@ import * as asgSvc from "@/server/services/assignments";
 import * as subSvc from "@/server/services/submissions";
 import * as upgradeSvc from "@/server/services/upgrades";
 import { FEATURE_KEYS } from "@/lib/premium-features";
+import { importQuiz, QUIZ_IMPORT_MAX_BYTES } from "@/server/services/quiz-import";
+import * as gradebookSvc from "@/server/services/gradebook";
+import * as materialSvc from "@/server/services/materials";
+import type { ParseResult } from "@/server/services/quiz-import-parse";
 import { rateLimit } from "@/server/rate-limit";
 import { UserError } from "@/server/services/errors";
 import { assignmentSchema, gradeSchema, questionsSchema } from "@/server/validation/assignment";
@@ -298,4 +302,59 @@ export async function cancelUpgradeAction(featureKey: string) {
   const actor = await teacher();
   await upgradeSvc.cancelMyRequest(actor, String(featureKey).slice(0, 40));
   revalidatePath("/teacher/upgrade");
+}
+
+export type ImportQuizResult = ActionState & { questions?: ParseResult["questions"]; warnings?: string[] };
+
+/** Tách đề từ văn bản dán hoặc file .docx/.xlsx (tính năng nâng cao). Không lưu, chỉ trả về để GV xem lại. */
+export async function importQuizAction(assignmentId: string, fd: FormData): Promise<ImportQuizResult> {
+  const actor = await teacher();
+  const file = fd.get("file");
+  const text = fd.get("text");
+  const r = await guard(async () => {
+    if (file instanceof File && file.size > 0) {
+      if (file.size > QUIZ_IMPORT_MAX_BYTES) throw new UserError("File quá lớn (tối đa 4 MB).");
+      return importQuiz(actor, String(assignmentId), { file: { name: file.name.slice(0, 200), bytes: Buffer.from(await file.arrayBuffer()) } });
+    }
+    return importQuiz(actor, String(assignmentId), { text: typeof text === "string" ? text : "" });
+  });
+  if ("error" in r && !("questions" in r)) return { error: r.error };
+  const parsed = r as ParseResult;
+  return { ok: true, questions: parsed.questions, warnings: parsed.warnings };
+}
+
+export async function setGradeWeightAction(assignmentId: string, weight: number): Promise<ActionState> {
+  const actor = await teacher();
+  const w = z.coerce.number().int().min(1).max(3).safeParse(weight);
+  if (!w.success) return { error: "Hệ số là 1, 2 hoặc 3." };
+  const r = await guard(() => gradebookSvc.setGradeWeight(actor, String(assignmentId), w.data));
+  if (typeof r !== "string") return r;
+  revalidatePath(`/teacher/classes/${r}`);
+  return { ok: true };
+}
+
+const materialSchema = z.strictObject({
+  title: z.string().trim().min(2, "Tiêu đề cần ít nhất 2 ký tự").max(200),
+  body: z.string().max(20_000, "Nội dung quá dài").default(""),
+  attachmentIds: z.array(z.uuid()).max(10).default([]),
+});
+
+export async function createMaterialAction(classId: string, _: ActionState, fd: FormData): Promise<ActionState> {
+  const actor = await teacher();
+  const parsed = materialSchema.safeParse({
+    title: String(fd.get("title") ?? ""),
+    body: String(fd.get("body") ?? ""),
+    attachmentIds: fd.getAll("attachmentIds").map(String),
+  });
+  if (!parsed.success) return { fieldErrors: fieldErrorsFrom(parsed.error.issues) };
+  if (!parsed.data.body.trim() && !parsed.data.attachmentIds.length) return { fieldErrors: { body: "Viết nội dung hoặc đính kèm ít nhất một file" } };
+  await materialSvc.createMaterial(actor, String(classId), parsed.data);
+  revalidatePath(`/teacher/classes/${classId}`);
+  return { ok: true, message: "Đã đăng tài liệu. Học sinh đã nhận thông báo." };
+}
+
+export async function deleteMaterialAction(materialId: string) {
+  const actor = await teacher();
+  const classId = await materialSvc.deleteMaterial(actor, String(materialId));
+  revalidatePath(`/teacher/classes/${classId}`);
 }

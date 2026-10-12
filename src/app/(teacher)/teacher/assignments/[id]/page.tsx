@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ListChecks, Pencil } from "lucide-react";
+import { ListChecks, Pencil, BarChart3 } from "lucide-react";
 import { requireActor } from "@/server/auth/guard";
 import { attachmentsOf, questionsWithOptions } from "@/server/services/assignments";
 import { assignmentRoster } from "@/server/services/submissions";
@@ -50,6 +50,11 @@ export default async function TeacherAssignmentPage({ params }: { params: Promis
         actions={
           <>
             {(a.status === "DRAFT" || a.status === "SCHEDULED") && <PublishButton id={a.id} />}
+            {a.type === "QUIZ" && (
+              <LinkButton href={`/teacher/assignments/${a.id}/analytics`} variant="outline">
+                <BarChart3 aria-hidden="true" /> Thống kê câu hỏi
+              </LinkButton>
+            )}
             {a.type === "QUIZ" && (
               <LinkButton href={`/teacher/assignments/${a.id}/questions`} variant="outline">
                 <ListChecks aria-hidden="true" /> Câu hỏi ({questions.length})
