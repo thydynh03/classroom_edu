@@ -40,7 +40,9 @@ class RequestMetricsProcessor implements SpanProcessor {
       const { requestSamples } = await import("@/server/db/schema");
       await db.insert(requestSamples).values(batch);
     } catch (e) {
-      console.error("[obs] ghi request_samples lỗi", (e as Error).message);
+      // Drizzle bọc lỗi gốc trong `cause` (vd ECONNREFUSED, CONNECTION_CLOSED); chỉ log mã lỗi, không log tham số.
+      const cause = (e as { cause?: { code?: string; message?: string } }).cause;
+      console.error("[obs] ghi request_samples lỗi", { samples: batch.length, code: cause?.code ?? null, cause: cause?.message ?? (e as Error).message.split("\n")[0] });
     }
   }
 
