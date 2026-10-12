@@ -1,0 +1,263 @@
+# Audit bàn giao & kế hoạch — classroom_edu
+
+Ngày: 12/10/2026 · Người audit: Claude (orchestrator/reviewer) · Phạm vi: toàn bộ code trên `main` (commit `d69857b`).
+
+> Đây là **bản audit + plan**, chưa sửa code và **chưa xóa dữ liệu nào**. Các mục ở phần 11 cần người dùng chốt trước khi làm.
+
+---
+
+## 0. Tóm tắt
+
+**Kết luận:** đủ 8 chức năng ở mức MVP. Lint, typecheck và 62 unit test đều pass. Nhưng **chưa nên bàn giao ngay** vì còn 5 nhóm việc:
+
+1. **Production thiếu cấu hình nên một phần chức năng không chạy.** Chưa có SMTP thì không có email. R2/S3 có thể chưa đặt (cần kiểm tra); nếu chưa thì học sinh **không nộp được ảnh hay file**. Cron trên Vercel Hobby chạy 1 lần/ngày trong khung 06:00–06:59 giờ VN, phần lớn khung này là giờ yên tĩnh (trước 06:30), nên **email nhắc hạn gửi thất thường, tối đa 50 email/ngày**, còn nhắc hạn có thể trễ tới 24 giờ.
+2. **Lỗi đồng thời khi nhiều người dùng cùng lúc:** có 4 lỗi, đều nhỏ và sửa nhanh (xem mục 3).
+3. **UX mobile:** không có trang loading, trang lỗi hay trang 404 tiếng Việt. App dùng 404 để chặn quyền, nên người dùng sẽ gặp trang 404 tiếng Anh mặc định của Next. Trên mạng 4G yếu, bấm vào không thấy phản hồi gì.
+4. **Hạ tầng không hợp lệ hoặc không ổn định cho khách thương mại:** gói Vercel Hobby chỉ cho dùng cá nhân, phi thương mại. Supabase free tự tạm dừng khi không có hoạt động.
+5. **Dữ liệu demo tự sinh lại sau mỗi lần deploy** (`vercel-build` chạy `seed-demo.ts`). Nếu chỉ xóa DB mà không tắt bước này, lần deploy sau sẽ tạo lại `demo.gv` và 22 học sinh demo.
+
+Các yêu cầu mới (admin quản lý, theo dõi hành vi, dashboard p95/p99, tính năng trả phí kèm nút "Yêu cầu mở khóa") đều làm được trên kiến trúc hiện tại mà không phải đổi stack. Thiết kế ở mục 8–9, thứ tự làm ở mục 10.
+
+---
+
+## 1. Cách audit và giới hạn
+
+| Đã làm | Kết quả |
+| --- | --- |
+| Đọc schema, policy, services, server actions, jobs, layout, trang HS/GV/admin, CI, Dockerfile, vercel.json | xong |
+| `pnpm lint` | ✅ pass |
+| `pnpm typecheck` | ✅ pass |
+| `pnpm test` (unit) | ✅ 62/62 pass |
+| `pnpm test:int` (phân quyền, Testcontainers) | ⚠️ **không chạy được trong môi trường audit** (container không có Docker daemon). Lần chạy gần nhất ghi trong PROGRESS là 27 test pass. CI trên GitHub vẫn chạy job này. |
+| `pnpm test:e2e` | ⚠️ không chạy (cần Postgres đã seed và Docker) |
+| Kiểm tra production (Vercel/Supabase/R2) | ❌ không có quyền truy cập. Các mục ghi "cần xác minh" phải kiểm tra trên dashboard Vercel. |
+
+---
+
+## 2. Đối chiếu 8 chức năng yêu cầu
+
+Ký hiệu: ✅ chạy đúng · ⚠️ chạy nhưng thiếu hoặc có lỗi · ❌ chưa có hoặc không chạy trên production.
+
+| # | Chức năng | Trạng thái | Đã có | Thiếu / lỗi |
+| --- | --- | --- | --- | --- |
+| 1 | **Quản lý lớp học** | ✅ | Tạo/sửa/lưu trữ lớp, màu lớp, mã 8 ký tự và link `/join/[code]`, bật/tắt tham gia bằng mã, tạo HS hàng loạt (dán tên hoặc Excel), thêm HS đã có tài khoản, xóa HS (giữ bài nộp), cấp lại mật khẩu từng em hoặc hàng loạt, xuất danh sách Excel | GV **không sửa được họ tên HS** (gõ sai phải tạo lại). Nếu tạo 100 HS mà lỗi giữa chừng thì các tài khoản đã tạo mất mật khẩu tạm (`classes.ts` `bulkCreateStudents` không chạy trong một transaction). Không có danh sách HS đã rời lớp để thêm lại. Chưa có chuyển lớp sang GV khác khi GV nghỉ. |
+| 2 | **Đăng nhập** | ⚠️ | Tài khoản riêng GV/HS/ADMIN. GV tự đăng ký rồi chờ admin duyệt. HS vào bằng mã lớp hoặc do GV tạo (username + mật khẩu tạm, bắt đổi lần đầu). Khóa sau 10 lần sai, thiết bị đăng nhập + thu hồi, argon2id, session lưu DB | **Quên mật khẩu qua email không chạy** khi chưa có SMTP (chỉ admin hoặc GV cấp lại được). Rate limit nằm trong bộ nhớ nên vô hiệu trên serverless. Bộ đếm sai mật khẩu không nguyên tử (mục 3). |
+| 3 | **Giao bài tập** | ⚠️ | Tự luận + trắc nghiệm, file đính kèm, hạn nộp, nhận/không nhận trễ, cho nộp lại, giao nhiều lớp một lần, nháp, hẹn giờ đăng, lưu trữ | **Đính kèm tài liệu cần R2/S3** (cần xác minh biến `S3_*` trên Vercel). Đề bài chỉ là văn bản thuần: không in đậm, không công thức Toán, không chèn ảnh vào giữa đề. **Chưa có loại "Tài liệu" riêng** (đăng tài liệu cho lớp mà không cần nộp bài): yêu cầu ghi "đăng bài tập, tài liệu, đề bài", hiện tài liệu chỉ đi kèm bài tập. Tạo được bài có hạn nộp đã qua. |
+| 4 | **Nộp bài trực tuyến** | ⚠️ | Viết trực tiếp, đính kèm file/ảnh, nút chụp ảnh bằng camera, ảnh được thu nhỏ và xóa GPS, tự lưu nháp 2 giây, lưu cục bộ khi mất mạng, rút lại, đánh dấu trễ do server tính, nộp lại khi được trả | **Cần R2/S3 trên production.** Lỗi tự lưu mất nội dung gõ trong lúc đang lưu (mục 3). Ảnh HEIC từ iPhone không được chuyển sang JPEG, GV dùng Chrome/Windows có thể không xem được (cần thử trên iPhone thật). Chưa gộp nhiều ảnh thành một PDF. |
+| 5 | **Chấm điểm** | ✅ | Điểm + nhận xét, lưu nháp điểm, trả từng bài / trả hàng loạt, sửa điểm, lịch sử chấm append-only, ngân hàng nhận xét, chế độ tập trung + phím tắt, HS chỉ thấy điểm khi đã trả | Trên điện thoại cột danh sách bị ẩn (`hidden lg:flex`), GV chấm trên điện thoại phải bấm qua lại từng bài. Chưa chấm/ghi chú trực tiếp lên ảnh bài làm, chưa có rubric. |
+| 6 | **Trắc nghiệm tự động** | ⚠️ | 1 đáp án, nhiều đáp án, Đúng/Sai. Chấm ở server. Hiện kết quả ngay / sau hạn / thủ công. Có test chứng minh không lộ `is_correct` | **Không tự lưu câu trả lời**: HS tải lại trang, hết pin hay mất mạng giữa chừng là mất hết bài đang làm. Nộp hai lần song song có thể ghi đè nhau (mục 3). Chưa giới hạn thời gian, chưa trộn câu, mới 1 lượt làm. Câu nhiều đáp án tính đúng hết hoặc 0 điểm. GV chưa có thống kê từng câu. |
+| 7 | **Quản lý bài tập (đã nộp/chưa nộp)** | ✅ | Số liệu từng bài (tổng, đã nộp, chưa nộp, trễ, đã chấm), danh sách HS theo trạng thái, hộp "Cần chấm" xuyên lớp, heatmap HS × bài, dashboard GV, trang điểm của HS | Bài nộp của HS **đã rời lớp** vẫn được tính vào "đã nộp", nên tỉ lệ có thể sai hoặc vượt sĩ số (`classes.ts:411`). Chưa có nút **"Nhắc các em chưa nộp"**. Chưa xuất bảng điểm. |
+| 8 | **Thông báo (nhắc lịch, deadline)** | ❌ trên production · ✅ local | In-app: bài mới, sắp đến hạn (24 giờ), quá hạn, có bài nộp (gộp theo ngày), đã trả bài. Email có giờ yên tĩnh 21:30–6:30. Chuông thông báo, đánh dấu đã đọc | Trên Vercel Hobby, cron `0 23 * * *` UTC (06:00 giờ VN) chạy **1 lần/ngày**, Hobby chỉ đảm bảo chạy trong khung giờ đó, phần lớn khung là giờ yên tĩnh. Nếu chạy trước 06:30 thì `flushNotificationEmails` trả 0; chạy sau thì gửi được **tối đa 50 email/ngày**. Nhắc "sắp đến hạn" và "quá hạn" trễ tới 24 giờ. Đa số HS không có email nên chỉ thấy nhắc khi tự mở app. **Không có thông báo đẩy (Web Push)** và không có lịch. Hàng đợi email có thể kẹt (mục 3). Landing đang hứa "Nhắc 24 giờ trước hạn", điều này chưa đúng trên production. |
+
+---
+
+## 3. Khi nhiều người dùng cùng lúc
+
+Bối cảnh: Vercel serverless (nhiều instance chạy song song, bộ nhớ không chia sẻ) với Supabase qua pooler. Với vài trăm HS thì kiến trúc **đủ sức**: upload đi thẳng lên storage, DB có index cho các truy vấn chính. Các lỗi bên dưới xuất hiện khi có **nhiều request trùng thời điểm**, ví dụ cả lớp nộp bài trong phút cuối trước hạn.
+
+| Mức | Vấn đề | Chỗ | Hậu quả | Cách sửa |
+| --- | --- | --- | --- | --- |
+| 🔴 Cao | Rate limit nằm trong `Map` bộ nhớ của từng instance | `src/server/rate-limit.ts:4` | Trên Vercel mỗi instance đếm riêng, nên giới hạn đăng nhập/đăng ký/tham gia lớp gần như không có tác dụng | Chuyển sang đếm trong Postgres (bảng `rate_limits`, `INSERT … ON CONFLICT DO UPDATE` nguyên tử), hoặc dùng WAF của nền tảng |
+| 🔴 Cao | Cron 1 lần/ngày, phần lớn khung chạy là giờ yên tĩnh, mỗi lượt chỉ gửi 50 email | `vercel.json`, `notifications.ts:46–52` | Email gửi thất thường hoặc không gửi, nhắc hạn trễ tới 24 giờ | Gọi `/api/cron` mỗi 10–15 phút bằng cron bên ngoài (Cloudflare Workers Cron hoặc cron-job.org), hoặc nâng Vercel Pro |
+| 🟠 Vừa | Bộ đếm sai mật khẩu đọc rồi mới ghi (không nguyên tử) | `src/app/(auth)/actions.ts:77` | Gửi song song nhiều lượt đoán mật khẩu sẽ vượt mốc khóa 10 lần | `UPDATE users SET failed_logins = failed_logins + 1 … RETURNING` rồi mới quyết định khóa |
+| 🟠 Vừa | Nộp quiz không có điều kiện trạng thái trong UPDATE | `submissions.ts:167–195` | Bấm đúp hoặc mở 2 tab có thể nộp 2 lần, sinh 2 `grade_events`, lần sau ghi đè lần trước | `UPDATE … WHERE id = ? AND status = 'DRAFT'`; không có dòng nào được cập nhật thì báo "Bài đã nộp" |
+| 🟠 Vừa | Tự lưu bài viết làm mất nội dung gõ trong lúc đang lưu | `written-panel.tsx:57–63` | Lượt lưu đầu xong thì đặt `dirty=false`, nên phần gõ thêm trong lúc chờ không được gửi lên server (chỉ còn trong localStorage) | Dùng bộ đếm phiên bản thay cho cờ `dirty`, hoặc so nội dung đã gửi với nội dung hiện tại |
+| 🟠 Vừa | Hàng đợi email: lấy 50 dòng không sắp xếp, dòng gửi lỗi giữ nguyên | `notifications.ts:46–60` | SMTP lỗi 50 lần là cả hàng đợi kẹt vĩnh viễn | Sắp xếp theo `created_at`, thêm `email_attempts` và `email_last_error`, thử lại có giãn cách, bỏ sau N lần |
+| 🟡 Thấp | GV chấm đúng lúc HS rút bài: `saveGrade` không kiểm tra lại trạng thái trong UPDATE | `submissions.ts` `saveGrade` | Hiếm gặp; có thể chấm vào bản nháp | Thêm điều kiện `status IN ('SUBMITTED','GRADED','RETURNED')` vào UPDATE |
+| 🟡 Thấp | Thiếu index cho truy vấn gửi email (`email_sent_at IS NULL AND type IN …`) và cho `audit_logs.created_at` | `schema.ts` | Chậm dần khi bảng lớn | Thêm partial index |
+| 🟡 Thấp | Không dọn file `PENDING`, phiên hết hạn, token đã dùng | — | Bảng và bucket phình dần | Thêm bước dọn vào `/api/cron` |
+| 🟡 Thấp | Vercel đặt ở `bom1` (Mumbai), Supabase ở `ap-south-1` | `vercel.json` | Mỗi trang cần vài lượt truy vấn DB; người dùng VN gần Singapore hơn. `ARCHITECTURE.md` ghi `sin1`, không khớp với cấu hình | Khi chuyển sang tài khoản của khách, cân nhắc đặt cả hai ở Singapore (`sin1` + `ap-southeast-1`) |
+
+**Chưa từng load test.** Plan có một bước k6 giả lập 300 HS nộp bài cùng phút trước hạn (mục 10, H7).
+
+---
+
+## 4. Bảo mật & vận hành
+
+Phần làm tốt: policy layer thống nhất, trả 404 khi không có quyền, actor luôn lấy từ session, Zod strict ở server action, CSP có nonce, cookie `__Host-`, argon2id, token reset chỉ lưu hash, quét magic bytes khi upload, không lộ đáp án quiz (có test).
+
+Cần xử lý:
+
+1. **IP lấy từ `x-forwarded-for`, phần tử đầu tiên** (`session.ts:34`, `actions.ts:42`, `account-actions.ts:62`). Trên Vercel thì đúng. Chạy Docker hoặc VPS không có proxy tin cậy thì giả mạo được, và sau Cloudflare phải đọc `CF-Connecting-IP`. Nên gom về một hàm `clientIp()` đọc theo nền tảng.
+2. **ClamAV tắt trên Vercel.** File chỉ được kiểm tra magic bytes. Chấp nhận được, nhưng nên ghi rõ trong tài liệu bàn giao.
+3. **Không có error tracking.** `SENTRY_DSN` có trong schema env nhưng không dùng. Lỗi production hiện chỉ xem được trong log Vercel. Mục 8 giải quyết việc này.
+4. **Hạ tầng cho khách thương mại:**
+   - Theo tài liệu của Vercel, gói **Hobby chỉ cho dùng cá nhân, phi thương mại**. Bán dịch vụ, thu tiền mở khóa, hay được trả tiền để làm site đều tính là thương mại, nên cần **Vercel Pro**. ([Vercel Hobby plan](https://vercel.com/docs/plans/hobby), [Fair use guidelines](https://vercel.com/docs/limits/fair-use-guidelines))
+   - Supabase free giới hạn dung lượng và tạm dừng project khi không có hoạt động. Production của khách nên dùng gói trả phí, hoặc ít nhất có backup định kỳ.
+   - Tài khoản Vercel, Supabase, R2, tên miền và SMTP nên đứng tên khách (hoặc chuyển quyền sở hữu khi bàn giao).
+5. **Pháp lý (không phải tư vấn luật):** HS phần lớn chưa đủ 18 tuổi. Khi thêm theo dõi hành vi và thu tiền thì cần trang **Chính sách quyền riêng tư** và **Điều khoản sử dụng** (Nghị định 13/2023 về bảo vệ dữ liệu cá nhân), cùng quy trình hóa đơn. Nên hỏi kế toán hoặc luật sư của khách.
+
+---
+
+## 5. UI/UX & mobile cho học sinh
+
+### Nên thêm (ưu tiên từ trên xuống)
+
+| # | Việc | Lý do |
+| --- | --- | --- |
+| 1 | `loading.tsx` có skeleton cho `/student`, `/student/assignments/[id]`, `/student/classes`, `/student/grades`, `/teacher/*`, `/admin` | 4G yếu bấm vào không thấy gì, HS bấm lại nhiều lần. AGENTS.md yêu cầu mọi màn hình có skeleton nhưng hiện **không có file `loading.tsx` nào** |
+| 2 | `not-found.tsx` (tiếng Việt, kiêm màn "không có quyền"), `error.tsx` cho từng khu vực, `global-error.tsx` | App dùng `notFound()` để chặn quyền nên hiện **trang 404 tiếng Anh mặc định**. Lỗi bất ngờ hiện "Application error" tiếng Anh |
+| 3 | **Tự lưu câu trả lời quiz** (localStorage ngay khi chọn, kèm lưu nháp lên server) | HS làm trên điện thoại dễ mất bài |
+| 4 | Thanh tab mobile: **luôn hiện nhãn** dưới icon, vùng bấm ≥ 44px | Hiện chỉ tab đang mở có nhãn (`mobile-tab-bar.tsx:124`), vùng bấm khoảng 36px |
+| 5 | **PWA**: `manifest.webmanifest`, icon, màu theme, "Thêm vào màn hình chính" | HS mở như một app. Đây cũng là bước chuẩn bị cho Web Push |
+| 6 | **Web Push** nhắc hạn (sau PWA) | Cách duy nhất nhắc được HS không có email. PROJECT.md xếp vào Phase 3, nhưng với yêu cầu "nhắc lịch, deadline" thì nên đưa lên sớm |
+| 7 | Trang **Lịch** (HS: danh sách hạn nộp theo ngày, 2 tuần tới) | Yêu cầu có "nhắc lịch"; hiện chỉ có dải 7 ngày bị `aria-hidden` |
+| 8 | Nút **"Nhắc các em chưa nộp"** ở trang bài tập (GV) | Việc GV làm thường xuyên nhất, làm ít tốn công |
+| 9 | Loại bài **"Tài liệu"** (không hạn nộp, không nộp bài) hoặc bảng tin lớp | Khớp yêu cầu "đăng tài liệu" |
+| 10 | GV sửa họ tên HS; xem danh sách HS đã rời lớp và thêm lại | Thao tác quản lý lớp cơ bản |
+| 11 | Chuyển ảnh HEIC sang JPEG phía client, hoặc chặn HEIC kèm hướng dẫn | GV mở ảnh từ iPhone được |
+| 12 | Thêm test E2E project mobile (375px) cho luồng HS: mở bài, chụp/đính kèm, nộp, xem điểm | Hiện test mobile đang bị skip |
+
+### Nên bỏ hoặc sửa
+
+- **Bỏ `tsx scripts/seed-demo.ts` khỏi `vercel-build`** (hoặc đặt `SEED_DEMO=false`). Script tự tạo lại `demo.gv` và 22 HS demo ở lần deploy kế tiếp nếu không còn `demo.gv`, tức là ngay sau khi xóa dữ liệu.
+- Câu chữ landing phải khớp thực tế: "Nhắc 24 giờ trước hạn" và "nhận thông báo ngay" chỉ đúng khi cron chạy đều và có push/email.
+- Bảng "Tài khoản mẫu" trong README là dữ liệu seed dev (`co.ha`…). Tài liệu bàn giao cho khách cần một bản riêng.
+- Đồng bộ lại `ARCHITECTURE.md` (ghi region `sin1`, thực tế `bom1`).
+
+---
+
+## 6. Có nên thêm Cloudflare không?
+
+**Có, nhưng không đặt proxy (đám mây cam) trước Vercel.** Vercel khuyến cáo không đặt reverse proxy phía trước: nó làm Vercel Firewall và chống bot hoạt động kém, tăng độ trễ, gây xung đột cache, và hay gặp lỗi 526/524. ([Vercel: Should I use Cloudflare in front of Vercel?](https://vercel.com/guides/cloudflare-with-vercel), [Reverse proxy & Vercel](https://blog.vercel.com/docs/security/reverse-proxy), [Community: lỗi khi bật proxy](https://community.vercel.com/t/how-to-fix-vercel-invalid-configuration-error-with-cloudflare-proxy-enabled/37446))
+
+Nên dùng Cloudflare cho các việc sau:
+
+| Dùng | Lợi ích |
+| --- | --- |
+| **R2** (storage file bài nộp) | Đã nằm trong kiến trúc; free 10GB, không phí egress. Cần thiết để nộp ảnh/file chạy được |
+| **Workers Cron Triggers** gọi `/api/cron` mỗi 10–15 phút kèm `Authorization: Bearer CRON_SECRET` | Vượt giới hạn cron 1 lần/ngày, nhắc hạn đúng giờ và gửi được email |
+| **Turnstile** (captcha miễn phí, không làm phiền) trên đăng ký GV, `/join/[code]` và đăng nhập sau vài lần sai | Thay rate limit trong bộ nhớ đang vô hiệu, chặn bot tạo tài khoản. *Cần thêm `challenges.cloudflare.com` vào CSP* |
+| **DNS** của tên miền (chế độ DNS-only, đám mây xám) | Quản lý tên miền tập trung |
+
+**Nếu sau này chuyển sang VPS hoặc Docker** (không dùng Vercel) thì bật proxy Cloudflare (WAF, rate limiting, chống DDoS). Khi đó phải: đọc IP từ `CF-Connecting-IP`; tắt Rocket Loader, Email Obfuscation và Auto Minify vì chúng chèn script làm vỡ CSP nonce; không cache trang HTML (trang nào cũng cá nhân hóa).
+
+Trên Vercel, lớp chống tấn công nên dùng Vercel Firewall (custom rules, rate limit) theo gói khách mua.
+
+---
+
+## 7. Xóa dữ liệu, giữ 1 tài khoản mẫu, bàn giao
+
+> Chưa thực hiện. Môi trường audit không có quyền truy cập DB production, nên việc xóa phải chạy bằng script trên máy có `DIRECT_URL` (hoặc tôi chạy nếu được cấp biến này).
+
+### Đề xuất dữ liệu giữ lại (cần chốt, mục 11)
+
+- **1 admin của khách**: bắt buộc, vì chỉ admin duyệt được GV tự đăng ký.
+- **1 giáo viên mẫu** (`giaovien.mau`), có 1 lớp mẫu, 1 HS mẫu (`hocsinh.mau`), 1 bài tự luận và 1 bài trắc nghiệm, để khách thử ngay.
+- Mật khẩu sinh ngẫu nhiên, chỉ in ra một lần khi chạy script, không commit. Tài khoản mẫu đặt `must_change_password = true`.
+
+### Các bước
+
+1. **Backup trước khi xóa:** `pg_dump` toàn bộ DB và lưu ngoài repo.
+2. Viết `scripts/handover-reset.ts`:
+   - Chỉ chạy khi có `CONFIRM_WIPE=<tên host DB>` (chống chạy nhầm DB).
+   - Trong một transaction: `TRUNCATE` các bảng `audit_logs, notifications, grade_events, submission_files, submissions, question_options, questions, assignment_attachments, files, assignments, class_members, classes, auth_tokens, sessions, users` (cùng danh sách với `scripts/seed.ts`), rồi tạo các tài khoản ở trên.
+   - Thêm script `pnpm db:handover`.
+3. **Tắt seed demo:** bỏ `tsx scripts/seed-demo.ts` khỏi `vercel-build` (khuyến nghị xóa luôn file, kèm ADR), hoặc đặt `SEED_DEMO=false` trên Vercel.
+4. **Xóa object trong bucket R2** (`att/`, `sub/`) hoặc tạo bucket mới.
+5. **Đổi secret:** mật khẩu DB, key R2, `CRON_SECRET`. Xóa `BOOTSTRAP_ADMIN_PASSWORD` khỏi env sau khi admin đăng nhập. Xóa `demo-accounts.local.md` trên máy chủ dự án.
+6. **Cấu hình production đầy đủ:** `S3_*` (R2), `SMTP_*` (Resend), `REQUIRE_EMAIL_VERIFICATION=true` khi SMTP chạy, `TEACHER_AUTO_APPROVE_DOMAINS` (tên miền trường của khách), `APP_URL` (tên miền thật).
+7. Viết `docs/HANDOVER.md` cho khách: đăng nhập admin, duyệt GV, tạo lớp, phát tài khoản HS, xử lý quên mật khẩu, nơi xem log, cách backup.
+
+---
+
+## 8. Phần admin: quản lý, theo dõi hành vi, dashboard p95/p99, lỗi, mất request
+
+### 8.1 Admin quản lý (thêm vào trang admin hiện có)
+
+| Trang | Nội dung |
+| --- | --- |
+| `/admin` (đã có) | Người dùng, GV chờ duyệt, khóa/mở, cấp mật khẩu tạm. Thêm: lọc "chưa đăng nhập 30 ngày", xóa tài khoản theo yêu cầu (soft delete + audit) |
+| `/admin/classes` | Danh sách lớp (tên, GV, sĩ số, số bài, hoạt động gần nhất), **chuyển lớp sang GV khác**, lưu trữ. Không xem bài làm hay điểm (giữ nguyên quyết định privacy) |
+| `/admin/upgrades` | Yêu cầu mở khóa tính năng (mục 9) |
+| `/admin/ops` | Sức khỏe hệ thống (8.3) |
+| `/admin/activity` | Hành vi người dùng (8.2) |
+| `/admin/settings` | Tên trường, logo, email nhận thông báo admin, bật/tắt GV tự đăng ký, banner thông báo toàn hệ thống |
+| `/admin/audit` (đã có) | Thêm lọc theo người, hành động, ngày |
+
+### 8.2 Theo dõi hành vi người dùng
+
+- Bảng `user_events (id, at, user_id, role, event, route, device, meta jsonb)`. Sự kiện **ghi ở server** tại các điểm nghiệp vụ: đăng nhập, mở bài, nộp, rút, chấm, trả, tạo lớp, tạo bài, upload, mở tính năng khóa, gửi yêu cầu mở khóa. Không ghi nội dung bài, điểm hay nhận xét (theo AGENTS.md).
+- Dashboard: DAU/WAU/MAU theo vai trò; lượt đăng nhập theo ngày; **phễu** (bài được giao → HS mở → nộp → GV chấm → trả); tỉ lệ dùng điện thoại so với máy tính; heatmap giờ cao điểm (giờ × thứ); mức dùng từng tính năng; dòng thời gian hoạt động của một tài khoản (việc admin mở xem cũng ghi audit).
+- Lưu 90 ngày rồi gộp theo ngày. Không dùng công cụ quay màn hình (session replay) vì người dùng là trẻ vị thành niên.
+
+### 8.3 Sức khỏe hệ thống: p50/p95/p99, request lỗi, mất request
+
+| Nguồn | Cách lấy | Hiển thị |
+| --- | --- | --- |
+| **Lỗi server** | Export `onRequestError` trong `src/instrumentation.ts` (Next 16 hỗ trợ sẵn; có `routePath`, `routeType` render/route/action/proxy) → bảng `error_events` (route, loại, digest, message đã cắt, số lần, lần cuối). Không lưu body hay cookie | Bảng lỗi gom theo route + digest, xu hướng 24h/7 ngày |
+| **Độ trễ server** | Span OpenTelemetry của Next (`@vercel/otel` + span processor tự viết ghi thời lượng request gốc: route, method, status) → `request_samples` (giữ 3 ngày) → mỗi giờ gộp vào `request_stats_hourly` kèm histogram bucket | p50/p95/p99 theo thời gian, top route chậm nhất, tỉ lệ 4xx/5xx |
+| **Mất request / lỗi phía người dùng** | Beacon client (`navigator.sendBeacon('/api/telemetry')`, gửi theo lô, có rate limit): server action hoặc fetch lỗi mạng, quá thời gian, nộp bài khi offline, tải trang bị hủy. Kèm Web Vitals (`useReportWebVitals`: TTFB, LCP, INP) và loại mạng (`navigator.connection`) | "Request không tới được server" theo route và theo mạng/thiết bị; Web Vitals của người dùng mobile thật |
+| **Job nền** | `/api/cron` ghi `job_runs` (bắt đầu, kết thúc, số bài đăng, số nhắc, email gửi/lỗi) | Lần chạy cuối, cảnh báo nếu hơn 30 phút chưa chạy, độ dài hàng đợi email |
+
+- Mất request do hạ tầng (function timeout, 504 ở edge) chỉ thấy trong log của nền tảng. Có thể bổ sung bằng Vercel Log Drains hoặc Observability (gói Pro), hoặc thêm Sentry (bản miễn phí) để xem stack trace.
+- Cần ADR cho dependency mới (`@vercel/otel`, có thể thêm thư viện vẽ biểu đồ). Biểu đồ theo skill `dataviz`.
+- Cảnh báo: gửi email cho admin khi tỉ lệ 5xx vượt 2% trong 10 phút hoặc cron 30 phút chưa chạy.
+
+---
+
+## 9. Tính năng trả phí và luồng "Yêu cầu mở khóa"
+
+### 9.1 Luồng (đúng như yêu cầu: xem mô tả → bấm nút → gửi admin → email admin)
+
+1. GV thấy mục **"✨ Nâng cao"** trên thanh điều hướng, cùng các nút có ổ khóa ngay chỗ dùng (ví dụ "Nhập đề từ Word ✨" trong trình soạn quiz).
+2. Bấm vào: modal hoặc trang mô tả lợi ích, ảnh hoặc GIF demo, gói (tháng / năm / cả trường).
+3. Nút **"Yêu cầu mở khóa"**: form ngắn (chọn gói, SĐT/Zalo tùy chọn, ghi chú) → server action:
+   - Tạo `upgrade_requests (id, requester_id, feature_key, plan, contact, note, status NEW|CONTACTED|PAID|GRANTED|REJECTED, admin_note, handled_by, handled_at, created_at)`. Mỗi GV chỉ có một yêu cầu đang mở cho mỗi tính năng; có rate limit.
+   - Báo admin trong app, đồng thời **gửi email ngay cho `ADMIN_NOTIFY_EMAILS`** (không áp giờ yên tĩnh cho email admin).
+   - GV thấy: "Đã gửi yêu cầu. Quản trị viên sẽ liên hệ với bạn."
+4. Admin ở `/admin/upgrades`: xem, liên hệ, đánh dấu đã thanh toán → **Mở khóa** (tạo `feature_grants (user_id, feature_key, expires_at, granted_by)`) → GV nhận thông báo "Đã mở khóa".
+5. Thanh toán giai đoạn đầu làm thủ công: chuyển khoản qua ảnh VietQR do admin tải lên, nội dung `CE-<mã yêu cầu>`. Giai đoạn sau tích hợp payOS/VNPay/MoMo để tự mở khóa qua webhook.
+
+Nguyên tắc:
+
+- Chặn quyền **ở server** bằng `hasFeature(actor, key)` / `requireFeature`, không chỉ ẩn nút.
+- **HS không bao giờ thấy màn hình đòi tiền.** HS hưởng tính năng qua gói của GV.
+- Danh mục tính năng khai báo trong code (`src/lib/premium-features.ts`); chưa cần bảng giá trong DB.
+
+### 9.2 Tính năng nên bán (hợp với GV Việt Nam)
+
+| Ưu tiên | Tính năng | Vì sao hấp dẫn | Công sức ước tính |
+| --- | --- | --- | --- |
+| 1 | **Nhập đề trắc nghiệm từ Word/Excel/văn bản dán** ("Câu 1… A. B. C. D.", đáp án in đậm hoặc gạch chân) | GV VN soạn đề bằng Word; tiết kiệm rất nhiều thời gian | 3–4 ngày |
+| 2 | **Sổ điểm + xuất Excel** (điểm hệ số 1/2/3, trung bình môn theo kỳ) | Khớp cách chấm của trường VN | 2–3 ngày |
+| 3 | **Chấm trực tiếp lên ảnh bài làm** (bút đỏ, đánh dấu, ghi chú) | HS nộp ảnh chụp là chủ yếu; GV quen chấm bằng bút đỏ | 4–5 ngày |
+| 4 | **Ngân hàng câu hỏi + trộn câu/đáp án + giới hạn thời gian + nhiều lượt làm** | Chống chép bài, dùng lại đề | 5–7 ngày |
+| 5 | **Thống kê từng câu hỏi** (câu nhiều HS sai, phân bố điểm) | GV biết phần nào cần dạy lại | 1–2 ngày |
+| 6 | **AI gợi ý nhận xét / gợi ý điểm tự luận** (GV vẫn là người quyết định) | Gây ấn tượng mạnh khi demo | 3–5 ngày. Có chi phí API; cần ADR và chính sách dữ liệu |
+| 7 | **Báo cáo phụ huynh hằng tuần** (email/Zalo, hoặc tài khoản phụ huynh) | Phụ huynh VN rất quan tâm; có thể bán cho cả trường | 4–6 ngày |
+| 8 | Nhắc hạn qua **Zalo OA** | HS và phụ huynh VN dùng Zalo nhiều hơn email | 3–5 ngày, cần OA đã xác minh |
+| 9 | Đồng giảng dạy, chia sẻ thư viện bài tập giữa GV | Bán gói trường | 3–4 ngày |
+
+Khuyến nghị đợt đầu, vừa để demo vừa để bán: **1, 2, 5**, kèm *khung trả phí và luồng yêu cầu*. Tính năng 3, 4, 6 làm khi đã có khách đặt mua.
+
+---
+
+## 10. Kế hoạch theo milestone
+
+Mỗi milestone làm theo quy trình của repo: brief → code → `pnpm lint && pnpm typecheck && pnpm test && pnpm test:int` (+ `test:e2e` nếu đụng UI) → review bảo mật → cập nhật PROGRESS, LESSONS, DECISIONS. Số ngày là ước tính làm có AI hỗ trợ.
+
+| Mốc | Nội dung | Ước tính | Tiêu chí xong |
+| --- | --- | --- | --- |
+| **H0 · Dọn bàn giao** | Backup; `scripts/handover-reset.ts` + `pnpm db:handover`; bỏ seed-demo khỏi build; xóa bucket; đổi secret; cấu hình R2/SMTP/cron ngoài; `docs/HANDOVER.md`; chuyển Vercel Pro và tài khoản sang tên khách | 0,5–1 | DB chỉ còn tài khoản đã chốt; deploy lại không sinh demo; upload ảnh và email chạy trên production |
+| **H1 · Sửa lỗi chức năng & đồng thời** | Rate limit bằng Postgres; bộ đếm đăng nhập nguyên tử; quiz và chấm dùng UPDATE có điều kiện; sửa tự lưu; tự lưu quiz; hàng đợi email có thứ tự và thử lại; thống kê bỏ HS đã rời lớp; GV sửa tên HS; `bulkCreateStudents` dùng transaction; index; job dọn dẹp; hàm `clientIp()` chung | 2 | Integration test mới cho từng race (gửi request song song), 5 actor cho action mới |
+| **H2 · UX mobile** | `loading.tsx`, `error.tsx`, `not-found.tsx`, `global-error.tsx` tiếng Việt; tab bar có nhãn và vùng bấm ≥ 44px; PWA manifest; xử lý HEIC; nút "Nhắc các em chưa nộp"; loại bài "Tài liệu"; trang Lịch của HS; E2E mobile 375px | 3 | E2E mobile pass, axe không có lỗi serious, Lighthouse mobile ≥ 90 ở trang HS |
+| **H3 · Admin vận hành + observability** | ADR; `onRequestError` → `error_events`; span processor OTel → `request_samples`/`request_stats_hourly`; beacon client + Web Vitals; `job_runs`; `/admin/ops` (p50/p95/p99, lỗi, mất request, cron, hàng đợi email); email cảnh báo; `/admin/classes`, `/admin/settings` | 3–4 | Dashboard hiện số liệu thật; tự gây lỗi thì thấy trong 1 phút; không lưu PII hay nội dung bài |
+| **H4 · Theo dõi hành vi** | `user_events`; `/admin/activity` (DAU/WAU/MAU, phễu, thiết bị, giờ cao điểm, dòng thời gian); trang Chính sách quyền riêng tư và Điều khoản | 2 | Sự kiện ghi ở server, có retention, admin xem dòng thời gian thì ghi audit |
+| **H5 · Khung trả phí + yêu cầu mở khóa** | `upgrade_requests`, `feature_grants`, `hasFeature/requireFeature`, trang "Nâng cao", modal yêu cầu, email admin, `/admin/upgrades`, ảnh VietQR | 2–3 | GV gửi yêu cầu → admin nhận email → mở khóa → GV dùng được; GV chưa mở khóa bị server chặn |
+| **H6 · Tính năng trả phí đợt 1** | Nhập đề Word/Excel; sổ điểm + xuất Excel; thống kê từng câu | 6–9 | Mỗi tính năng có unit + integration test, nằm sau `requireFeature` |
+| **H7 · Load test & go-live** | Kịch bản k6: 300 HS nộp trong 1 phút, 50 GV mở dashboard; skill `security-review` và `engineering:deploy-checklist`; sửa landing cho khớp thực tế | 1 | p95 < 800ms ở luồng nộp bài, 0 lỗi 5xx, checklist deploy đủ |
+
+**Thứ tự gợi ý:** H0 → H1 → H2 (đủ để bàn giao bản ổn định) → H5 → H3 → H4 → H6 → H7. Nếu khách cần dùng ngay thì bàn giao sau H2 và làm tiếp các mốc còn lại.
+
+---
+
+## 11. Câu hỏi cần chốt trước khi làm
+
+1. **"1 tài khoản mẫu" là gì?** Đề xuất: 1 admin của khách + 1 GV mẫu (có 1 lớp, 1 HS, 2 bài). Hay chỉ giữ đúng 1 tài khoản admin?
+2. Cho tôi chạy việc xóa (cấp `DIRECT_URL` qua biến môi trường của phiên) hay bạn tự chạy script trên máy mình?
+3. Khách có chịu nâng **Vercel Pro** và gói Supabase trả phí không? Hay chuyển sang VPS + Docker (khi đó bật proxy Cloudflare)?
+4. Có SMTP chưa (Resend + tên miền của khách)? Đã có R2 chưa?
+5. Tính năng trả phí bán theo **từng GV** hay **cả trường**? Giá đã có chưa (để hiển thị trên thẻ tính năng)?
+6. Đợt đầu chọn tính năng trả phí nào (đề xuất: nhập đề Word/Excel, sổ điểm, thống kê câu hỏi)?
+7. Web Push (cho HS không có email) có làm trong đợt này không?
