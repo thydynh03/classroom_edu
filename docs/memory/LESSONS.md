@@ -103,3 +103,6 @@ Tránh: "giảm chuyển động" nghĩa là bỏ trượt/phóng/lặp, không 
 
 **2026-09-29 · Claude · e2e/màu** — Đổi nút theme (bỏ menu) nhưng quên sửa `tests/e2e/dev-ui.spec.ts`, E2E đỏ ở lần chạy sau. Đổi bảng màu thì axe bắt chữ cam `#C2410C` trên nền `#F3EDE4` = 4.44:1.
 Tránh: đổi UI dùng chung thì grep test E2E theo nhãn cũ; đổi màu thì chạy `pnpm test:e2e` (axe) trước khi push. Next 16 không cho 2 `next dev` cùng thư mục: đang có dev server thì chạy `E2E_PORT=3100 pnpm test:e2e`.
+
+**2026-10-12 · Claude · Vercel + Postgres** — Trang có truy vấn DB thỉnh thoảng treo hàng chục giây (/admin, /join), /admin/ops ghi p95 ~300 giây, log "[obs] ghi request_samples lỗi".
+Nguyên nhân (suy ra từ triệu chứng, chưa có log xác nhận): postgres.js giữ kết nối qua lúc function đóng băng; pooler đã cắt kết nối nên request sau khi thức dậy treo trên socket chết. Tránh: trên serverless đặt `idle_timeout`, `max_lifetime`, `connect_timeout` (src/server/db/client.ts); DATABASE_URL dùng pooler transaction :6543 kèm `?pgbouncer=true`.

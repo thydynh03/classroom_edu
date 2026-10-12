@@ -11,7 +11,11 @@ function createClient() {
   const url = process.env.DATABASE_URL ?? "postgres://missing-database-url:5432/missing";
   // Serverless: mỗi instance ít kết nối để không vượt giới hạn của Postgres free.
   // Pooler kiểu transaction (Supabase :6543, pgbouncer) không hỗ trợ prepared statement.
-  return postgres(url, { max: process.env.VERCEL ? 2 : 10, prepare: !url.includes("pgbouncer=true") });
+  // Serverless: instance bị đóng băng giữa các request, pooler cắt kết nối rảnh trong lúc đó. Nếu giữ kết nối cũ,
+  // request đầu tiên sau khi thức dậy ghi vào socket đã chết và treo tới khi function hết giờ (LESSONS 2026-10-12).
+  // idle_timeout đóng kết nối rảnh sớm, max_lifetime thay kết nối định kỳ, connect_timeout để lỗi nhanh thay vì treo.
+  const serverless = process.env.VERCEL ? { max: 2, idle_timeout: 10, max_lifetime: 300, connect_timeout: 10 } : { max: 10 };
+  return postgres(url, { ...serverless, prepare: !url.includes("pgbouncer=true") });
 }
 
 const client = globalForDb.pgClient ?? createClient();
