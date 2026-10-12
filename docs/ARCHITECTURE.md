@@ -15,7 +15,7 @@ Tài liệu này mô tả code **đang chạy** (cập nhật 28/09/2026 sau khi
 | Auth         | Tự viết: session lưu DB (token 32 byte, DB chỉ lưu SHA-256), cookie httpOnly, argon2id (`@node-rs/argon2`) |
 | Storage      | S3 API (`@aws-sdk/client-s3` + presigner). Dev: SeaweedFS (docker). Prod: Cloudflare R2                    |
 | Jobs         | Vercel: `/api/cron` (CRON_SECRET) + đăng bài lười khi mở trang. Docker: `setInterval` từ `instrumentation.ts` |
-| Email        | nodemailer qua SMTP. Dev: Mailpit (UI :8025). Prod: SMTP của Resend                                        |
+| Email        | nodemailer qua SMTP. Dev: Mailpit (UI :8025). Prod: SMTP của Resend (free 100/ngày; dự phòng Brevo)        |
 | Test         | Vitest (unit), Vitest + Testcontainers (integration), Playwright + axe-core (E2E)                           |
 | Deploy       | Vercel (`vercel.json`, region sin1) + Postgres ngoài. `Dockerfile` giữ cho Render/VPS                        |
 

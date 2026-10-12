@@ -4,6 +4,10 @@ Mỗi mục: ngày · ai gặp · triệu chứng · nguyên nhân · cách trá
 
 ---
 
+**2026-10-12 · Claude · storage/CSP** — README hướng dẫn R2 với `S3_FORCE_PATH_STYLE=false`, sẽ làm hỏng upload và ảnh trên production.
+Nguyên nhân: với `forcePathStyle: false`, SDK sinh presigned URL dạng `https://<bucket>.<account>.r2.cloudflarestorage.com`, còn CSP trong `src/proxy.ts` chỉ cho phép origin của `S3_ENDPOINT` (không có tên bucket ở đầu).
+Tránh: R2 dùng `S3_FORCE_PATH_STYLE=true`; hoặc đặt `S3_PUBLIC_ORIGIN` đúng origin mà presigned URL dùng. Đổi cấu hình storage thì kiểm tra `new URL(await getSignedUrl(...)).origin` có nằm trong CSP không.
+
 **2026-09-28 · Claude · storage** — Upload presigned PUT từ trình duyệt bị 400.
 Nguyên nhân: AWS SDK v3 mới mặc định thêm `x-amz-checksum-crc32` vào presigned URL.
 Tránh: `new S3Client({ requestChecksumCalculation: "WHEN_REQUIRED", responseChecksumValidation: "WHEN_REQUIRED" })`.

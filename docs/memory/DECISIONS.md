@@ -4,6 +4,15 @@ Mỗi mục: ngày · quyết định · lý do · phương án đã loại · t
 
 ---
 
+**2026-10-12 · Email production: Resend qua SMTP (gói free), dự phòng Brevo** — Đã chốt (người dùng).
+Lý do: code đã gửi bằng nodemailer qua SMTP nên chỉ cần đặt biến `SMTP_*` (`smtp.resend.com:465`, user `resend`, pass = API key), không sửa code. Gói free 3.000 email/tháng, tối đa 100/ngày, 1 tên miền, không chèn logo, không tự tính tiền khi vượt (chỉ tạm dừng gửi). Cần tên miền riêng của khách với SPF/DKIM (và DMARC) trên Cloudflare DNS; không gửi được từ `*.vercel.app`.
+Hệ quả: email giao dịch (xác minh, đặt lại mật khẩu, báo admin) phải được ưu tiên trong giới hạn 100/ngày. Email nhắc HS gộp thành tối đa 1 email/ngày/HS và có `EMAIL_DAILY_LIMIT` (plan H1). Nhắc HS chủ yếu bằng in-app + Web Push. Vượt giới hạn thì đổi biến sang Brevo (free 300/ngày), Resend Pro hoặc Amazon SES.
+Loại: SendGrid (bỏ gói free từ 05/2025, chỉ còn dùng thử 60 ngày); Gmail SMTP (địa chỉ @gmail.com, dễ bị khóa, chỉ dùng để test); Amazon SES (rẻ nhưng cài phức tạp, phải xin ra khỏi sandbox).
+
+**2026-10-12 · Storage production: Cloudflare R2** — Đã chốt (người dùng). Đóng câu hỏi "R2 hay Cloudinary" trong PROJECT.md và mục 2026-09-28 bên dưới.
+Lý do: app đã dùng `StorageProvider` theo chuẩn S3 (presigned PUT/GET, magic bytes, bucket private) nên R2 chỉ cần đặt biến `S3_*` (`S3_REGION=auto`, `S3_FORCE_PATH_STYLE=true` để origin của presigned URL khớp CSP, xem LESSONS 2026-10-12). Free 10GB, 1 triệu lượt ghi, 10 triệu lượt đọc mỗi tháng; **tải ra miễn phí** nên GV mở xem ảnh bài nộp không phát sinh phí; dùng chung tài khoản Cloudflare với Workers Cron và Turnstile. Bucket private, không bật `r2.dev`; CORS cho phép PUT/GET từ `APP_URL` với header `Content-Type`.
+Loại: Cloudinary (phải viết lại luồng upload; gói free giới hạn khoảng 10MB/file trong khi app cho 25/50MB; chặn tải PDF/ZIP mặc định; credit hết nhanh). Amazon S3 (tương thích nhưng tính phí tải ra sau 100GB/tháng; chỉ chọn khi khách đã dùng AWS).
+
 **2026-09-28 · Quiz dùng thang điểm GV đặt (mặc định 10); điểm từng câu là trọng số** — Đã chốt (Claude).
 Lý do: trường học VN chấm thang 10. Trước đó `saveQuestions` ghi đè `max_points` = tổng điểm câu → điểm quiz lệch thang (integration test phát hiện).
 
@@ -49,7 +58,7 @@ Loại: monorepo apps/web + apps/worker + packages/* (quá nặng cho MVP).
 
 **2026-09-28 · Implementer chính là agy (Antigravity)** — Đã chốt (người dùng). Claude là orchestrator/reviewer.
 
-**2026-09-28 · Storage qua interface `StorageProvider` (S3 API); dev MinIO, prod R2** — Tạm chốt, chờ người dùng xác nhận R2 hay Cloudinary.
+**2026-09-28 · Storage qua interface `StorageProvider` (S3 API); dev MinIO, prod R2** — Đã chốt R2 ngày 2026-10-12 (xem mục trên cùng).
 Lý do: R2 free 10GB, không phí egress, bucket private, đổi nhà cung cấp dễ. Cloudinary free giới hạn 10MB/file, chặn PDF mặc định.
 
 **2026-09-28 · Tài khoản học sinh: username bắt buộc, email tùy chọn; mật khẩu tạm + bắt buộc đổi lần đầu** — Đã chốt.

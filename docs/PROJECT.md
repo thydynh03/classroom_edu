@@ -48,5 +48,5 @@ GV đăng nhập → tạo lớp → thêm HS → tạo bài → HS đăng nhậ
 
 ## Câu hỏi còn mở (hỏi người dùng trước khi làm phần liên quan)
 
-- Storage production: Cloudflare R2 (mặc định) hay Cloudinary cho ảnh? Code qua interface `StorageProvider` để đổi được.
+- ~~Storage production: Cloudflare R2 hay Cloudinary?~~ Đã chốt **R2** (DECISIONS 2026-10-12). Email production: **Resend** qua SMTP.
 - Số lượng người dùng thực tế và 1 hay nhiều trường.

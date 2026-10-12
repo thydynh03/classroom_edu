@@ -52,7 +52,7 @@ Biến môi trường (Project → Settings → Environment Variables; secret th
 | `APP_URL` | URL public, ví dụ `https://classroom-edu.vercel.app` |
 | `CRON_SECRET` | Chuỗi ngẫu nhiên ≥ 32 ký tự; Vercel Cron tự gửi header này |
 | `BOOTSTRAP_ADMIN_USERNAME` / `BOOTSTRAP_ADMIN_PASSWORD` | Tạo admin đầu tiên (mật khẩu ≥ 12 ký tự). Xóa mật khẩu sau khi đăng nhập |
-| `S3_ENDPOINT`, `S3_BUCKET`, `S3_REGION=auto`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_FORCE_PATH_STYLE=false` | Cloudflare R2. Chưa đặt thì upload báo "chưa cấu hình" |
+| `S3_ENDPOINT`, `S3_BUCKET`, `S3_REGION=auto`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_FORCE_PATH_STYLE=true` | Cloudflare R2 (bucket private + CORS cho `APP_URL`). Giữ path-style để origin presigned URL khớp CSP. Chưa đặt thì upload báo "chưa cấu hình" |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `EMAIL_FROM` | Gửi email. Chưa đặt thì không gửi |
 
 `Dockerfile` vẫn giữ để chạy trên Render/VPS nếu cần (ở đó job chạy bằng `setInterval`).
