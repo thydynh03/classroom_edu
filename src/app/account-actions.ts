@@ -8,7 +8,7 @@ import { db } from "@/server/db/client";
 import { sessions, users } from "@/server/db/schema";
 import { getActor, createSession } from "@/server/auth/session";
 import { requireActor } from "@/server/auth/guard";
-import { hashPassword } from "@/server/auth/password";
+import { signupStudent } from "@/server/auth/accounts";
 import { markAllRead } from "@/server/services/notifications";
 import { findClassByCode, joinClass } from "@/server/services/classes";
 import { rateLimit } from "@/server/rate-limit";
@@ -30,7 +30,7 @@ export async function markAllReadAction() {
 }
 
 export async function revokeSessionAction(sessionId: string) {
-  const actor = await requireActor();
+  const actor = await requireActor(undefined, { allowPending: true });
   if (sessionId === actor.sessionId) return;
   await db.delete(sessions).where(and(eq(sessions.id, sessionId), eq(sessions.userId, actor.id)));
   revalidatePath("/settings");
@@ -69,16 +69,8 @@ export async function joinSignupAction(_: ActionState, fd: FormData): Promise<Ac
     .where(sql`lower(${users.username}) = ${parsed.data.username}`)
     .limit(1);
   if (taken) return { fieldErrors: { username: "Tên đăng nhập đã có người dùng. Nếu là bạn, hãy đăng nhập." } };
-  const [u] = await db
-    .insert(users)
-    .values({
-      fullName: parsed.data.fullName,
-      username: parsed.data.username,
-      passwordHash: await hashPassword(parsed.data.password),
-      role: "STUDENT",
-    })
-    .returning({ id: users.id });
-  await joinClass(u.id, cls.id);
-  await createSession(u.id);
+  const userId = await signupStudent(parsed.data);
+  await joinClass(userId, cls.id);
+  await createSession(userId);
   redirect(`/student/classes/${cls.id}`);
 }

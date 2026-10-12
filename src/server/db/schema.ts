@@ -60,6 +60,7 @@ export const fileStatus = pgEnum("file_status", ["PENDING", "READY", "INFECTED",
 export const filePurpose = pgEnum("file_purpose", ["ATTACHMENT", "SUBMISSION"]);
 export const gradeAction = pgEnum("grade_action", ["GRADED", "EDITED", "RETURNED", "AUTO"]);
 export const tokenPurpose = pgEnum("token_purpose", ["VERIFY_EMAIL", "RESET_PASSWORD"]);
+export const inviteStatus = pgEnum("invite_status", ["PENDING", "ACCEPTED", "DECLINED", "CANCELLED"]);
 
 export const users = pgTable(
   "users",
@@ -323,24 +324,76 @@ export const notifications = pgTable(
     href: text("href").notNull(),
     dedupeKey: text("dedupe_key").notNull(),
     emailSentAt: timestamp("email_sent_at", { withTimezone: true }),
+    /** Số lần gửi email lỗi; quá giới hạn thì bỏ (đánh dấu emailSentAt) */
+    emailAttempts: integer("email_attempts").notNull().default(0),
+    emailLastError: text("email_last_error"),
+    /** Gửi lại không sớm hơn thời điểm này (giãn cách sau lỗi, hoặc đã hết suất trong ngày) */
+    emailNextAt: timestamp("email_next_at", { withTimezone: true }),
     readAt: timestamp("read_at", { withTimezone: true }),
     createdAt: createdAt(),
   },
   (t) => [
     uniqueIndex("notifications_dedupe_uq").on(t.dedupeKey),
     index("notifications_recipient_idx").on(t.recipientId, t.readAt, t.createdAt),
+    index("notifications_email_queue_idx").on(t.createdAt).where(sql`${t.emailSentAt} is null`),
   ],
 );
 
-export const auditLogs = pgTable("audit_logs", {
-  id: id(),
-  actorId: uuid("actor_id").references(() => users.id),
-  action: text("action").notNull(),
-  targetType: text("target_type").notNull(),
-  targetId: text("target_id"),
-  meta: jsonb("meta").$type<Record<string, unknown>>(),
-  createdAt: createdAt(),
+export const auditLogs = pgTable(
+  "audit_logs",
+  {
+    id: id(),
+    actorId: uuid("actor_id").references(() => users.id),
+    action: text("action").notNull(),
+    targetType: text("target_type").notNull(),
+    targetId: text("target_id"),
+    meta: jsonb("meta").$type<Record<string, unknown>>(),
+    createdAt: createdAt(),
+  },
+  (t) => [index("audit_logs_created_idx").on(t.createdAt)],
+);
+
+/** Lời mời HS (đã có tài khoản) vào lớp: HS phải tự đồng ý, GV không tự thêm được. */
+export const classInvites = pgTable(
+  "class_invites",
+  {
+    id: id(),
+    classId: uuid("class_id")
+      .notNull()
+      .references(() => classes.id, { onDelete: "cascade" }),
+    studentId: uuid("student_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    invitedBy: uuid("invited_by")
+      .notNull()
+      .references(() => users.id),
+    status: inviteStatus("status").notNull().default("PENDING"),
+    createdAt: createdAt(),
+    respondedAt: timestamp("responded_at", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("class_invites_pending_uq").on(t.classId, t.studentId).where(sql`${t.status} = 'PENDING'`),
+    index("class_invites_student_idx").on(t.studentId, t.status),
+  ],
+);
+
+/** Rate limit dùng chung giữa các instance (thay Map trong bộ nhớ). */
+export const rateLimits = pgTable("rate_limits", {
+  key: text("key").primaryKey(),
+  count: integer("count").notNull(),
+  resetAt: timestamp("reset_at", { withTimezone: true }).notNull(),
 });
+
+/** Số email đã gửi mỗi ngày (giờ VN) theo loại, để không vượt giới hạn của nhà cung cấp (Resend free 100/ngày). */
+export const emailSends = pgTable(
+  "email_sends",
+  {
+    day: text("day").notNull(),
+    kind: text("kind").notNull(),
+    count: integer("count").notNull().default(0),
+  },
+  (t) => [primaryKey({ columns: [t.day, t.kind] })],
+);
 
 export const usersRelations = relations(users, ({ many }) => ({
   memberships: many(classMembers),

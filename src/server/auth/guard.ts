@@ -4,14 +4,15 @@ import { getActor, type Actor } from "./session";
 
 /**
  * Dùng trong layout/page/server action. Chưa đăng nhập → /login; sai role → 404;
- * GV chưa được duyệt → /pending-approval (không vào được phần GV, kể cả server action).
+ * GV chưa được duyệt → /pending-approval ở MỌI nơi (kể cả khi không truyền role), trừ vài trang tài khoản
+ * gọi với `allowPending: true` (trang chờ duyệt, Tài khoản & bảo mật, thu hồi phiên).
  */
-export async function requireActor(role?: Actor["role"]): Promise<Actor> {
+export async function requireActor(role?: Actor["role"], opts: { allowPending?: boolean } = {}): Promise<Actor> {
   const actor = await getActor();
   if (!actor) redirect("/login");
   if (actor.mustChangePassword) redirect("/change-password");
   if (role && actor.role !== role) notFound();
-  if (role === "TEACHER" && actor.approved === false) redirect("/pending-approval");
+  if (actor.role === "TEACHER" && actor.approved === false && !opts.allowPending) redirect("/pending-approval");
   return actor;
 }
 

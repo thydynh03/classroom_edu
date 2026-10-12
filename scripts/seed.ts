@@ -28,6 +28,9 @@ async function main() {
     "truncate table audit_logs, notifications, grade_events, submission_files, submissions, question_options, questions, assignment_attachments, files, assignments, class_members, classes, auth_tokens, sessions, users restart identity cascade",
   );
   const pw = await hash(PASSWORD!, { memoryCost: 19456, timeCost: 2, parallelism: 1 });
+  // Seed dev chạy trên 1 kết nối: bật cờ cấp phiên để trigger users_guard cho tạo admin + GV đã duyệt.
+  await client`select set_config('app.allow_admin_insert', 'on', false)`;
+  await client`select set_config('app.allow_teacher_approval', 'on', false)`;
 
   const [teacher] = await db
     .insert(s.users)

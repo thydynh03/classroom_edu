@@ -29,6 +29,20 @@
       "when": 1790693518206,
       "tag": "0003_old_nightcrawler",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791812977187,
+      "tag": "0004_security_email_ratelimit",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791812978804,
+      "tag": "0005_users_guard",
+      "breakpoints": true
     }
   ]
 }

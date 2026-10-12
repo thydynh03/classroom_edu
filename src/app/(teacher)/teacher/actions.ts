@@ -90,14 +90,14 @@ export async function bulkCreateStudentsAction(classId: string, _: BulkResult, f
   return { ok: true, created };
 }
 
-export async function addExistingStudentAction(classId: string, _: ActionState, fd: FormData): Promise<ActionState> {
+export async function inviteStudentAction(classId: string, _: ActionState, fd: FormData): Promise<ActionState> {
   const actor = await teacher();
-  const username = String(fd.get("username") ?? "").trim();
+  const username = String(fd.get("username") ?? "").trim().slice(0, 64);
   if (!username) return { fieldErrors: { username: "Nhập tên đăng nhập của học sinh" } };
-  const ok = await classSvc.addExistingStudent(actor, classId, username);
-  if (!ok) return { fieldErrors: { username: "Không tìm thấy học sinh với tên đăng nhập này" } };
-  revalidatePath(`/teacher/classes/${classId}`);
-  return { ok: true, message: `Đã thêm ${username} vào lớp.` };
+  const r = await classSvc.inviteExistingStudent(actor, classId, username);
+  if (r === "not_found") return { fieldErrors: { username: "Không tìm thấy học sinh với tên đăng nhập này" } };
+  if (r === "already") return { fieldErrors: { username: "Học sinh này đã ở trong lớp" } };
+  return { ok: true, message: `Đã gửi lời mời tới ${username}. Học sinh cần bấm Đồng ý trong mục Lớp học thì mới vào lớp.` };
 }
 
 export async function removeStudentAction(classId: string, studentId: string) {
@@ -106,10 +106,10 @@ export async function removeStudentAction(classId: string, studentId: string) {
   revalidatePath(`/teacher/classes/${classId}`);
 }
 
-export async function resetStudentPasswordAction(classId: string, studentId: string) {
+export async function resetStudentPasswordAction(classId: string, studentId: string): Promise<{ tempPassword?: string; error?: string }> {
   const actor = await teacher();
-  const tempPassword = await classSvc.resetStudentPassword(actor, classId, studentId);
-  return { tempPassword };
+  const r = await guard(() => classSvc.resetStudentPassword(actor, classId, String(studentId)));
+  return typeof r === "string" ? { tempPassword: r } : { error: r.error };
 }
 
 const studentIdsSchema = z.array(z.uuid()).min(1).max(200);
@@ -118,9 +118,10 @@ export async function resetStudentPasswordsAction(classId: string, studentIds: s
   const actor = await teacher();
   const ids = studentIdsSchema.safeParse(studentIds);
   if (!ids.success) return { created: [] };
-  const created = await classSvc.resetStudentPasswords(actor, classId, ids.data);
+  const r = await guard(() => classSvc.resetStudentPasswords(actor, classId, ids.data));
+  if (!Array.isArray(r)) return { created: [], error: r.error };
   revalidatePath(`/teacher/classes/${classId}`);
-  return { created };
+  return { created: r };
 }
 
 // ---------------------------------------------------------------- Bài tập

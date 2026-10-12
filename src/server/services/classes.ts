@@ -5,6 +5,7 @@ import { db } from "@/server/db/client";
 import {
   assignments,
   auditLogs,
+  classInvites,
   classMembers,
   classes,
   submissions,
@@ -12,7 +13,10 @@ import {
   type ClassColor,
 } from "@/server/db/schema";
 import type { Actor } from "@/server/auth/session";
-import { requireStudentOfClass, requireTeacherOfClass } from "@/server/policy";
+import { isUuid, membershipOf, requireStudentOfClass, requireTeacherOfClass } from "@/server/policy";
+import { createStudentsInClass } from "@/server/auth/accounts";
+import { notify, notifyPasswordReset } from "./notifications";
+import { UserError } from "./errors";
 import { generateTempPassword, hashPassword } from "@/server/auth/password";
 import { revokeAllSessions } from "@/server/auth/session";
 
@@ -207,24 +211,9 @@ export async function bulkCreateStudents(actor: Actor, classId: string, names: s
   const taken = new Set<string>();
   const created: { fullName: string; username: string; tempPassword: string }[] = [];
   for (const fullName of clean) {
-    const username = await uniqueUsername(slugifyName(fullName), taken);
-    const tempPassword = generateTempPassword();
-    await db.transaction(async (tx) => {
-      const [u] = await tx
-        .insert(users)
-        .values({
-          fullName,
-          username,
-          passwordHash: await hashPassword(tempPassword),
-          role: "STUDENT",
-          mustChangePassword: true,
-          createdBy: actor.id,
-        })
-        .returning({ id: users.id });
-      await tx.insert(classMembers).values({ classId, userId: u.id, role: "STUDENT" });
-    });
-    created.push({ fullName, username, tempPassword });
+    created.push({ fullName, username: await uniqueUsername(slugifyName(fullName), taken), tempPassword: generateTempPassword() });
   }
+  await createStudentsInClass(actor.id, classId, created);
   await db.insert(auditLogs).values({
     actorId: actor.id,
     action: "students.bulk_create",
@@ -235,23 +224,99 @@ export async function bulkCreateStudents(actor: Actor, classId: string, names: s
   return created;
 }
 
-/** Thêm học sinh đã có tài khoản vào lớp bằng tên đăng nhập. */
-export async function addExistingStudent(actor: Actor, classId: string, username: string) {
-  await requireTeacherOfClass(actor, classId);
+/**
+ * Mời HS đã có tài khoản vào lớp. GV KHÔNG tự thêm được: HS phải đồng ý (respondInvite).
+ * Nếu cho GV tự thêm, GV có thể thêm HS lạ rồi cấp lại mật khẩu để chiếm tài khoản (audit mục 12.2).
+ */
+export async function inviteExistingStudent(actor: Actor, classId: string, username: string) {
+  const cls = await requireTeacherOfClass(actor, classId);
   const [u] = await db
     .select({ id: users.id, role: users.role })
     .from(users)
     .where(and(sql`lower(${users.username}) = ${username.toLowerCase()}`, isNull(users.deletedAt)))
     .limit(1);
-  if (!u || u.role !== "STUDENT") return false;
-  await db
-    .insert(classMembers)
-    .values({ classId, userId: u.id, role: "STUDENT" })
-    .onConflictDoUpdate({
-      target: [classMembers.classId, classMembers.userId],
-      set: { status: "ACTIVE" },
-    });
-  return true;
+  if (!u || u.role !== "STUDENT") return "not_found" as const;
+  if ((await membershipOf(u.id, classId)) === "STUDENT") return "already" as const;
+  await db.transaction(async (tx) => {
+    const [inv] = await tx
+      .insert(classInvites)
+      .values({ classId, studentId: u.id, invitedBy: actor.id })
+      .onConflictDoNothing()
+      .returning({ id: classInvites.id });
+    if (!inv) return; // đã có lời mời đang chờ
+    await notify(tx, [
+      {
+        recipientId: u.id,
+        type: "CLASS_INVITE",
+        title: `${actor.fullName} mời bạn vào lớp ${cls.name}. Mở để đồng ý hoặc từ chối.`,
+        href: "/student/classes",
+        dedupeKey: `invite:${inv.id}`,
+      },
+    ]);
+    await tx.insert(auditLogs).values({ actorId: actor.id, action: "class.invite_student", targetType: "class", targetId: classId, meta: { studentId: u.id } });
+  });
+  return "invited" as const;
+}
+
+/** Lời mời đang chờ của HS (chỉ của chính mình). */
+export async function listMyInvites(actor: Actor) {
+  if (actor.role !== "STUDENT") return [];
+  return db
+    .select({ id: classInvites.id, className: classes.name, subject: classes.subject, color: classes.color, teacherName: users.fullName, createdAt: classInvites.createdAt })
+    .from(classInvites)
+    .innerJoin(classes, eq(classes.id, classInvites.classId))
+    .innerJoin(users, eq(users.id, classInvites.invitedBy))
+    .where(and(eq(classInvites.studentId, actor.id), eq(classInvites.status, "PENDING"), isNull(classes.deletedAt), eq(classes.status, "ACTIVE")))
+    .orderBy(desc(classInvites.createdAt));
+}
+
+/** HS đồng ý / từ chối lời mời. Lời mời không phải của mình, hoặc không còn chờ → 404. */
+export async function respondInvite(actor: Actor, inviteId: string, accept: boolean) {
+  if (actor.role !== "STUDENT" || !isUuid(inviteId)) notFound();
+  return db.transaction(async (tx) => {
+    const [inv] = await tx
+      .update(classInvites)
+      .set({ status: accept ? "ACCEPTED" : "DECLINED", respondedAt: new Date() })
+      .where(and(eq(classInvites.id, inviteId), eq(classInvites.studentId, actor.id), eq(classInvites.status, "PENDING")))
+      .returning({ classId: classInvites.classId });
+    if (!inv) notFound();
+    const [cls] = await tx.select({ status: classes.status, deletedAt: classes.deletedAt }).from(classes).where(eq(classes.id, inv.classId));
+    if (!cls || cls.deletedAt || cls.status !== "ACTIVE") notFound();
+    if (accept) {
+      await tx
+        .insert(classMembers)
+        .values({ classId: inv.classId, userId: actor.id, role: "STUDENT" })
+        .onConflictDoUpdate({ target: [classMembers.classId, classMembers.userId], set: { status: "ACTIVE" } });
+    }
+    return inv.classId;
+  });
+}
+
+/**
+ * GV chỉ được cấp lại mật khẩu cho HS khi MỌI lớp HS đang học đều do GV này dạy.
+ * Nếu không, GV đăng nhập bằng mật khẩu tạm sẽ xem được bài/điểm ở lớp của GV khác → phải nhờ admin.
+ */
+async function assertOnlyMyStudents(actor: Actor, studentIds: string[]) {
+  const outside = await db
+    .selectDistinct({ fullName: users.fullName })
+    .from(classMembers)
+    .innerJoin(users, eq(users.id, classMembers.userId))
+    .innerJoin(classes, eq(classes.id, classMembers.classId))
+    .where(
+      and(
+        inArray(classMembers.userId, studentIds),
+        eq(classMembers.role, "STUDENT"),
+        eq(classMembers.status, "ACTIVE"),
+        isNull(classes.deletedAt),
+        sql`not exists (select 1 from class_members t where t.class_id = ${classMembers.classId} and t.user_id = ${actor.id} and t.role = 'TEACHER' and t.status = 'ACTIVE')`,
+      ),
+    );
+  if (outside.length) {
+    const names = outside.slice(0, 3).map((o) => o.fullName).join(", ");
+    throw new UserError(
+      `${names}${outside.length > 3 ? ` và ${outside.length - 3} em khác` : ""} đang học lớp của giáo viên khác nên bạn không cấp lại mật khẩu được. Hãy nhờ quản trị viên.`,
+    );
+  }
 }
 
 export async function removeStudent(actor: Actor, classId: string, studentId: string) {
@@ -285,6 +350,7 @@ export async function resetStudentPassword(actor: Actor, classId: string, studen
     )
     .limit(1);
   if (!m) notFound();
+  await assertOnlyMyStudents(actor, [studentId]);
   const tempPassword = generateTempPassword();
   await db
     .update(users)
@@ -296,6 +362,7 @@ export async function resetStudentPassword(actor: Actor, classId: string, studen
     })
     .where(eq(users.id, studentId));
   await revokeAllSessions(studentId);
+  await notifyPasswordReset(studentId, actor.fullName);
   await db.insert(auditLogs).values({
     actorId: actor.id,
     action: "student.reset_password",
@@ -327,6 +394,7 @@ export async function resetStudentPasswords(actor: Actor, classId: string, stude
     )
     .orderBy(asc(users.fullName));
   if (members.length !== ids.length) notFound();
+  await assertOnlyMyStudents(actor, ids);
   const created: { fullName: string; username: string; tempPassword: string }[] = [];
   for (const m of members) {
     const tempPassword = generateTempPassword();
@@ -335,6 +403,7 @@ export async function resetStudentPasswords(actor: Actor, classId: string, stude
       .set({ passwordHash: await hashPassword(tempPassword), mustChangePassword: true, failedLogins: 0, lockedUntil: null })
       .where(eq(users.id, m.id));
     await revokeAllSessions(m.id);
+    await notifyPasswordReset(m.id, actor.fullName);
     created.push({ fullName: m.fullName, username: m.username, tempPassword });
   }
   await db.insert(auditLogs).values({

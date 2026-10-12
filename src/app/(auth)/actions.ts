@@ -15,6 +15,7 @@ import {
 } from "@/server/auth/session";
 import { homeFor } from "@/server/auth/guard";
 import { autoApproveTeacher } from "@/server/auth/teacher-approval";
+import { approveTeacherAccount, registerTeacher } from "@/server/auth/accounts";
 import { newToken, sha256 } from "@/server/auth/tokens";
 import { rateLimit } from "@/server/rate-limit";
 import { appUrl, sendMail } from "@/server/mail";
@@ -119,25 +120,17 @@ export async function registerAction(_: ActionState, fd: FormData): Promise<Acti
     return { fieldErrors: { email: "Email này đã được đăng ký" } };
   }
   const verify = emailVerificationRequired();
-  // Role luôn là TEACHER: không bao giờ lấy role từ form.
-  const [user] = await db
-    .insert(users)
-    .values({
-      email,
-      username,
-      fullName,
-      passwordHash: await hashPassword(password),
-      role: "TEACHER",
-      emailVerifiedAt: verify ? null : new Date(),
-      // Tự đăng ký: chờ admin duyệt, trừ email thuộc tên miền trường đã khai báo.
-      approvedAt: autoApproveTeacher(email) ? new Date() : null,
-    })
-    .returning({ id: users.id });
+  if (!verify && process.env.TEACHER_AUTO_APPROVE_DOMAINS?.trim()) {
+    // Không xác minh email thì không biết người đăng ký có sở hữu email đó không: bỏ qua duyệt theo tên miền.
+    console.warn("[auth] TEACHER_AUTO_APPROVE_DOMAINS bị bỏ qua vì REQUIRE_EMAIL_VERIFICATION khác \"true\"");
+  }
+  // Luôn là GV chờ admin duyệt; duyệt theo tên miền trường chỉ xảy ra sau khi bấm link xác minh email.
+  const userId = await registerTeacher({ email, username, fullName, password, emailVerified: !verify });
   if (!verify) {
-    await createSession(user.id);
+    await createSession(userId);
     redirect(homeFor("TEACHER"));
   }
-  await issueEmailToken(user.id, email, "VERIFY_EMAIL");
+  await issueEmailToken(userId, email, "VERIFY_EMAIL");
   return {
     ok: true,
     message: `Đã gửi email xác minh tới ${email}. Mở email và bấm vào liên kết để kích hoạt tài khoản.`,
@@ -190,7 +183,15 @@ async function consumeToken(token: string, purpose: "VERIFY_EMAIL" | "RESET_PASS
 export async function verifyEmailToken(token: string) {
   const userId = await consumeToken(token, "VERIFY_EMAIL");
   if (!userId) return false;
-  await db.update(users).set({ emailVerifiedAt: new Date() }).where(eq(users.id, userId));
+  const [u] = await db
+    .update(users)
+    .set({ emailVerifiedAt: new Date() })
+    .where(eq(users.id, userId))
+    .returning({ email: users.email, role: users.role, approvedAt: users.approvedAt });
+  // Email đã được chứng minh thuộc về người đăng ký: lúc này mới duyệt theo tên miền trường (nếu có cấu hình).
+  if (u?.role === "TEACHER" && !u.approvedAt && u.email && emailVerificationRequired() && autoApproveTeacher(u.email)) {
+    await approveTeacherAccount(userId);
+  }
   return true;
 }
 

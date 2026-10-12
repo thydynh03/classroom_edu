@@ -5,7 +5,7 @@ import { useActionState, useTransition } from "react";
 import { Copy, FileDown, FileUp, KeyRound, Search, UserMinus, X } from "lucide-react";
 import { toast } from "sonner";
 import {
-  addExistingStudentAction,
+  inviteStudentAction,
   bulkCreateStudentsAction,
   removeStudentAction,
   resetStudentPasswordAction,
@@ -80,7 +80,7 @@ export function StudentsPanel({
     }
     return r;
   }, {} as BulkResult);
-  const [add, addAction] = useActionState(addExistingStudentAction.bind(null, classId), {});
+  const [add, addAction] = useActionState(inviteStudentAction.bind(null, classId), {});
 
   function show(c: Credentials) {
     setCreds(c);
@@ -129,6 +129,7 @@ export function StudentsPanel({
     const ids = [...selected];
     start(async () => {
       const r = await resetStudentPasswordsAction(classId, ids);
+      if (r.error) return void toast.error(r.error);
       if (!r.created.length) return void toast.error("Không cấp lại được mật khẩu. Tải lại trang rồi thử lại.");
       setSelected(new Set());
       show({ title: `Mật khẩu tạm mới cho ${r.created.length} học sinh`, rows: r.created });
@@ -310,6 +311,7 @@ export function StudentsPanel({
                           onClick={() =>
                             start(async () => {
                               const r = await resetStudentPasswordAction(classId, s.id);
+                              if (!r.tempPassword) return void toast.error(r.error ?? "Không cấp lại được mật khẩu.");
                               show({ title: `Mật khẩu tạm mới cho ${s.fullName}`, rows: [{ fullName: s.fullName, username: s.username, tempPassword: r.tempPassword }] });
                             })
                           }
@@ -393,11 +395,12 @@ export function StudentsPanel({
           </section>
 
           <section className="bg-surface border-border rounded-card border p-5">
-            <h2 className="mb-3 text-[15px] font-bold">Thêm học sinh đã có tài khoản</h2>
+            <h2 className="mb-1 text-[15px] font-bold">Mời học sinh đã có tài khoản</h2>
+            <p className="text-muted mb-3 text-sm">Học sinh nhận lời mời và tự bấm Đồng ý thì mới vào lớp.</p>
             <form action={addAction} className="space-y-3">
               <FormAlert state={add} />
               <Field label="Tên đăng nhập" name="username" placeholder="lehoanganh" error={add.fieldErrors?.username} />
-              <SubmitButton variant="outline">Thêm vào lớp</SubmitButton>
+              <SubmitButton variant="outline">Gửi lời mời</SubmitButton>
             </form>
           </section>
         </div>

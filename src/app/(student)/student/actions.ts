@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireActor } from "@/server/auth/guard";
 import * as subSvc from "@/server/services/submissions";
+import { respondInvite } from "@/server/services/classes";
 import { UserError } from "@/server/services/errors";
 import type { ActionState } from "@/lib/action";
 
@@ -50,4 +51,15 @@ export async function submitQuizAction(assignmentId: string, answers: unknown): 
   const parsed = quizSchema.safeParse(answers);
   if (!parsed.success) return { error: "Câu trả lời không hợp lệ." };
   return run(() => subSvc.submitQuiz(actor, assignmentId, parsed.data), "Đã nộp bài trắc nghiệm", assignmentId);
+}
+
+/** Đồng ý / từ chối lời mời vào lớp (chỉ lời mời của chính mình; id lạ → 404). */
+export async function respondInviteAction(inviteId: string, accept: boolean): Promise<ActionState & { classId?: string }> {
+  const actor = await student();
+  const id = z.uuid().safeParse(inviteId);
+  if (!id.success || typeof accept !== "boolean") return { error: "Lời mời không hợp lệ." };
+  const classId = await respondInvite(actor, id.data, accept);
+  revalidatePath("/student/classes");
+  revalidatePath("/student");
+  return { ok: true, classId, message: accept ? "Đã vào lớp." : "Đã từ chối lời mời." };
 }

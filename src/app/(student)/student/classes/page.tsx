@@ -1,20 +1,22 @@
 import Link from "next/link";
 import { BookOpen } from "lucide-react";
 import { requireActor } from "@/server/auth/guard";
-import { listStudentClasses } from "@/server/services/classes";
+import { listMyInvites, listStudentClasses } from "@/server/services/classes";
 import { COLOR_CLASSES } from "@/components/domain/class-chip";
 import { EmptyState, PageHeader } from "@/components/domain/page-parts";
 import { cn } from "@/lib/utils";
 import { JoinByCode } from "./join-by-code";
+import { InviteList } from "./invite-list";
 
 export const metadata = { title: "Lớp học · Classroom Edu" };
 
 export default async function StudentClassesPage() {
   const actor = await requireActor("STUDENT");
-  const classes = await listStudentClasses(actor);
+  const [classes, invites] = await Promise.all([listStudentClasses(actor), listMyInvites(actor)]);
   return (
     <>
       <PageHeader title="Lớp học" description={`${classes.length} lớp`} />
+      <InviteList invites={invites} />
       <div className="mb-6">
         <JoinByCode />
       </div>

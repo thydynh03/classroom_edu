@@ -9,7 +9,9 @@ export type NotificationType =
   | "ASSIGNMENT_DUE_SOON"
   | "ASSIGNMENT_OVERDUE"
   | "SUBMISSION_RECEIVED"
-  | "ASSIGNMENT_RETURNED";
+  | "ASSIGNMENT_RETURNED"
+  | "CLASS_INVITE"
+  | "PASSWORD_RESET";
 
 /** Loại thông báo có gửi email (còn lại chỉ in-app). */
 const EMAIL_TYPES: NotificationType[] = [
@@ -28,6 +30,26 @@ export async function notify(
 ) {
   if (!items.length) return;
   await exec.insert(notifications).values(items).onConflictDoNothing();
+}
+
+/** Báo cho chủ tài khoản biết mật khẩu vừa bị người khác (GV/admin) cấp lại. */
+export async function notifyPasswordReset(userId: string, byName: string, now = new Date()) {
+  const at = new Intl.DateTimeFormat("vi-VN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    day: "2-digit",
+    month: "2-digit",
+    timeZone: "Asia/Ho_Chi_Minh",
+  }).format(now);
+  await notify(db, [
+    {
+      recipientId: userId,
+      type: "PASSWORD_RESET",
+      title: `Mật khẩu của bạn đã được ${byName} cấp lại lúc ${at}. Nếu bạn không yêu cầu, hãy báo giáo viên chủ nhiệm hoặc quản trị viên.`,
+      href: "/settings",
+      dedupeKey: `pwreset:${userId}:${now.getTime()}`,
+    },
+  ]);
 }
 
 export function isQuietHours(now = new Date()) {

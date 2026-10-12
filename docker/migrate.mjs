@@ -36,8 +36,12 @@ try {
     if (n === 0) {
       if (password.length < 12) throw new Error("BOOTSTRAP_ADMIN_PASSWORD cần ít nhất 12 ký tự");
       const passwordHash = await hash(password, { memoryCost: 19456, timeCost: 2, parallelism: 1 });
-      await client`insert into users (id, username, full_name, password_hash, role, email_verified_at)
-        values (${randomUUID()}, ${username.toLowerCase()}, ${"Quản trị viên"}, ${passwordHash}, 'ADMIN', now())`;
+      // Trigger users_guard chỉ cho INSERT admin khi transaction bật app.allow_admin_insert.
+      await client.begin(async (tx) => {
+        await tx`select set_config('app.allow_admin_insert', 'on', true)`;
+        await tx`insert into users (id, username, full_name, password_hash, role, email_verified_at)
+          values (${randomUUID()}, ${username.toLowerCase()}, ${"Quản trị viên"}, ${passwordHash}, 'ADMIN', now())`;
+      });
       console.log(`[migrate] đã tạo admin ${username} — hãy xóa BOOTSTRAP_ADMIN_PASSWORD khỏi env sau khi đăng nhập`);
     }
   }

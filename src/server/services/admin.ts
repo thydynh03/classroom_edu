@@ -1,10 +1,12 @@
 import "server-only";
-import { and, count, desc, eq, ilike, isNull, or, sql } from "drizzle-orm";
+import { and, count, desc, eq, ilike, isNull, ne, or, sql } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { db } from "@/server/db/client";
 import { auditLogs, classes, notifications, submissions, users } from "@/server/db/schema";
 import type { Actor } from "@/server/auth/session";
 import { generateTempPassword, hashPassword } from "@/server/auth/password";
+import { approveTeacherAccount, createTeacherByAdmin } from "@/server/auth/accounts";
+import { notifyPasswordReset } from "./notifications";
 import { revokeAllSessions } from "@/server/auth/session";
 import { requireRole, isUuid } from "@/server/policy";
 import { UserError } from "./errors";
@@ -100,7 +102,7 @@ export async function approveTeacher(actor: Actor, userId: string) {
   const u = await targetUser(actor, userId);
   if (u.role !== "TEACHER") notFound();
   if (u.approvedAt) return;
-  await db.update(users).set({ approvedAt: new Date() }).where(eq(users.id, u.id));
+  if (!(await approveTeacherAccount(u.id))) return;
   await db
     .insert(notifications)
     .values({
@@ -133,6 +135,13 @@ async function audit(actor: Actor, action: string, targetId: string, meta?: Reco
 export async function setUserStatus(actor: Actor, userId: string, status: "ACTIVE" | "LOCKED" | "DISABLED") {
   const u = await targetUser(actor, userId);
   if (u.id === actor.id) throw new UserError("Không thể tự khóa tài khoản của chính mình.");
+  if (u.role === "ADMIN" && status !== "ACTIVE") {
+    const [other] = await db
+      .select({ n: count() })
+      .from(users)
+      .where(and(eq(users.role, "ADMIN"), eq(users.status, "ACTIVE"), isNull(users.deletedAt), ne(users.id, u.id)));
+    if (!other?.n) throw new UserError("Phải còn ít nhất một quản trị viên đang hoạt động.");
+  }
   await db
     .update(users)
     .set({ status, failedLogins: 0, lockedUntil: status === "ACTIVE" ? null : u.lockedUntil })
@@ -151,12 +160,17 @@ export async function clearLoginLock(actor: Actor, userId: string) {
 export async function adminResetPassword(actor: Actor, userId: string) {
   const u = await targetUser(actor, userId);
   if (u.id === actor.id) throw new UserError("Hãy đổi mật khẩu của chính bạn ở trang Tài khoản.");
+  // Không cấp mật khẩu tạm cho admin khác: nếu không, một admin bị lộ mật khẩu sẽ chiếm được mọi tài khoản admin.
+  if (u.role === "ADMIN") {
+    throw new UserError("Không cấp lại mật khẩu cho quản trị viên khác. Quản trị viên dùng chức năng Quên mật khẩu hoặc script pnpm admin:create.");
+  }
   const tempPassword = generateTempPassword();
   await db
     .update(users)
     .set({ passwordHash: await hashPassword(tempPassword), mustChangePassword: true, failedLogins: 0, lockedUntil: null })
     .where(eq(users.id, u.id));
   await revokeAllSessions(u.id);
+  await notifyPasswordReset(u.id, "Quản trị viên");
   await audit(actor, "user.reset_password", u.id);
   return tempPassword;
 }
@@ -171,18 +185,8 @@ export async function createTeacher(actor: Actor, input: { fullName: string; use
     .limit(1);
   if (taken) throw new UserError("Tên đăng nhập hoặc email đã được dùng.");
   const tempPassword = generateTempPassword();
-  const [u] = await db
-    .insert(users)
-    .values({
-      ...input,
-      passwordHash: await hashPassword(tempPassword),
-      role: "TEACHER",
-      mustChangePassword: true,
-      emailVerifiedAt: new Date(),
-      approvedAt: new Date(),
-      createdBy: actor.id,
-    })
-    .returning({ id: users.id });
+  const id = await createTeacherByAdmin(actor.id, input, tempPassword);
+  const u = { id };
   await audit(actor, "user.create_teacher", u.id);
   return tempPassword;
 }

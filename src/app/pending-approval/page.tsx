@@ -8,7 +8,7 @@ export const metadata = { title: "Chờ duyệt · Classroom Edu" };
 
 /** GV tự đăng ký, chưa được admin duyệt: chỉ thấy trang này (guard chặn toàn bộ phần GV). */
 export default async function PendingApprovalPage() {
-  const actor = await requireActor();
+  const actor = await requireActor(undefined, { allowPending: true });
   if (actor.approved !== false) redirect(homeFor(actor.role));
   return (
     <main className="bg-background flex min-h-screen items-center justify-center px-4 py-10">

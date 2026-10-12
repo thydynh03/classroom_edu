@@ -4,6 +4,7 @@
  */
 import { beforeAll, describe, expect, inject, it } from "vitest";
 import { uuidv7 } from "uuidv7";
+import { sql } from "drizzle-orm";
 
 process.env.DATABASE_URL = inject("dbUrl");
 
@@ -286,10 +287,12 @@ describe("lên lịch đăng bài", () => {
 describe("quản trị", () => {
   let adminActor: Actor;
   beforeAll(async () => {
-    const [u] = await m.db.db
-      .insert(m.schema.users)
-      .values({ username: "quan.tri", fullName: "Admin", passwordHash: "x", role: "ADMIN" })
-      .returning();
+    // Admin chỉ tạo được khi transaction bật cờ (như script admin:create) — trigger users_guard.
+    const u = await m.db.db.transaction(async (tx) => {
+      await tx.execute(sql`select set_config('app.allow_admin_insert', 'on', true)`);
+      const [row] = await tx.insert(m.schema.users).values({ username: "quan.tri", fullName: "Admin", passwordHash: "x", role: "ADMIN" }).returning();
+      return row;
+    });
     adminActor = actor(u.id, "ADMIN");
   });
 

@@ -18,7 +18,7 @@ function deviceName(ua: string | null) {
 }
 
 export default async function SettingsPage() {
-  const actor = await requireActor();
+  const actor = await requireActor(undefined, { allowPending: true });
   const [me] = await db.select({ email: users.email, username: users.username, fullName: users.fullName }).from(users).where(eq(users.id, actor.id));
   const list = await db.select().from(sessions).where(eq(sessions.userId, actor.id)).orderBy(desc(sessions.lastSeenAt));
   return (
