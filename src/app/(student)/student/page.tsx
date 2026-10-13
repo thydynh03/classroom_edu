@@ -47,7 +47,7 @@ export default async function StudentHome({ searchParams }: { searchParams: Prom
       <ProductTour key={replay ? "replay" : "auto"} steps={STUDENT_TOUR} initialOpen={replay || !actor.tourDone} replay={replay} />
       <PushToggle publicKey={pushPublicKey()} variant="banner" />
 
-      <div className="-mb-3 flex justify-end">
+      <div className="flex justify-end">
         <Link href="/student/calendar" className="text-primary text-sm font-semibold hover:underline">
           Xem lịch hạn nộp
         </Link>
