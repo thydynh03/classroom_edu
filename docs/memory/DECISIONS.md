@@ -124,3 +124,5 @@ Người dùng yêu cầu ô bài làm là trình soạn thảo đầy đủ (đ
 - Màu, căn lề, thụt lề lưu bằng `data-color` / `data-align` / `data-indent` với giá trị cố định, không lưu `style`. Màu ánh xạ sang token trong `globals.css` (`.rich-content`).
 - Không cho link, ảnh, bảng trong bài làm (ảnh nộp qua file đính kèm).
 - Ghi chú cho giáo viên lưu ở `submissions.note` (tối đa 2.000 ký tự).
+
+**2026-10-13 · Ngân hàng câu hỏi làm sớm hơn kế hoạch** — PROJECT.md xếp ngân hàng câu hỏi vào giai đoạn sau; người dùng yêu cầu làm ngay. Thiết kế tối giản: mỗi giáo viên một ngân hàng riêng (lọc theo ownerId, người khác nhận 404); lựa chọn lưu jsonb trong cùng dòng; câu chọn vào đề được SAO CHÉP sang questions (sửa/xóa trong ngân hàng không ảnh hưởng đề đã giao, không cần khóa khi đã có bài nộp); trùng nội dung câu hỏi thì bỏ qua; tối đa 2000 câu mỗi giáo viên. Chưa làm: chia sẻ ngân hàng giữa giáo viên, trộn câu, rút ngẫu nhiên.

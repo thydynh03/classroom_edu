@@ -9,7 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { publishAssignmentAction, saveQuestionsAction } from "../../../actions";
+import { addToBankAction, publishAssignmentAction, saveQuestionsAction } from "../../../actions";
+import { BankPicker } from "./bank-picker";
+import type { BankItem } from "../../../questions/bank-manager";
 import { cn } from "@/lib/utils";
 import { ImportQuiz, type ImportedQuestion } from "./import-quiz";
 
@@ -38,12 +40,14 @@ export function QuestionEditor({
   locked,
   isDraft,
   canImport,
+  bank,
 }: {
   assignmentId: string;
   initial: { type: QType; prompt: string; points: number; options: { label: string; isCorrect: boolean }[] }[];
   locked: boolean;
   isDraft: boolean;
   canImport: boolean;
+  bank: BankItem[];
 }) {
   const [qs, setQs] = React.useState<Q[]>(() =>
     initial.length
@@ -122,6 +126,28 @@ export function QuestionEditor({
       </div>
     );
 
+  function pickFromBank(list: BankItem[]) {
+    const mapped: Q[] = list.map((b) => ({ key: k(), type: b.type, prompt: b.prompt, points: b.points, options: b.options.map((o) => ({ ...o, key: k() })) }));
+    setQs((all) => [...all.filter((q) => q.prompt.trim()), ...mapped]);
+    toast.success(`Đã thêm ${mapped.length} câu từ ngân hàng. Kiểm tra lại rồi bấm Lưu.`);
+  }
+
+  function saveToBank() {
+    setError(null);
+    const payload = qs
+      .filter((q) => q.prompt.trim())
+      .map((q) => ({
+        topic: "",
+        question: { type: q.type, prompt: q.prompt, points: Number(q.points), options: q.options.filter((o) => o.label.trim()).map((o) => ({ label: o.label, isCorrect: o.isCorrect })) },
+      }));
+    start(async () => {
+      const r = await addToBankAction(payload);
+      if (r.error) return setError(r.error);
+      toast.success(r.message ?? "Đã lưu vào ngân hàng");
+      router.refresh();
+    });
+  }
+
   function importQuestions(list: ImportedQuestion[], mode: "append" | "replace") {
     const mapped = list.map((q) => ({ ...q, key: k(), options: q.options.map((o) => ({ ...o, key: k() })) }));
     setQs((all) => (mode === "replace" ? mapped : [...all.filter((q) => q.prompt.trim() || q.options.some((o) => o.label.trim())), ...mapped]));
@@ -131,6 +157,7 @@ export function QuestionEditor({
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap justify-end gap-2">
+        <BankPicker bank={bank} onPick={pickFromBank} />
         <ImportQuiz assignmentId={assignmentId} unlocked={canImport} onImport={importQuestions} />
       </div>
       {qs.map((q, i) => (
@@ -215,7 +242,10 @@ export function QuestionEditor({
           <b>{qs.length}</b> câu · tổng trọng số <b>{total}</b>
         </p>
         {error && <p role="alert" className="text-danger text-sm font-semibold">{error}</p>}
-        <div className="ml-auto flex gap-2">
+        <div className="ml-auto flex flex-wrap gap-2">
+          <Button variant="ghost" disabled={pending} onClick={saveToBank}>
+            Lưu các câu này vào ngân hàng
+          </Button>
           <Button variant="outline" disabled={pending} onClick={() => save(false)}>
             Lưu
           </Button>

@@ -30,6 +30,11 @@ export const questionSchema = z
   });
 export type QuestionInput = z.infer<typeof questionSchema>;
 
+/** Câu hỏi trong ngân hàng: cùng luật với câu trong đề, thêm chủ đề để lọc. */
+export const bankQuestionSchema = z.strictObject({ topic: z.string().trim().max(60), question: questionSchema });
+export type BankQuestionInput = z.infer<typeof bankQuestionSchema>;
+export const bankQuestionsSchema = z.array(bankQuestionSchema).min(1, "Chưa có câu hỏi nào").max(100);
+
 export const questionsSchema = z.array(questionSchema).min(1, "Quiz cần ít nhất 1 câu hỏi").max(100);
 
 export const gradeSchema = z.strictObject({

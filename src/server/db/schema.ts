@@ -259,6 +259,27 @@ export const questionOptions = pgTable("question_options", {
   position: integer("position").notNull(),
 });
 
+export type BankOption = { label: string; isCorrect: boolean };
+
+/** Ngân hàng câu hỏi riêng của từng giáo viên. Câu chọn vào đề được SAO CHÉP sang questions, không liên kết ngược. */
+export const bankQuestions = pgTable(
+  "bank_questions",
+  {
+    id: id(),
+    ownerId: uuid("owner_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    type: questionType("type").notNull(),
+    prompt: text("prompt").notNull(),
+    points: numeric("points", { precision: 6, scale: 2, mode: "number" }).notNull().default(1),
+    topic: text("topic").notNull().default(""),
+    options: jsonb("options").$type<BankOption[]>().notNull(),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [index("bank_questions_owner_idx").on(t.ownerId, t.updatedAt)],
+);
+
 export type QuizAnswers = Record<string, string[]>;
 
 export const submissions = pgTable(

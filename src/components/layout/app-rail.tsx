@@ -9,6 +9,7 @@ import {
   BookOpen,
   ClipboardList,
   Sparkles,
+  Library,
   CalendarCheck,
   CalendarDays,
   Star,
@@ -71,6 +72,11 @@ export function AppRail({
       label: "Bài tập",
       href: "/teacher/assignments",
       icon: ClipboardList,
+    },
+    {
+      label: "Câu hỏi",
+      href: "/teacher/questions",
+      icon: Library,
     },
     {
       label: "Nâng cao",

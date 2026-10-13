@@ -17,7 +17,8 @@ import { track } from "@/server/observability/events";
 import type { ParseResult } from "@/server/services/quiz-import-parse";
 import { rateLimit } from "@/server/rate-limit";
 import { UserError } from "@/server/services/errors";
-import { assignmentSchema, gradeSchema, questionsSchema } from "@/server/validation/assignment";
+import { assignmentSchema, bankQuestionSchema, bankQuestionsSchema, gradeSchema, questionsSchema } from "@/server/validation/assignment";
+import * as bankSvc from "@/server/services/question-bank";
 import { type ActionState, fieldErrorsFrom } from "@/lib/action";
 import { fromLocalInputValue } from "@/lib/dates";
 
@@ -374,4 +375,44 @@ export async function deleteMaterialAction(materialId: string) {
   const actor = await teacher();
   const classId = await materialSvc.deleteMaterial(actor, String(materialId));
   revalidatePath(`/teacher/classes/${classId}`);
+}
+
+// ---------------------------------------------------------------- Ngân hàng câu hỏi
+
+function bankIssue(issue: { path: PropertyKey[]; message: string }) {
+  const idx = typeof issue.path[0] === "number" ? `Câu ${issue.path[0] + 1}: ` : "";
+  return { error: `${idx}${issue.message}` };
+}
+
+export async function saveBankQuestionAction(id: string | null, payload: unknown): Promise<ActionState> {
+  const actor = await teacher();
+  const parsed = bankQuestionSchema.safeParse(payload);
+  if (!parsed.success) return bankIssue(parsed.error.issues[0]);
+  if (id) await bankSvc.updateBankQuestion(actor, id, parsed.data);
+  else {
+    const r = await guard(() => bankSvc.addBankQuestions(actor, [parsed.data]));
+    if (r && typeof r === "object" && "error" in r) return r;
+    if (r === 0) return { error: "Câu hỏi này đã có trong ngân hàng." };
+  }
+  revalidatePath("/teacher/questions");
+  return { ok: true, message: id ? "Đã lưu câu hỏi." : "Đã thêm vào ngân hàng." };
+}
+
+export async function deleteBankQuestionAction(id: string): Promise<ActionState> {
+  const actor = await teacher();
+  await bankSvc.deleteBankQuestion(actor, id);
+  revalidatePath("/teacher/questions");
+  return { ok: true, message: "Đã xóa câu hỏi." };
+}
+
+/** Lưu các câu đang soạn trong một đề vào ngân hàng (bỏ qua câu đã có). */
+export async function addToBankAction(payload: unknown): Promise<ActionState> {
+  const actor = await teacher();
+  const parsed = bankQuestionsSchema.safeParse(payload);
+  if (!parsed.success) return bankIssue(parsed.error.issues[0]);
+  const r = await guard(() => bankSvc.addBankQuestions(actor, parsed.data));
+  if (typeof r !== "number") return r as ActionState;
+  revalidatePath("/teacher/questions");
+  const skipped = parsed.data.length - r;
+  return { ok: true, message: r ? `Đã lưu ${r} câu vào ngân hàng${skipped ? `, bỏ qua ${skipped} câu đã có` : ""}.` : "Các câu này đã có trong ngân hàng." };
 }

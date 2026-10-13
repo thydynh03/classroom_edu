@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ClipboardList, Plus } from "lucide-react";
+import { ClipboardList, Library, Plus } from "lucide-react";
 import { requireActor } from "@/server/auth/guard";
 import { listTeacherAssignments } from "@/server/services/assignments";
 import { AssignmentRow } from "@/components/domain/assignment-row";
@@ -36,9 +36,14 @@ export default async function AssignmentsPage({ searchParams }: { searchParams: 
         title="Bài tập"
         description="Tất cả bài tập ở mọi lớp"
         actions={
-          <LinkButton href="/teacher/assignments/new">
-            <Plus aria-hidden="true" /> Giao bài
-          </LinkButton>
+          <>
+            <LinkButton href="/teacher/questions" variant="outline">
+              <Library aria-hidden="true" /> Ngân hàng câu hỏi
+            </LinkButton>
+            <LinkButton href="/teacher/assignments/new">
+              <Plus aria-hidden="true" /> Giao bài
+            </LinkButton>
+          </>
         }
       />
       {all.length > 0 && (
