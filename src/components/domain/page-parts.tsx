@@ -132,3 +132,26 @@ export function LinkButton({
     </Link>
   );
 }
+
+const TONE = { default: "text-foreground", primary: "text-primary", success: "text-success", warning: "text-warning", danger: "text-danger" } as const;
+
+/** Hàng số liệu tóm tắt đầu trang danh sách (gọn hơn StatTile). */
+export function SummaryStrip({
+  items,
+  className,
+}: {
+  items: { label: string; value: React.ReactNode; hint?: React.ReactNode; tone?: keyof typeof TONE }[];
+  className?: string;
+}) {
+  return (
+    <dl className={cn("mb-6 grid grid-cols-2 gap-3", items.length >= 4 ? "lg:grid-cols-4" : "sm:grid-cols-3", className)}>
+      {items.map((i) => (
+        <div key={i.label} className="bg-surface border-border rounded-card border px-4 py-3.5">
+          <dt className="text-muted text-xs font-semibold">{i.label}</dt>
+          <dd className={cn("mt-1 text-2xl font-extrabold tracking-tight tabular-nums", TONE[i.tone ?? "default"])}>{i.value}</dd>
+          {i.hint && <dd className="text-muted mt-0.5 truncate text-xs">{i.hint}</dd>}
+        </div>
+      ))}
+    </dl>
+  );
+}
