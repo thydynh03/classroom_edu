@@ -164,7 +164,7 @@ function EditorShell({ editor, id, full, onToggleFull }: { editor: Editor; id: s
   };
 
   return (
-    <div className={cn("flex flex-col", full && "bg-background fixed inset-0 z-50 p-3 md:p-8")}>
+    <div data-editor-full={full || undefined} className={cn("flex flex-col", full && "bg-background fixed inset-0 z-50 p-3 md:p-8")}>
       <div className="mb-1.5 flex items-center justify-between gap-2">
         <label htmlFor={id} className="text-sm font-semibold">
           Bài làm
@@ -247,7 +247,7 @@ function EditorShell({ editor, id, full, onToggleFull }: { editor: Editor; id: s
           </ToolButton>
         </div>
 
-        <div role="toolbar" aria-label="Chèn ký hiệu" className="border-border flex gap-0.5 overflow-x-auto border-b px-2 py-1">
+        <div role="toolbar" aria-label="Chèn ký hiệu" className="border-border flex gap-0.5 overflow-x-auto border-b px-2 py-1 md:flex-wrap md:overflow-visible">
           {SYMBOLS.map((sym) => (
             <ToolButton key={sym} label={`Chèn ${sym}`} onClick={() => chain().insertContent(sym).run()}>
               <span className="text-base">{sym}</span>

@@ -209,8 +209,15 @@ export function WrittenPanel({
           role="status"
           className="bg-warning-soft text-warning rounded-control flex items-center gap-2 px-3 py-2 text-sm font-semibold"
         >
-          <CloudOff className="size-4" aria-hidden="true" /> Mất kết nối. Bài
-          viết vẫn được lưu trên máy này.
+          <CloudOff className="size-4 shrink-0" aria-hidden="true" />
+          <span className="flex-1">
+            {online ? "Chưa lưu được lên máy chủ. Bài viết vẫn được lưu trên máy này; tải lại trang rồi bấm khôi phục bản nháp." : "Mất kết nối. Bài viết vẫn được lưu trên máy này."}
+          </span>
+          {online && (
+            <button type="button" onClick={() => window.location.reload()} className="shrink-0 underline">
+              Tải lại
+            </button>
+          )}
         </p>
       )}
       <AnswerEditor

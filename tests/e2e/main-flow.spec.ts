@@ -114,7 +114,8 @@ test.describe("luồng chính giáo viên → học sinh", () => {
     await page.getByLabel("Họ và tên").fill("Giáo Viên Mới");
     await page.getByLabel("Email").fill(`gv.${stamp}@example.com`);
     await page.getByLabel("Tên đăng nhập").fill(`gv.${stamp}`);
-    await page.getByLabel("Mật khẩu").fill("matkhau-moi-456");
+    await page.getByLabel("Mật khẩu", { exact: true }).fill("matkhau-moi-456");
+    await page.getByLabel("Nhập lại mật khẩu").fill("matkhau-moi-456");
     await page.locator('form button[type="submit"]').click();
     await expect(page).toHaveURL(/\/pending-approval$/);
     await expect(page.getByRole("heading", { name: "Tài khoản đang chờ duyệt" })).toBeVisible();

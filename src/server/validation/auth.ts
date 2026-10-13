@@ -17,12 +17,18 @@ export const usernameSchema = z
   .toLowerCase()
   .regex(/^[a-z0-9._]{3,32}$/, "Tên đăng nhập 3–32 ký tự: chữ thường, số, dấu chấm, gạch dưới");
 
-export const registerSchema = z.strictObject({
-  fullName: z.string().trim().min(2, "Nhập họ tên").max(100),
-  email: z.email("Email không hợp lệ").trim().toLowerCase(),
-  username: usernameSchema,
-  password: passwordSchema,
-});
+export const registerSchema = z
+  .strictObject({
+    fullName: z.string().trim().min(2, "Nhập họ tên").max(100),
+    email: z.email("Email không hợp lệ").trim().toLowerCase(),
+    username: usernameSchema,
+    password: passwordSchema,
+    confirm: z.string(),
+  })
+  .refine((v) => v.password === v.confirm, {
+    message: "Mật khẩu nhập lại không khớp",
+    path: ["confirm"],
+  });
 
 export const changePasswordSchema = z
   .strictObject({

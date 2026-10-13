@@ -100,8 +100,9 @@ describe("trigger users_guard (lớp chặn cuối ở DB)", () => {
 
 describe("tạo và duyệt giáo viên", () => {
   it("form đăng ký từ chối field lạ như role/approvedAt", () => {
-    const base = { fullName: "Cô Test", email: "co.test@example.com", username: "co.test", password: "matkhau-123" };
+    const base = { fullName: "Cô Test", email: "co.test@example.com", username: "co.test", password: "matkhau-123", confirm: "matkhau-123" };
     expect(m.validation.registerSchema.safeParse(base).success).toBe(true);
+    expect(m.validation.registerSchema.safeParse({ ...base, confirm: "matkhau-124" }).success).toBe(false);
     expect(m.validation.registerSchema.safeParse({ ...base, role: "ADMIN" }).success).toBe(false);
     expect(m.validation.registerSchema.safeParse({ ...base, approvedAt: "2026-01-01" }).success).toBe(false);
   });

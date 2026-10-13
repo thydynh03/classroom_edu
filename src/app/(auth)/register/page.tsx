@@ -51,6 +51,14 @@ export default function RegisterPage() {
             hint="Ít nhất 8 ký tự"
             error={state.fieldErrors?.password}
           />
+          <Field
+            label="Nhập lại mật khẩu"
+            name="confirm"
+            type="password"
+            autoComplete="new-password"
+            required
+            error={state.fieldErrors?.confirm}
+          />
           <SubmitButton className="w-full" pendingText="Đang tạo tài khoản…">
             Tạo tài khoản
           </SubmitButton>

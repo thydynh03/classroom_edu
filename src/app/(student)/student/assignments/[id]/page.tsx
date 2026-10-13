@@ -111,7 +111,7 @@ export default async function StudentAssignmentPage({ params }: { params: Promis
           <Panel
             title="Bài làm của em"
             action={turnedIn && sub?.submittedAt ? <span className="text-muted text-xs">Nộp {shortDateTime(sub.submittedAt)}{sub.isLate ? " · trễ" : ""}</span> : undefined}
-            className="h-fit lg:sticky lg:top-24"
+            className="h-fit has-[[data-editor-full]]:z-50 lg:sticky lg:top-24"
           >
             <WrittenPanel
               assignmentId={a.id}
