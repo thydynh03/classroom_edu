@@ -83,7 +83,9 @@ test.describe("luồng chính giáo viên → học sinh", () => {
 
     await s.getByRole("link", { name: new RegExp(title) }).first().click();
     await expect(s.getByRole("heading", { name: title })).toBeVisible();
-    await s.getByLabel("Bài làm / ghi chú cho giáo viên").fill("x = 2 hoặc x = 3");
+    // Ô bài làm là trình soạn thảo (contenteditable), ghi chú là ô riêng.
+    await s.getByRole("textbox", { name: "Bài làm", exact: true }).fill("x = 2 hoặc x = 3");
+    await s.getByLabel("Ghi chú cho giáo viên (không bắt buộc)").fill("Em làm theo cách phân tích nhân tử.");
     await s.getByRole("button", { name: "Nộp bài" }).click();
     await expect(s.getByRole("button", { name: "Rút lại để sửa" })).toBeVisible();
 
