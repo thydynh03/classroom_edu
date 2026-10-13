@@ -26,6 +26,7 @@ import {
   Underline,
   Undo2,
 } from "lucide-react";
+import { Columns2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const COLORS = [
@@ -103,7 +104,20 @@ const Divider = () => <span className="bg-border mx-1 h-5 w-px shrink-0" aria-hi
  * Trình soạn bài làm của học sinh. Xuất HTML; server lọc lại bằng sanitizeAnswerHtml trước khi lưu.
  * `initialHtml` chỉ đọc lúc khởi tạo; muốn nạp nội dung khác thì đổi `key` của component.
  */
-export function AnswerEditor({ id, initialHtml, onChange, onBlur }: { id: string; initialHtml: string; onChange: (html: string, text: string) => void; onBlur?: () => void }) {
+export function AnswerEditor({
+  id,
+  initialHtml,
+  onChange,
+  onBlur,
+  aside,
+}: {
+  id: string;
+  initialHtml: string;
+  onChange: (html: string, text: string) => void;
+  onBlur?: () => void;
+  /** Đề bài/tài liệu: có thì chế độ toàn màn hình chia đôi, đề bên trái, bài làm bên phải. */
+  aside?: React.ReactNode;
+}) {
   const [full, setFull] = React.useState(false);
   const editor = useEditor({
     immediatelyRender: false,
@@ -124,10 +138,12 @@ export function AnswerEditor({ id, initialHtml, onChange, onBlur }: { id: string
   if (!editor) {
     return <div className="border-border bg-surface min-h-[380px] animate-pulse rounded-[16px] border" aria-hidden="true" />;
   }
-  return <EditorShell editor={editor} id={id} full={full} onToggleFull={() => setFull((v) => !v)} />;
+  return <EditorShell editor={editor} id={id} full={full} onToggleFull={() => setFull((v) => !v)} aside={aside} />;
 }
 
-function EditorShell({ editor, id, full, onToggleFull }: { editor: Editor; id: string; full: boolean; onToggleFull: () => void }) {
+function EditorShell({ editor, id, full, onToggleFull, aside }: { editor: Editor; id: string; full: boolean; onToggleFull: () => void; aside?: React.ReactNode }) {
+  const [showAside, setShowAside] = React.useState(true);
+  const split = full && !!aside && showAside;
   const state = useEditorState({
     editor,
     selector: ({ editor: e }) => {
@@ -164,11 +180,34 @@ function EditorShell({ editor, id, full, onToggleFull }: { editor: Editor; id: s
   };
 
   return (
-    <div data-editor-full={full || undefined} className={cn("flex flex-col", full && "bg-background fixed inset-0 z-50 p-3 md:p-8")}>
+    <div
+      data-editor-full={full || undefined}
+      className={cn(
+        "flex flex-col",
+        full && "bg-background fixed inset-0 z-50 p-3 md:p-6",
+        split && "gap-3 md:grid md:grid-cols-2 md:grid-rows-[auto_minmax(0,1fr)] md:gap-x-5 md:gap-y-0",
+      )}
+    >
+      {split && (
+        <section aria-label="Đề bài" className="border-border bg-surface max-h-[38vh] shrink-0 overflow-y-auto rounded-[16px] border p-4 md:row-span-2 md:max-h-none md:p-6">
+          {aside}
+        </section>
+      )}
       <div className="mb-1.5 flex items-center justify-between gap-2">
         <label htmlFor={id} className="text-sm font-semibold">
           Bài làm
         </label>
+        {full && aside && (
+          <button
+            type="button"
+            onClick={() => setShowAside((v) => !v)}
+            aria-pressed={showAside}
+            className="text-muted hover:text-foreground focus-visible:ring-ring rounded-control ml-auto inline-flex min-h-9 items-center gap-1.5 px-2 text-xs font-semibold focus-visible:ring-2 focus-visible:outline-hidden"
+          >
+            <Columns2 className="size-4" aria-hidden="true" />
+            {showAside ? "Ẩn đề bài" : "Hiện đề bài"}
+          </button>
+        )}
         <button
           type="button"
           onClick={onToggleFull}
@@ -176,11 +215,11 @@ function EditorShell({ editor, id, full, onToggleFull }: { editor: Editor; id: s
           className="text-muted hover:text-foreground focus-visible:ring-ring rounded-control inline-flex min-h-9 items-center gap-1.5 px-2 text-xs font-semibold focus-visible:ring-2 focus-visible:outline-hidden"
         >
           {full ? <Minimize2 className="size-4" aria-hidden="true" /> : <Maximize2 className="size-4" aria-hidden="true" />}
-          {full ? "Thu nhỏ (Esc)" : "Viết toàn màn hình"}
+          {full ? "Thu nhỏ (Esc)" : aside ? "Chia đôi: đọc đề và làm bài" : "Viết toàn màn hình"}
         </button>
       </div>
 
-      <div className={cn("border-border bg-surface focus-within:ring-ring flex flex-col overflow-hidden rounded-[16px] border shadow-sm focus-within:ring-2", full && "mx-auto min-h-0 w-full max-w-4xl flex-1")}>
+      <div className={cn("border-border bg-surface focus-within:ring-ring flex flex-col overflow-hidden rounded-[16px] border shadow-sm focus-within:ring-2", full && "mx-auto min-h-0 w-full flex-1", full && !split && "max-w-4xl")}>
         <div role="toolbar" aria-label="Định dạng bài làm" className="border-border bg-surface-2 flex flex-wrap items-center gap-0.5 border-b px-2 py-1.5">
           <ToolButton label="Hoàn tác" disabled={!state.canUndo} onClick={() => chain().undo().run()}>
             <Undo2 />

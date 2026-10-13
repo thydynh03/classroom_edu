@@ -1286,7 +1286,14 @@ export function UiCatalog() {
             Trình soạn bài làm
           </h2>
           <div className="max-w-3xl">
-            <AnswerEditor id="catalog-answer" initialHtml="<p>Bài 1. Đỉnh I(2; −1).</p>" onChange={() => {}} />
+            <AnswerEditor id="catalog-answer" initialHtml="<p>Bài 1. Đỉnh I(2; −1).</p>" onChange={() => {}}
+              aside={
+                <div className="space-y-3">
+                  <h2 className="text-lg font-extrabold">Ôn tập chương 2</h2>
+                  <p className="text-[15px] leading-relaxed whitespace-pre-line">{"Bài 1. Tìm toạ độ đỉnh của parabol y = x² − 4x + 3.\nBài 2. Giải phương trình x² − 5x + 6 = 0."}</p>
+                </div>
+              }
+            />
           </div>
         </section>
       </main>

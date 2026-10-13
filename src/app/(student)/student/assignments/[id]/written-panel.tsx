@@ -27,6 +27,7 @@ export function WrittenPanel({
   editBlockedReason,
   status,
   dueLabelText,
+  brief,
 }: {
   assignmentId: string;
   initialContent: string;
@@ -37,6 +38,8 @@ export function WrittenPanel({
   editBlockedReason?: string;
   status: "NONE" | "DRAFT" | "SUBMITTED" | "GRADED" | "RETURNED";
   dueLabelText: string;
+  /** Đề bài và tài liệu, hiện bên trái khi chia đôi màn hình. */
+  brief?: React.ReactNode;
 }) {
   const router = useRouter();
   const storageKey = `draft:${assignmentId}`;
@@ -224,6 +227,7 @@ export function WrittenPanel({
         key={editorSeed.key}
         id="content"
         initialHtml={editorSeed.html}
+        aside={brief}
         onChange={(html) => {
           dirty.current = true;
           editSeq.current++;

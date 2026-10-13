@@ -10,6 +10,7 @@ import { formatScore } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { WrittenPanel } from "./written-panel";
 import { QuizPlayer } from "./quiz-player";
+import { AssignmentBrief } from "@/components/domain/assignment-brief";
 import { requestNow } from "@/lib/now";
 import { track } from "@/server/observability/events";
 
@@ -123,6 +124,7 @@ export default async function StudentAssignmentPage({ params }: { params: Promis
               editBlockedReason={v.edit.ok ? undefined : v.edit.reason}
               status={sub?.status ?? "NONE"}
               dueLabelText={dueLabel(a.dueAt)}
+              brief={<AssignmentBrief title={a.title} body={a.body} attachments={v.attachments} />}
             />
           </Panel>
         )}
