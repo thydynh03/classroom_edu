@@ -468,15 +468,27 @@ export async function remindMissing(actor: Actor, assignmentId: string, now = ne
       ),
     );
   if (!rows.length) return 0;
+  const href = `/student/assignments/${a.id}`;
+  // Bỏ qua em đã được nhắc bài này trong 6 giờ gần nhất (tính theo thời điểm nhắc, không theo khung giờ cố định:
+  // khung cố định cho phép nhắc lúc 23:59 rồi nhắc lại lúc 00:01).
+  const since = new Date(now.getTime() - REMIND_WINDOW_MS).toISOString();
+  const recent = await db
+    .select({ id: notifications.recipientId })
+    .from(notifications)
+    .where(and(eq(notifications.type, "ASSIGNMENT_REMINDER"), eq(notifications.href, href), sql`${notifications.createdAt} > ${since}::timestamptz`));
+  const reminded = new Set(recent.map((r) => r.id));
+  const targets = rows.filter((r) => !reminded.has(r.id));
+  if (!targets.length) return 0;
+  // dedupeKey theo khung giờ vẫn giữ để hai lần bấm cùng lúc không tạo hai thông báo.
   const bucket = Math.floor(now.getTime() / REMIND_WINDOW_MS);
   const inserted = await db
     .insert(notifications)
     .values(
-      rows.map((r) => ({
+      targets.map((r) => ({
         recipientId: r.id,
         type: "ASSIGNMENT_REMINDER",
         title: `${actor.fullName} nhắc bạn nộp bài: ${a.title} (${cls.name})`,
-        href: `/student/assignments/${a.id}`,
+        href,
         dedupeKey: `remind:${a.id}:${r.id}:${bucket}`,
       })),
     )
