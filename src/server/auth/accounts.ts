@@ -1,5 +1,6 @@
 import "server-only";
 import { sql } from "drizzle-orm";
+import { uuidv7 } from "uuidv7";
 import { db } from "@/server/db/client";
 import { classMembers, users } from "@/server/db/schema";
 import { hashPassword } from "./password";
@@ -45,8 +46,8 @@ export async function createTeacherByAdmin(
   // Không dùng db.transaction: qua pooler Supabase, postgres.js báo UNSAFE_TRANSACTION (LESSONS 2026-10-14).
   const rows = await db.execute<{ id: string }>(sql`
     with f as (select set_config('app.allow_teacher_approval', 'on', true))
-    insert into users (full_name, username, email, password_hash, role, must_change_password, email_verified_at, approved_at, created_by)
-    select ${input.fullName}, ${input.username}, ${input.email}, ${passwordHash}, 'TEACHER', true, now(), now(), ${adminId} from f
+    insert into users (id, full_name, username, email, password_hash, role, must_change_password, email_verified_at, approved_at, created_by)
+    select ${uuidv7()}, ${input.fullName}, ${input.username}, ${input.email}, ${passwordHash}, 'TEACHER', true, now(), now(), ${adminId} from f
     returning id`);
   return rows[0].id;
 }
