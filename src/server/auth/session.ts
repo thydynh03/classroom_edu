@@ -13,7 +13,7 @@ const COOKIE =
 
 export type Actor = {
   id: string;
-  role: "ADMIN" | "TEACHER" | "STUDENT";
+  role: "ADMIN" | "MODERATOR" | "TEACHER" | "STUDENT";
   fullName: string;
   username: string;
   mustChangePassword: boolean;

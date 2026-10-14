@@ -52,6 +52,30 @@ export async function createTeacherByAdmin(
   return rows[0].id;
 }
 
+/** Kiểm duyệt viên do admin tạo (trigger users_guard không cho app tạo ADMIN, MODERATOR thì được). */
+export async function createModeratorByAdmin(
+  adminId: string,
+  input: { fullName: string; username: string; email: string },
+  tempPassword: string,
+) {
+  const passwordHash = await hashPassword(tempPassword);
+  const [u] = await db
+    .insert(users)
+    .values({
+      id: uuidv7(),
+      fullName: input.fullName,
+      username: input.username,
+      email: input.email,
+      passwordHash,
+      role: "MODERATOR",
+      mustChangePassword: true,
+      emailVerifiedAt: new Date(),
+      createdBy: adminId,
+    })
+    .returning({ id: users.id });
+  return u.id;
+}
+
 /** Duyệt GV đang chờ. Trả về true nếu vừa duyệt (false nếu đã duyệt trước đó / không phải GV). */
 export async function approveTeacherAccount(userId: string) {
   const rows = await db.execute<{ id: string }>(sql`

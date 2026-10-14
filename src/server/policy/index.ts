@@ -133,6 +133,11 @@ export function requireRole(actor: Actor, role: Actor["role"]) {
   if (actor.role !== role) notFound();
 }
 
+/** Quản trị viên hoặc kiểm duyệt viên (admin phụ: chỉ duyệt và quản lý tài khoản GV/HS). */
+export function requireStaff(actor: Actor) {
+  if (actor.role !== "ADMIN" && actor.role !== "MODERATOR") notFound();
+}
+
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export function isUuid(v: string) {
   return UUID_RE.test(v);

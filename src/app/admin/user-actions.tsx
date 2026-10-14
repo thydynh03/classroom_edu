@@ -27,7 +27,13 @@ import {
 } from "./actions";
 
 /** Duyệt / từ chối GV tự đăng ký. Từ chối = khóa tài khoản (mở lại được ở danh sách người dùng). */
-export function PendingTeacherActions({ userId, name }: { userId: string; name: string }) {
+export function PendingTeacherActions({
+  userId,
+  name,
+}: {
+  userId: string;
+  name: string;
+}) {
   const [pending, start] = useTransition();
   return (
     <div className="flex shrink-0 gap-1.5">
@@ -54,7 +60,8 @@ export function PendingTeacherActions({ userId, name }: { userId: string; name: 
           <AlertDialogHeader>
             <AlertDialogTitle>Từ chối {name}?</AlertDialogTitle>
             <AlertDialogDescription>
-              Tài khoản sẽ bị khóa và không đăng nhập được. Nếu nhầm, bạn mở khóa lại ở danh sách người dùng rồi duyệt.
+              Tài khoản sẽ bị khóa và không đăng nhập được. Nếu nhầm, bạn mở
+              khóa lại ở danh sách người dùng rồi duyệt.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -83,23 +90,33 @@ export function UserActions({
   name,
   status,
   loginLocked,
+  canDelete = true,
 }: {
   userId: string;
   name: string;
   status: "ACTIVE" | "LOCKED" | "DISABLED";
   loginLocked: boolean;
+  canDelete?: boolean;
 }) {
   const [pending, start] = useTransition();
   const [temp, setTemp] = useState<string | null>(null);
   return (
     <div className="flex flex-wrap justify-end gap-1.5">
       {temp && (
-        <span role="status" className="bg-warning-soft text-warning rounded-control px-2 py-1 font-mono text-xs select-all">
+        <span
+          role="status"
+          className="bg-warning-soft text-warning rounded-control px-2 py-1 font-mono text-xs select-all"
+        >
           Mật khẩu tạm: {temp}
         </span>
       )}
       {loginLocked && (
-        <Button size="sm" variant="ghost" disabled={pending} onClick={() => start(() => clearLockAction(userId))}>
+        <Button
+          size="sm"
+          variant="ghost"
+          disabled={pending}
+          onClick={() => start(() => clearLockAction(userId))}
+        >
           Gỡ khóa tạm
         </Button>
       )}
@@ -121,14 +138,23 @@ export function UserActions({
       {status === "ACTIVE" ? (
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button size="sm" variant="outline" className="text-danger" disabled={pending} aria-label={`Khóa ${name}`}>
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-danger"
+              disabled={pending}
+              aria-label={`Khóa ${name}`}
+            >
               Khóa
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Khóa tài khoản {name}?</AlertDialogTitle>
-              <AlertDialogDescription>Người dùng bị đăng xuất khỏi mọi thiết bị và không đăng nhập được cho tới khi được mở khóa. Dữ liệu vẫn được giữ.</AlertDialogDescription>
+              <AlertDialogDescription>
+                Người dùng bị đăng xuất khỏi mọi thiết bị và không đăng nhập
+                được cho tới khi được mở khóa. Dữ liệu vẫn được giữ.
+              </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Hủy</AlertDialogCancel>
@@ -161,59 +187,113 @@ export function UserActions({
           Mở khóa
         </Button>
       )}
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <Button size="sm" variant="ghost" className="text-danger" disabled={pending} aria-label={`Xóa ${name}`}>
-            Xóa
-          </Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Xóa tài khoản {name}?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tài khoản biến mất khỏi danh sách và không đăng nhập được nữa. Bài nộp, điểm và lớp đã có vẫn được giữ. Tên đăng nhập và email được giải phóng để người đó đăng ký lại nếu cần. Không hoàn tác được trên giao diện.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Hủy</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-danger hover:bg-danger/90"
-              onClick={() =>
-                start(async () => {
-                  const r = await deleteUserAction(userId);
-                  if (r.ok) toast.success(`Đã xóa ${name}`);
-                  else toast.error(r.error);
-                })
-              }
+      {canDelete && (
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-danger"
+              disabled={pending}
+              aria-label={`Xóa ${name}`}
             >
-              Xóa tài khoản
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+              Xóa
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Xóa tài khoản {name}?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tài khoản biến mất khỏi danh sách và không đăng nhập được nữa.
+                Bài nộp, điểm và lớp đã có vẫn được giữ. Tên đăng nhập và email
+                được giải phóng để người đó đăng ký lại nếu cần. Không hoàn tác
+                được trên giao diện.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Hủy</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-danger hover:bg-danger/90"
+                onClick={() =>
+                  start(async () => {
+                    const r = await deleteUserAction(userId);
+                    if (r.ok) toast.success(`Đã xóa ${name}`);
+                    else toast.error(r.error);
+                  })
+                }
+              >
+                Xóa tài khoản
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   );
 }
 
 export function CreateTeacherForm() {
-  const [state, action] = useActionState(createTeacherAction, {} as CreateTeacherState);
+  const [state, action] = useActionState(
+    createTeacherAction,
+    {} as CreateTeacherState
+  );
   return (
     <section className="bg-surface border-border rounded-card h-fit border p-5">
-      <h2 className="mb-1 text-[15px] font-bold">Tạo tài khoản giáo viên</h2>
-      <p className="text-muted mb-3 text-sm">Tài khoản đã xác minh, phải đổi mật khẩu khi đăng nhập lần đầu.</p>
+      <h2 className="mb-1 text-[15px] font-bold">Tạo tài khoản</h2>
+      <p className="text-muted mb-3 text-sm">
+        Giáo viên (đã duyệt sẵn) hoặc kiểm duyệt viên (chỉ duyệt và quản lý
+        GV/HS). Phải đổi mật khẩu khi đăng nhập lần đầu.
+      </p>
       {state.ok && state.tempPassword ? (
-        <div role="status" className="bg-success-soft text-success rounded-control space-y-1 px-3 py-2.5 text-sm">
+        <div
+          role="status"
+          className="bg-success-soft text-success rounded-control space-y-1 px-3 py-2.5 text-sm"
+        >
           <p className="font-bold">Đã tạo {state.username}</p>
-          <p className="font-mono select-all">Mật khẩu tạm: {state.tempPassword}</p>
-          <p className="text-xs">Chỉ hiện một lần. Gửi cho giáo viên qua kênh riêng.</p>
+          <p className="font-mono select-all">
+            Mật khẩu tạm: {state.tempPassword}
+          </p>
+          <p className="text-xs">
+            Chỉ hiện một lần. Gửi cho giáo viên qua kênh riêng.
+          </p>
         </div>
       ) : (
         <form action={action} className="space-y-3" noValidate>
           <FormAlert state={state} />
-          <Field label="Họ và tên" name="fullName" required error={state.fieldErrors?.fullName} />
-          <Field label="Tên đăng nhập" name="username" required error={state.fieldErrors?.username} />
-          <Field label="Email" name="email" type="email" required error={state.fieldErrors?.email} />
-          <SubmitButton className="w-full">Tạo giáo viên</SubmitButton>
+          <div className="space-y-1">
+            <label htmlFor="new-role" className="text-sm font-semibold">
+              Vai trò
+            </label>
+            <select
+              id="new-role"
+              name="role"
+              defaultValue="TEACHER"
+              className="border-border bg-surface rounded-control h-10 w-full border px-2 text-sm"
+            >
+              <option value="TEACHER">Giáo viên</option>
+              <option value="MODERATOR">Kiểm duyệt viên</option>
+            </select>
+          </div>
+          <Field
+            label="Họ và tên"
+            name="fullName"
+            required
+            error={state.fieldErrors?.fullName}
+          />
+          <Field
+            label="Tên đăng nhập"
+            name="username"
+            required
+            error={state.fieldErrors?.username}
+          />
+          <Field
+            label="Email"
+            name="email"
+            type="email"
+            required
+            error={state.fieldErrors?.email}
+          />
+          <SubmitButton className="w-full">Tạo tài khoản</SubmitButton>
         </form>
       )}
     </section>

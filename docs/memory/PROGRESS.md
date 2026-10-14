@@ -105,3 +105,9 @@ Cập nhật sau mỗi task. `[x]` xong · `[~]` đang làm / dở · `[ ]` chư
 - 2026-10-14: Sửa lỗi duyệt GV trên production (UNSAFE_TRANSACTION qua pooler): approveTeacherAccount và createTeacherByAdmin dùng một câu SQL có CTE set_config, bỏ db.transaction. Đã thử lại trên DB local. Chưa push.
 
 - 2026-10-14: Admin xóa mềm tài khoản (`softDeleteUser`: deleted_at, DISABLED, giải phóng username/email, thu hồi phiên; không xóa admin) + mục "Đang hoạt động" trên /admin (phiên có last_seen trong 15 phút; session cập nhật last_seen mỗi 5 phút thay vì 1 giờ). Test ở escalation.test.ts — chưa chạy local (thiếu Docker), chờ CI.
+- 2026-10-14: Sửa tận gốc UNSAFE_TRANSACTION (b4883bb, b493d97): transaction trên Vercel chạy client riêng max 1 / max_pipeline 1, xếp hàng tuần tự. Đã test trên production (tài khoản GV, lớp "Lớp thử 3"): tạo lớp, tạo 2 HS, đăng bài tự luận — đều OK, log không lỗi. HS nộp bài + GV chấm 8/10 và trả bài: OK (Học Sinh Thử Hai). Chưa test: tài liệu, nâng cấp (cần đăng nhập HS / đụng dữ liệu thật). Log còn thấy `[obs] ghi request_samples lỗi CONNECT_TIMEOUT` (ghi số liệu nền, không ảnh hưởng người dùng) — theo dõi.
+
+## 2026-10-14 — Kiểm duyệt viên (MODERATOR, admin phụ)
+- Vai trò mới `MODERATOR` (migration 0012). Admin tạo ở form "Tạo tài khoản" (chọn vai trò). Trang `/mod`: GV chờ duyệt, đang online, bảng GV/HS.
+- Quyền: duyệt/từ chối GV, khóa/mở khóa, gỡ khóa tạm, cấp mật khẩu tạm cho GV/HS. Không xóa, không tạo tài khoản, không thấy admin/kiểm duyệt viên khác (404). Step-up 15 phút như admin.
+- Policy: `requireStaff` + `targetUser` giới hạn MODERATOR ở TEACHER/STUDENT. Test: escalation.test.ts "kiểm duyệt viên".

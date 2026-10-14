@@ -10,7 +10,7 @@ process.env.DATABASE_URL = inject("dbUrl");
 
 type Actor = {
   id: string;
-  role: "ADMIN" | "TEACHER" | "STUDENT";
+  role: "ADMIN" | "MODERATOR" | "TEACHER" | "STUDENT";
   fullName: string;
   username: string;
   mustChangePassword: boolean;
@@ -242,6 +242,36 @@ describe("xóa mềm tài khoản", () => {
   it("danh sách đang hoạt động chỉ cho admin", async () => {
     await expect(m.admin.listOnlineUsers(gvA)).rejects.toBeTruthy();
     expect(Array.isArray(await m.admin.listOnlineUsers(admin1))).toBe(true);
+  });
+});
+
+describe("kiểm duyệt viên (MODERATOR)", () => {
+  it("chỉ admin tạo được; quản lý GV/HS được, tài khoản admin/kiểm duyệt viên khác là 404, không xóa được", async () => {
+    const input = { fullName: "Kiểm Duyệt", username: "esc.mod", email: "esc.mod@x.vn" };
+    await is404(m.admin.createModerator(gvA, input));
+    await m.admin.createModerator(admin1, input);
+    const [row] = await m.db.db.select().from(m.schema.users).where(eq(m.schema.users.username, "esc.mod"));
+    expect(row.role).toBe("MODERATOR");
+    expect(row.mustChangePassword).toBe(true);
+    const md = actor(row.id, "MODERATOR");
+    const [mod2] = await m.admin.listUsers(admin1, { role: "MODERATOR" }).then((l) => l.rows);
+    expect(mod2.id).toBe(row.id);
+
+    const [st] = await m.db.db.insert(m.schema.users).values({ username: "esc.modst", fullName: "St", passwordHash: "x", role: "STUDENT" }).returning();
+    await m.admin.setUserStatus(md, st.id, "LOCKED");
+    await m.admin.setUserStatus(md, st.id, "ACTIVE");
+    expect(typeof (await m.admin.adminResetPassword(md, st.id))).toBe("string");
+    await is404(m.admin.softDeleteUser(md, st.id));
+
+    await is404(m.admin.setUserStatus(md, admin2.id, "LOCKED"));
+    await is404(m.admin.adminResetPassword(md, admin2.id));
+    await is404(m.admin.setUserStatus(md, row.id, "LOCKED"));
+    await is404(m.admin.createTeacher(md, { fullName: "X", username: "esc.modgv", email: "esc.modgv@x.vn" }));
+    await is404(m.admin.adminStats(md));
+
+    const list = await m.admin.listUsers(md, {});
+    expect(list.rows.every((u) => u.role === "TEACHER" || u.role === "STUDENT")).toBe(true);
+    expect(list.rows.some((u) => u.id === st.id)).toBe(true);
   });
 });
 

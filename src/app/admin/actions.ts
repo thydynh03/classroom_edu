@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { notFound } from "next/navigation";
 import { z } from "zod";
 import { requireActor, requireRecentAuth } from "@/server/auth/guard";
 import { markReauthenticated } from "@/server/auth/session";
@@ -18,6 +19,16 @@ import { usernameSchema } from "@/server/validation/auth";
 import { type ActionState, fieldErrorsFrom } from "@/lib/action";
 
 const adminActor = () => requireActor("ADMIN");
+/** Admin hoặc kiểm duyệt viên; service tự giới hạn kiểm duyệt viên ở tài khoản GV/HS. */
+async function staffActor() {
+  const actor = await requireActor();
+  if (actor.role !== "ADMIN" && actor.role !== "MODERATOR") notFound();
+  return actor;
+}
+function revalidateStaff() {
+  revalidatePath("/admin");
+  revalidatePath("/mod");
+}
 
 async function wrap<T>(fn: () => Promise<T>): Promise<{ ok: true; value: T } | { ok: false; error: string }> {
   try {
@@ -29,24 +40,24 @@ async function wrap<T>(fn: () => Promise<T>): Promise<{ ok: true; value: T } | {
 }
 
 export async function setStatusAction(userId: string, status: "ACTIVE" | "LOCKED" | "DISABLED") {
-  const actor = await adminActor();
+  const actor = await staffActor();
   const parsed = z.enum(["ACTIVE", "LOCKED", "DISABLED"]).safeParse(status);
   if (!parsed.success) return { ok: false as const, error: "Trạng thái không hợp lệ" };
   const r = await wrap(async () => {
     if (parsed.data !== "ACTIVE") requireRecentAuth(actor);
     return admin.setUserStatus(actor, userId, parsed.data);
   });
-  revalidatePath("/admin");
+  revalidateStaff();
   return r;
 }
 
 export async function approveTeacherAction(userId: string) {
-  const actor = await adminActor();
+  const actor = await staffActor();
   const r = await wrap(async () => {
     requireRecentAuth(actor);
     return admin.approveTeacher(actor, userId);
   });
-  revalidatePath("/admin");
+  revalidateStaff();
   return r;
 }
 
@@ -61,13 +72,13 @@ export async function deleteUserAction(userId: string) {
 }
 
 export async function clearLockAction(userId: string) {
-  const actor = await adminActor();
+  const actor = await staffActor();
   await admin.clearLoginLock(actor, userId);
-  revalidatePath("/admin");
+  revalidateStaff();
 }
 
 export async function resetPasswordAction(userId: string) {
-  const actor = await adminActor();
+  const actor = await staffActor();
   return wrap(async () => {
     requireRecentAuth(actor);
     return admin.adminResetPassword(actor, userId);
@@ -75,6 +86,7 @@ export async function resetPasswordAction(userId: string) {
 }
 
 const teacherSchema = z.strictObject({
+  role: z.enum(["TEACHER", "MODERATOR"]),
   fullName: z.string().trim().min(2, "Nhập họ tên").max(100),
   username: usernameSchema,
   email: z.email("Email không hợp lệ").trim().toLowerCase(),
@@ -85,14 +97,16 @@ export type CreateTeacherState = ActionState & { tempPassword?: string; username
 export async function createTeacherAction(_: CreateTeacherState, fd: FormData): Promise<CreateTeacherState> {
   const actor = await adminActor();
   const parsed = teacherSchema.safeParse({
+    role: String(fd.get("role") ?? "TEACHER"),
     fullName: String(fd.get("fullName") ?? ""),
     username: String(fd.get("username") ?? ""),
     email: String(fd.get("email") ?? ""),
   });
   if (!parsed.success) return { fieldErrors: fieldErrorsFrom(parsed.error.issues) };
+  const { role, ...input } = parsed.data;
   const r = await wrap(async () => {
     requireRecentAuth(actor);
-    return admin.createTeacher(actor, parsed.data);
+    return role === "MODERATOR" ? admin.createModerator(actor, input) : admin.createTeacher(actor, input);
   });
   if (!r.ok) return { error: r.error };
   revalidatePath("/admin");
@@ -198,7 +212,7 @@ export async function saveBillingAction(_: ActionState, fd: FormData): Promise<A
 
 /** Nhập lại mật khẩu để mở thao tác nhạy cảm trong 15 phút (step-up). */
 export async function reauthAction(_: ActionState, fd: FormData): Promise<ActionState> {
-  const actor = await adminActor();
+  const actor = await staffActor();
   const password = String(fd.get("password") ?? "");
   if (!password) return { fieldErrors: { password: "Nhập mật khẩu" } };
   if (!(await rateLimit(`reauth:${actor.id}`, 10, 15 * 60_000))) return { error: "Bạn thử quá nhiều lần. Đợi 15 phút." };
@@ -207,5 +221,6 @@ export async function reauthAction(_: ActionState, fd: FormData): Promise<Action
   await markReauthenticated(actor.sessionId);
   await db.insert(auditLogs).values({ actorId: actor.id, action: "admin.reauth", targetType: "session", targetId: actor.sessionId });
   revalidatePath("/admin", "layout");
+  revalidatePath("/mod", "layout");
   return { ok: true, message: "Đã xác nhận. Thao tác nhạy cảm mở trong 15 phút." };
 }

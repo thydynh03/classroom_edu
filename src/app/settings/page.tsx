@@ -53,7 +53,7 @@ export default async function SettingsPage() {
           </section>
         )}
 
-        {actor.role !== "ADMIN" && (
+        {actor.role !== "ADMIN" && actor.role !== "MODERATOR" && (
           <section className="bg-surface border-border rounded-card border p-5">
             <h2 className="mb-1 text-[15px] font-bold">Hướng dẫn sử dụng</h2>
             <p className="text-muted mb-3 text-sm">Xem lại hướng dẫn từng bước đã hiện khi bạn đăng nhập lần đầu.</p>

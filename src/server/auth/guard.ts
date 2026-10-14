@@ -31,5 +31,6 @@ export function requireRecentAuth(actor: Pick<Actor, "authAt">) {
 
 export function homeFor(role: Actor["role"]) {
   if (role === "ADMIN") return "/admin";
+  if (role === "MODERATOR") return "/mod";
   return role === "STUDENT" ? "/student" : "/teacher";
 }

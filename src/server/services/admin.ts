@@ -1,19 +1,20 @@
 import "server-only";
-import { and, count, desc, eq, gt, ilike, isNull, ne, or, sql } from "drizzle-orm";
+import { and, count, desc, eq, gt, ilike, inArray, isNull, ne, or, sql } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { db } from "@/server/db/client";
 import { auditLogs, classes, notifications, sessions, submissions, userEvents, users } from "@/server/db/schema";
 import type { Actor } from "@/server/auth/session";
 import { generateTempPassword, hashPassword } from "@/server/auth/password";
-import { approveTeacherAccount, createTeacherByAdmin } from "@/server/auth/accounts";
+import { approveTeacherAccount, createModeratorByAdmin, createTeacherByAdmin } from "@/server/auth/accounts";
 import { notifyPasswordReset } from "./notifications";
 import { revokeAllSessions } from "@/server/auth/session";
-import { requireRole, isUuid } from "@/server/policy";
+import { requireRole, requireStaff, isUuid } from "@/server/policy";
 import { UserError } from "./errors";
 
 /**
- * Quản trị: chỉ ADMIN. Admin quản lý TÀI KHOẢN, không đọc bài làm/điểm của học sinh (privacy).
- * Mọi thao tác ghi audit_logs.
+ * Quản trị: ADMIN. Admin quản lý TÀI KHOẢN, không đọc bài làm/điểm của học sinh (privacy).
+ * MODERATOR (kiểm duyệt viên) chỉ: xem/duyệt GV, khóa/mở khóa, gỡ khóa tạm, cấp mật khẩu tạm cho GV/HS.
+ * Tài khoản ADMIN/MODERATOR khác với kiểm duyệt viên là 404. Mọi thao tác ghi audit_logs.
  */
 
 export async function adminStats(actor: Actor) {
@@ -80,14 +81,16 @@ export async function adminCharts(actor: Actor) {
 
 export async function listUsers(
   actor: Actor,
-  opts: { q?: string; role?: "ADMIN" | "TEACHER" | "STUDENT"; status?: "ACTIVE" | "LOCKED" | "DISABLED"; page?: number },
+  opts: { q?: string; role?: "ADMIN" | "MODERATOR" | "TEACHER" | "STUDENT"; status?: "ACTIVE" | "LOCKED" | "DISABLED"; page?: number },
 ) {
-  requireRole(actor, "ADMIN");
+  requireStaff(actor);
+  const modScope = actor.role === "MODERATOR" ? inArray(users.role, ["TEACHER", "STUDENT"]) : undefined;
   const pageSize = 50;
   const page = Math.max(1, opts.page ?? 1);
   const q = opts.q?.trim();
   const where = and(
     isNull(users.deletedAt),
+    modScope,
     opts.role ? eq(users.role, opts.role) : undefined,
     opts.status ? eq(users.status, opts.status) : undefined,
     q
@@ -126,7 +129,7 @@ export async function listUsers(
 
 /** GV tự đăng ký đang chờ duyệt (chưa bị khóa), cũ nhất lên trước. */
 export async function listPendingTeachers(actor: Actor) {
-  requireRole(actor, "ADMIN");
+  requireStaff(actor);
   return db
     .select({ id: users.id, fullName: users.fullName, username: users.username, email: users.email, createdAt: users.createdAt })
     .from(users)
@@ -159,10 +162,11 @@ function escapeLike(s: string) {
 }
 
 async function targetUser(actor: Actor, userId: string) {
-  requireRole(actor, "ADMIN");
+  requireStaff(actor);
   if (!isUuid(userId)) notFound();
   const [u] = await db.select().from(users).where(and(eq(users.id, userId), isNull(users.deletedAt))).limit(1);
   if (!u) notFound();
+  if (actor.role === "MODERATOR" && u.role !== "TEACHER" && u.role !== "STUDENT") notFound();
   return u;
 }
 
@@ -193,6 +197,7 @@ export async function setUserStatus(actor: Actor, userId: string, status: "ACTIV
  * Giải phóng username/email để người đó đăng ký lại được. Không xóa admin.
  */
 export async function softDeleteUser(actor: Actor, userId: string) {
+  requireRole(actor, "ADMIN");
   const u = await targetUser(actor, userId);
   if (u.id === actor.id) throw new UserError("Không thể tự xóa tài khoản của chính mình.");
   if (u.role === "ADMIN") throw new UserError("Không xóa được tài khoản quản trị viên.");
@@ -206,7 +211,7 @@ export async function softDeleteUser(actor: Actor, userId: string) {
 
 /** Người dùng có phiên đăng nhập hoạt động trong `minutes` phút gần đây. */
 export async function listOnlineUsers(actor: Actor, minutes = 15) {
-  requireRole(actor, "ADMIN");
+  requireStaff(actor);
   const since = new Date(Date.now() - minutes * 60_000);
   return db
     .select({
@@ -218,7 +223,15 @@ export async function listOnlineUsers(actor: Actor, minutes = 15) {
     })
     .from(sessions)
     .innerJoin(users, eq(users.id, sessions.userId))
-    .where(and(gt(sessions.lastSeenAt, since), gt(sessions.expiresAt, new Date()), isNull(users.deletedAt), eq(users.status, "ACTIVE")))
+    .where(
+      and(
+        gt(sessions.lastSeenAt, since),
+        gt(sessions.expiresAt, new Date()),
+        isNull(users.deletedAt),
+        eq(users.status, "ACTIVE"),
+        actor.role === "MODERATOR" ? inArray(users.role, ["TEACHER", "STUDENT"]) : undefined,
+      ),
+    )
     .groupBy(users.id)
     .orderBy(desc(sql`max(${sessions.lastSeenAt})`))
     .limit(200);
@@ -244,7 +257,7 @@ export async function adminResetPassword(actor: Actor, userId: string) {
     .set({ passwordHash: await hashPassword(tempPassword), mustChangePassword: true, failedLogins: 0, lockedUntil: null })
     .where(eq(users.id, u.id));
   await revokeAllSessions(u.id);
-  await notifyPasswordReset(u.id, "Quản trị viên");
+  await notifyPasswordReset(u.id, actor.role === "MODERATOR" ? "Kiểm duyệt viên" : "Quản trị viên");
   await audit(actor, "user.reset_password", u.id);
   return tempPassword;
 }
@@ -262,6 +275,21 @@ export async function createTeacher(actor: Actor, input: { fullName: string; use
   const id = await createTeacherByAdmin(actor.id, input, tempPassword);
   const u = { id };
   await audit(actor, "user.create_teacher", u.id);
+  return tempPassword;
+}
+
+/** Admin tạo kiểm duyệt viên, mật khẩu tạm bắt đổi lần đầu. */
+export async function createModerator(actor: Actor, input: { fullName: string; username: string; email: string }) {
+  requireRole(actor, "ADMIN");
+  const [taken] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(or(sql`lower(${users.username}) = ${input.username}`, sql`lower(${users.email}) = ${input.email}`))
+    .limit(1);
+  if (taken) throw new UserError("Tên đăng nhập hoặc email đã được dùng.");
+  const tempPassword = generateTempPassword();
+  const id = await createModeratorByAdmin(actor.id, input, tempPassword);
+  await audit(actor, "user.create_moderator", id);
   return tempPassword;
 }
 

@@ -117,7 +117,7 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
                 {a.devices.map((d) => (
                   <tr key={`${d.device}-${d.role}`}>
                     <td className="py-1">{DEVICE_LABEL[d.device] ?? d.device}</td>
-                    <td className="py-1">{d.role === "TEACHER" ? "Giáo viên" : d.role === "STUDENT" ? "Học sinh" : "Quản trị"}</td>
+                    <td className="py-1">{d.role === "TEACHER" ? "Giáo viên" : d.role === "STUDENT" ? "Học sinh" : d.role === "MODERATOR" ? "Kiểm duyệt viên" : "Quản trị"}</td>
                     <td className="py-1 text-right tabular-nums">{d.users}</td>
                   </tr>
                 ))}

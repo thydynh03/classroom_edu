@@ -28,7 +28,7 @@ const updatedAt = () =>
     .defaultNow()
     .$onUpdate(() => new Date());
 
-export const userRole = pgEnum("user_role", ["ADMIN", "TEACHER", "STUDENT"]);
+export const userRole = pgEnum("user_role", ["ADMIN", "MODERATOR", "TEACHER", "STUDENT"]);
 export const userStatus = pgEnum("user_status", ["ACTIVE", "LOCKED", "DISABLED"]);
 export const classColor = pgEnum("class_color", [
   "sky",
