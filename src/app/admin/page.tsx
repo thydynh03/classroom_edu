@@ -186,6 +186,7 @@ export default async function AdminPage({
                   <th scope="col" className="px-4 py-2 font-semibold">Người dùng</th>
                   <th scope="col" className="px-3 py-2 font-semibold">Vai trò</th>
                   <th scope="col" className="px-3 py-2 font-semibold">Trạng thái</th>
+                  <th scope="col" className="px-3 py-2 font-semibold">Truy cập</th>
                   <th scope="col" className="px-3 py-2 font-semibold">Tạo lúc</th>
                   <th scope="col" className="px-4 py-2 text-right font-semibold">Thao tác</th>
                 </tr>
@@ -215,6 +216,19 @@ export default async function AdminPage({
                         {loginLocked && <span className="bg-warning-soft text-warning ml-1 rounded-full px-2 py-0.5 text-xs font-bold">Khóa tạm do sai mật khẩu</span>}
                         {u.mustChangePassword && <p className="text-muted mt-0.5 text-xs">Chưa đổi mật khẩu tạm</p>}
                       </td>
+                      <td className="px-3 py-2.5 text-xs">
+                        {u.lastSeenAt && now - u.lastSeenAt.getTime() < 15 * 60_000 ? (
+                          <span className="text-success inline-flex items-center gap-1.5 font-bold">
+                            <span aria-hidden className="bg-success size-2 rounded-full" />
+                            Đang online
+                          </span>
+                        ) : (
+                          <span className="text-muted inline-flex items-center gap-1.5">
+                            <span aria-hidden className="bg-border size-2 rounded-full" />
+                            {u.lastSeenAt ? `Offline · ${shortDateTime(u.lastSeenAt)}` : "Offline"}
+                          </span>
+                        )}
+                      </td>
                       <td className="text-muted px-3 py-2.5 text-xs tabular-nums">{shortDateTime(u.createdAt)}</td>
                       <td className="px-4 py-2.5 text-right">
                         {u.id !== actor.id && <UserActions userId={u.id} name={u.fullName} status={u.status} loginLocked={loginLocked} />}
@@ -224,7 +238,7 @@ export default async function AdminPage({
                 })}
                 {list.rows.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="text-muted px-4 py-8 text-center">Không có người dùng phù hợp.</td>
+                    <td colSpan={6} className="text-muted px-4 py-8 text-center">Không có người dùng phù hợp.</td>
                   </tr>
                 )}
               </tbody>

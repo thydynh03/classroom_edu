@@ -110,6 +110,9 @@ export async function listUsers(
         mustChangePassword: users.mustChangePassword,
         lockedUntil: users.lockedUntil,
         createdAt: users.createdAt,
+        lastSeenAt: sql<Date | null>`(select max(${sessions.lastSeenAt}) from ${sessions} where ${sessions.userId} = ${users.id})`.mapWith(
+          (v) => (v ? new Date(v) : null),
+        ),
       })
       .from(users)
       .where(where)
