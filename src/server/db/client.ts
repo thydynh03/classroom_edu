@@ -32,10 +32,11 @@ export const db = drizzle(client, { schema, casing: "snake_case" });
 
 // postgres.js chỉ giữ riêng kết nối cho sql.begin khi được phép pipeline (connection.js: `sent.length < max_pipeline && onexecute`).
 // Với max_pipeline: 0 thì BEGIN chạy trên kết nối không được giữ → UNSAFE_TRANSACTION (LESSONS 2026-10-14).
-// Nên trên serverless, transaction chạy trên client riêng max: 1 (postgres.js bỏ kiểm tra khi max = 1)
+// Nên trên serverless, transaction chạy trên client riêng max: 1, max_pipeline: 1 (để sql.begin giữ được kết nối;
+// max_pipeline 0 thì begin vỡ với "Cannot set properties of undefined (onclose)")
 // và được xếp hàng tuần tự để hai transaction không bao giờ xen lệnh trên cùng một kết nối.
 if (created && process.env.VERCEL) {
-  const txDb = drizzle(postgres(created.url, { ...created.opts, max: 1 }), { schema, casing: "snake_case" });
+  const txDb = drizzle(postgres(created.url, { ...created.opts, ...{ max: 1, max_pipeline: 1 } }), { schema, casing: "snake_case" });
   let chain: Promise<unknown> = Promise.resolve();
   db.transaction = ((fn, config) => {
     const run = chain.then(() => txDb.transaction(fn as never, config));
