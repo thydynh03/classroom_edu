@@ -20,13 +20,29 @@ function createClient() {
   const serverless = process.env.VERCEL ? { max: 3, max_pipeline: 0, idle_timeout: 5, max_lifetime: 300, connect_timeout: 10 } : { max: 10 };
   // Pooler transaction không giữ prepared statement giữa các truy vấn.
   const viaTransactionPooler = !useSession && (!!process.env.VERCEL || url.includes("pgbouncer=true") || url.includes(":6543"));
-  return postgres(url, { ...serverless, prepare: !viaTransactionPooler });
+  const opts = { ...serverless, prepare: !viaTransactionPooler };
+  return { url, opts, client: postgres(url, opts) };
 }
 
-const client = globalForDb.pgClient ?? createClient();
+const created = globalForDb.pgClient ? null : createClient();
+const client = globalForDb.pgClient ?? created!.client;
 if (process.env.NODE_ENV !== "production") globalForDb.pgClient = client;
 
 export const db = drizzle(client, { schema, casing: "snake_case" });
+
+// postgres.js chỉ giữ riêng kết nối cho sql.begin khi được phép pipeline (connection.js: `sent.length < max_pipeline && onexecute`).
+// Với max_pipeline: 0 thì BEGIN chạy trên kết nối không được giữ → UNSAFE_TRANSACTION (LESSONS 2026-10-14).
+// Nên trên serverless, transaction chạy trên client riêng max: 1 (postgres.js bỏ kiểm tra khi max = 1)
+// và được xếp hàng tuần tự để hai transaction không bao giờ xen lệnh trên cùng một kết nối.
+if (created && process.env.VERCEL) {
+  const txDb = drizzle(postgres(created.url, { ...created.opts, max: 1 }), { schema, casing: "snake_case" });
+  let chain: Promise<unknown> = Promise.resolve();
+  db.transaction = ((fn, config) => {
+    const run = chain.then(() => txDb.transaction(fn as never, config));
+    chain = run.catch(() => undefined);
+    return run;
+  }) as Db["transaction"];
+}
 export type Db = typeof db;
 export type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
 export { schema };
