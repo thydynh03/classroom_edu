@@ -1,6 +1,6 @@
 import "server-only";
-import { and, eq, isNull, sql } from "drizzle-orm";
-import { db, type Tx } from "@/server/db/client";
+import { sql } from "drizzle-orm";
+import { db } from "@/server/db/client";
 import { classMembers, users } from "@/server/db/schema";
 import { hashPassword } from "./password";
 
@@ -10,10 +10,6 @@ import { hashPassword } from "./password";
  * - `approved_at` của GV chỉ đặt ở đây, kèm cờ `app.allow_teacher_approval` mà trigger `users_guard` (drizzle/0005) đòi hỏi.
  * Unit test `tests/unit/accounts-single-entry.test.ts` fail nếu có `insert(users)` ở nơi khác trong src/.
  */
-
-async function allowTeacherApproval(tx: Tx) {
-  await tx.execute(sql`select set_config('app.allow_teacher_approval', 'on', true)`);
-}
 
 /** GV tự đăng ký: luôn chờ admin duyệt (approved_at = null). */
 export async function registerTeacher(input: {
@@ -45,35 +41,24 @@ export async function createTeacherByAdmin(
   tempPassword: string,
 ) {
   const passwordHash = await hashPassword(tempPassword);
-  return db.transaction(async (tx) => {
-    await allowTeacherApproval(tx);
-    const [u] = await tx
-      .insert(users)
-      .values({
-        ...input,
-        passwordHash,
-        role: "TEACHER",
-        mustChangePassword: true,
-        emailVerifiedAt: new Date(),
-        approvedAt: new Date(),
-        createdBy: adminId,
-      })
-      .returning({ id: users.id });
-    return u.id;
-  });
+  // Một câu lệnh: cờ set_config(..., true) sống trong transaction ngầm của chính câu lệnh này.
+  // Không dùng db.transaction: qua pooler Supabase, postgres.js báo UNSAFE_TRANSACTION (LESSONS 2026-10-14).
+  const rows = await db.execute<{ id: string }>(sql`
+    with f as (select set_config('app.allow_teacher_approval', 'on', true))
+    insert into users (full_name, username, email, password_hash, role, must_change_password, email_verified_at, approved_at, created_by)
+    select ${input.fullName}, ${input.username}, ${input.email}, ${passwordHash}, 'TEACHER', true, now(), now(), ${adminId} from f
+    returning id`);
+  return rows[0].id;
 }
 
 /** Duyệt GV đang chờ. Trả về true nếu vừa duyệt (false nếu đã duyệt trước đó / không phải GV). */
 export async function approveTeacherAccount(userId: string) {
-  return db.transaction(async (tx) => {
-    await allowTeacherApproval(tx);
-    const rows = await tx
-      .update(users)
-      .set({ approvedAt: new Date() })
-      .where(and(eq(users.id, userId), eq(users.role, "TEACHER"), isNull(users.approvedAt)))
-      .returning({ id: users.id });
-    return rows.length > 0;
-  });
+  const rows = await db.execute<{ id: string }>(sql`
+    with f as (select set_config('app.allow_teacher_approval', 'on', true))
+    update users set approved_at = now() from f
+    where users.id = ${userId} and users.role = 'TEACHER' and users.approved_at is null
+    returning users.id`);
+  return rows.length > 0;
 }
 
 /** HS tự đăng ký bằng mã lớp. */
