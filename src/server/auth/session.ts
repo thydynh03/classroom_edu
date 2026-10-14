@@ -97,7 +97,7 @@ export const getActor = cache(async (): Promise<Actor | null> => {
     .limit(1);
   const r = rows[0];
   if (!r || r.status !== "ACTIVE" || r.deletedAt) return null;
-  if (Date.now() - r.lastSeenAt.getTime() > 3600_000) {
+  if (Date.now() - r.lastSeenAt.getTime() > 5 * 60_000) {
     await db
       .update(sessions)
       .set({

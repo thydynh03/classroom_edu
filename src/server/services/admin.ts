@@ -1,8 +1,8 @@
 import "server-only";
-import { and, count, desc, eq, ilike, isNull, ne, or, sql } from "drizzle-orm";
+import { and, count, desc, eq, gt, ilike, isNull, ne, or, sql } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { db } from "@/server/db/client";
-import { auditLogs, classes, notifications, submissions, userEvents, users } from "@/server/db/schema";
+import { auditLogs, classes, notifications, sessions, submissions, userEvents, users } from "@/server/db/schema";
 import type { Actor } from "@/server/auth/session";
 import { generateTempPassword, hashPassword } from "@/server/auth/password";
 import { approveTeacherAccount, createTeacherByAdmin } from "@/server/auth/accounts";
@@ -183,6 +183,42 @@ export async function setUserStatus(actor: Actor, userId: string, status: "ACTIV
     .where(eq(users.id, u.id));
   if (status !== "ACTIVE") await revokeAllSessions(u.id);
   await audit(actor, `user.status.${status.toLowerCase()}`, u.id);
+}
+
+/**
+ * Xóa mềm: giữ lại dữ liệu (bài nộp, lớp) nhưng tài khoản biến mất khỏi danh sách và không đăng nhập được.
+ * Giải phóng username/email để người đó đăng ký lại được. Không xóa admin.
+ */
+export async function softDeleteUser(actor: Actor, userId: string) {
+  const u = await targetUser(actor, userId);
+  if (u.id === actor.id) throw new UserError("Không thể tự xóa tài khoản của chính mình.");
+  if (u.role === "ADMIN") throw new UserError("Không xóa được tài khoản quản trị viên.");
+  await db
+    .update(users)
+    .set({ deletedAt: new Date(), status: "DISABLED", username: `deleted.${u.id}`, email: null })
+    .where(eq(users.id, u.id));
+  await revokeAllSessions(u.id);
+  await audit(actor, "user.delete", u.id);
+}
+
+/** Người dùng có phiên đăng nhập hoạt động trong `minutes` phút gần đây. */
+export async function listOnlineUsers(actor: Actor, minutes = 15) {
+  requireRole(actor, "ADMIN");
+  const since = new Date(Date.now() - minutes * 60_000);
+  return db
+    .select({
+      id: users.id,
+      fullName: users.fullName,
+      username: users.username,
+      role: users.role,
+      lastSeenAt: sql<Date>`max(${sessions.lastSeenAt})`.mapWith((v) => new Date(v)),
+    })
+    .from(sessions)
+    .innerJoin(users, eq(users.id, sessions.userId))
+    .where(and(gt(sessions.lastSeenAt, since), gt(sessions.expiresAt, new Date()), isNull(users.deletedAt), eq(users.status, "ACTIVE")))
+    .groupBy(users.id)
+    .orderBy(desc(sql`max(${sessions.lastSeenAt})`))
+    .limit(200);
 }
 
 /** Mở khóa tạm thời do nhập sai mật khẩu nhiều lần. */

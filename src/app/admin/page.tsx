@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requireActor } from "@/server/auth/guard";
-import { adminCharts, adminStats, listPendingTeachers, listUsers } from "@/server/services/admin";
+import { adminCharts, adminStats, listOnlineUsers, listPendingTeachers, listUsers } from "@/server/services/admin";
 import { DonutChart, LineChart } from "@/components/domain/charts";
 import { PageHeader } from "@/components/domain/page-parts";
 import { shortDateTime } from "@/lib/dates";
@@ -23,11 +23,12 @@ export default async function AdminPage({
   const role = (["ADMIN", "TEACHER", "STUDENT"] as const).find((r) => r === sp.role);
   const status = (["ACTIVE", "LOCKED", "DISABLED"] as const).find((r) => r === sp.status);
   const page = Number(sp.page) || 1;
-  const [stats, charts, list, pendingTeachers] = await Promise.all([
+  const [stats, charts, list, pendingTeachers, online] = await Promise.all([
     adminStats(actor),
     adminCharts(actor),
     listUsers(actor, { q: sp.q, role, status, page }),
     listPendingTeachers(actor),
+    listOnlineUsers(actor),
   ]);
   const now = requestNow();
   const pages = Math.max(1, Math.ceil(list.total / list.pageSize));
@@ -89,6 +90,27 @@ export default async function AdminPage({
             ]}
           />
         </div>
+      </section>
+      <section aria-labelledby="online-title" className="bg-surface border-border rounded-card mb-6 border p-5">
+        <h2 id="online-title" className="text-[15px] font-bold">
+          Đang hoạt động ({online.length})
+        </h2>
+        <p className="text-muted mb-3 text-sm">Tài khoản có thao tác trong 15 phút gần đây.</p>
+        {online.length === 0 ? (
+          <p className="text-muted text-sm">Hiện không có ai đang dùng.</p>
+        ) : (
+          <ul className="flex flex-wrap gap-2">
+            {online.map((u) => (
+              <li key={u.id} className="border-border rounded-control flex items-center gap-2 border px-3 py-1.5 text-sm">
+                <span aria-hidden className="bg-success size-2 rounded-full" />
+                <span className="font-semibold">{u.fullName}</span>
+                <span className="text-muted text-xs">
+                  {ROLE_LABEL[u.role]} · {shortDateTime(u.lastSeenAt)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
       {pendingTeachers.length > 0 && (
         <section aria-labelledby="pending-title" className="bg-warning-soft border-warning/30 rounded-card mb-6 border p-5">

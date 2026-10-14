@@ -224,6 +224,27 @@ describe("giới hạn trong quyền admin", () => {
   });
 });
 
+describe("xóa mềm tài khoản", () => {
+  it("chỉ admin xóa được; tài khoản biến mất, giải phóng username, không xóa admin", async () => {
+    const [u] = await m.db.db.insert(m.schema.users).values({ username: "esc.del", email: "esc.del@x.vn", fullName: "Del", passwordHash: "x", role: "STUDENT" }).returning();
+    await expect(m.admin.softDeleteUser(gvA, u.id)).rejects.toThrow();
+    await expect(m.admin.softDeleteUser(admin1, admin2.id)).rejects.toThrow(/quản trị viên/);
+    await m.admin.softDeleteUser(admin1, u.id);
+    const [row] = await m.db.db.select().from(m.schema.users).where(eq(m.schema.users.id, u.id));
+    expect(row.deletedAt).not.toBeNull();
+    expect(row.email).toBeNull();
+    const list = await m.admin.listUsers(admin1, { q: "esc.del" });
+    expect(list.rows).toHaveLength(0);
+    await m.db.db.insert(m.schema.users).values({ username: "esc.del", email: "esc.del@x.vn", fullName: "Del 2", passwordHash: "x", role: "STUDENT" });
+    await is404(m.admin.softDeleteUser(admin1, u.id));
+  });
+
+  it("danh sách đang hoạt động chỉ cho admin", async () => {
+    await expect(m.admin.listOnlineUsers(gvA)).rejects.toBeTruthy();
+    expect(Array.isArray(await m.admin.listOnlineUsers(admin1))).toBe(true);
+  });
+});
+
 describe("role ứng dụng classroom_app (scripts/sql/app-role.sql)", () => {
   it("không tạo được ADMIN kể cả tự bật cờ; không tắt được trigger", async () => {
     const postgres = (await import("postgres")).default;

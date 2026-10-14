@@ -50,6 +50,16 @@ export async function approveTeacherAction(userId: string) {
   return r;
 }
 
+export async function deleteUserAction(userId: string) {
+  const actor = await adminActor();
+  const r = await wrap(async () => {
+    requireRecentAuth(actor);
+    return admin.softDeleteUser(actor, userId);
+  });
+  revalidatePath("/admin");
+  return r;
+}
+
 export async function clearLockAction(userId: string) {
   const actor = await adminActor();
   await admin.clearLoginLock(actor, userId);

@@ -20,6 +20,7 @@ import {
   approveTeacherAction,
   clearLockAction,
   createTeacherAction,
+  deleteUserAction,
   resetPasswordAction,
   setStatusAction,
   type CreateTeacherState,
@@ -160,6 +161,36 @@ export function UserActions({
           Mở khóa
         </Button>
       )}
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button size="sm" variant="ghost" className="text-danger" disabled={pending} aria-label={`Xóa ${name}`}>
+            Xóa
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xóa tài khoản {name}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tài khoản biến mất khỏi danh sách và không đăng nhập được nữa. Bài nộp, điểm và lớp đã có vẫn được giữ. Tên đăng nhập và email được giải phóng để người đó đăng ký lại nếu cần. Không hoàn tác được trên giao diện.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-danger hover:bg-danger/90"
+              onClick={() =>
+                start(async () => {
+                  const r = await deleteUserAction(userId);
+                  if (r.ok) toast.success(`Đã xóa ${name}`);
+                  else toast.error(r.error);
+                })
+              }
+            >
+              Xóa tài khoản
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
